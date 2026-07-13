@@ -1,0 +1,9 @@
+spring.application.name=backend
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/autominutes
+spring.datasource.username=autominutes_user
+spring.datasource.password=YOUR_PASSWORD_HERE
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.show-sql=true
