@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.summerpractice.autominutes.dto.MeetingUpdateRequest;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
 @RequestMapping("/api/meetings")
@@ -42,5 +45,17 @@ public class MeetingController {
     @GetMapping("/{id}")
     public MeetingResponse getMeeting(@PathVariable UUID id) {
         return meetingService.getMeeting(id);
+    }
+
+    @PutMapping("/{id}")
+    public MeetingResponse updateMeeting(@PathVariable UUID id,
+                                         @Valid @RequestBody MeetingUpdateRequest request) {
+        return meetingService.updateMeeting(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteMeeting(@PathVariable UUID id) {
+        meetingService.deleteMeeting(id);
+        return ResponseEntity.noContent().build();
     }
 }

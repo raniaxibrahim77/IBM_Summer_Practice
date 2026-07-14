@@ -4,6 +4,7 @@ import com.summerpractice.autominutes.dto.MeetingCreateRequest;
 import com.summerpractice.autominutes.dto.MeetingResponse;
 import com.summerpractice.autominutes.model.Meeting;
 import com.summerpractice.autominutes.repository.MeetingRepository;
+import com.summerpractice.autominutes.dto.MeetingUpdateRequest;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -48,5 +49,26 @@ public class MeetingService {
         return meetingRepository.findById(id)
                 .map(MeetingResponse::from)
                 .orElseThrow(() -> new IllegalArgumentException("Meeting not found: " + id));
+    }
+
+    @Transactional
+    public MeetingResponse updateMeeting(UUID id, MeetingUpdateRequest request) {
+        Meeting meeting = meetingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Meeting not found: " + id));
+
+        meeting.setTitle(request.getTitle());
+        meeting.setDescription(request.getDescription());
+        meeting.setMeetingDatetime(request.getMeetingDatetime());
+        meeting.setUpdatedAt(java.time.LocalDateTime.now());
+
+        return MeetingResponse.from(meetingRepository.save(meeting));
+    }
+
+    @Transactional
+    public void deleteMeeting(UUID id) {
+        Meeting meeting = meetingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Meeting not found: " + id));
+
+        meetingRepository.delete(meeting);
     }
 }
