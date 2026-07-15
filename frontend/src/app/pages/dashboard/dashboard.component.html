@@ -1,0 +1,182 @@
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#A33E43] shadow-sm flex flex-col py-2 z-50">
+  <div class="px-6 py-4 mb-8 flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-[#450C21] flex items-center justify-center text-[#FBF2DA]">
+      <span class="material-symbols-outlined">dashboard</span>
+    </div>
+  </div>
+
+  <nav class="flex-1 space-y-1">
+    <a routerLink="/dashboard"
+        class="flex items-center gap-3 pl-4 py-3 mx-2 rounded-lg text-[#FBF2DA] hover:bg-[#FBF2DA] hover:text-[#450C21] hover:font-bold transition-all">
+        <span class="material-symbols-outlined">home</span>
+        <span class="text-sm font-semibold">Home</span>
+    </a>
+    <a routerLink="/calendar"
+        class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+        <span class="material-symbols-outlined">calendar_today</span>
+        <span class="text-sm font-semibold">Calendar</span>
+    </a>
+    <a routerLink="/meetings"
+        class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+        <span class="material-symbols-outlined">groups</span>
+        <span class="text-sm font-semibold">Meetings</span>
+    </a>
+    <a routerLink="/chat"
+        class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+        <span class="material-symbols-outlined">chat</span>
+        <span class="text-sm font-semibold">Chat</span>
+    </a>
+    <a href="#" class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+        <span class="material-symbols-outlined">settings</span>
+        <span class="text-sm font-semibold">Settings</span>
+    </a>
+  </nav>
+
+  <div class="mt-auto px-4 pb-6">
+    <button routerLink="/" class="w-full flex items-center gap-3 pl-5 py-3 text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors rounded-lg">
+      <span class="material-symbols-outlined">logout</span>
+      <span class="text-sm font-semibold">Logout</span>
+    </button>
+  </div>
+</aside>
+
+<header class="h-16 fixed top-0 right-0 left-64 bg-[#450C21] border-b border-[#FBF2DA]/10 flex items-center justify-between px-6 z-40">
+  <div class="flex items-center bg-[#A33E43] rounded-full px-4 py-2 w-96 border border-[#FBF2DA]/10">
+    <span class="material-symbols-outlined text-[#FBF2DA]/60">search</span>
+    <input class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2 text-[#FBF2DA] placeholder:text-[#FBF2DA]/50" placeholder="Search tasks or events..." type="text" />
+  </div>
+  <div class="flex items-center gap-4">
+    <div class="flex items-center gap-3 pl-4 border-l border-[#FBF2DA]/15">
+      <div class="text-right">
+        <p class="text-sm font-semibold leading-none text-[#FBF2DA]">Raina J.</p>
+      </div>
+      <div class="w-10 h-10 rounded-full bg-[#75C3D1] flex items-center justify-center text-[#450C21] font-bold">R</div>
+    </div>
+  </div>
+</header>
+
+<main class="ml-64 pt-16 min-h-screen bg-[#450C21]">
+  <div class="p-8 max-w-7xl mx-auto space-y-6">
+    <h1 class="text-4xl font-extrabold text-[#FBF2DA] tracking-tight">Welcome back!</h1>
+
+    <div class="grid grid-cols-12 gap-6">
+      <!-- Left column -->
+      <div class="col-span-12 lg:col-span-8 space-y-6">
+        <!-- Create a Meeting -->
+        <div class="bg-[#D9FFD2] rounded-xl p-6 text-[#1c2e1a] flex items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-bold">Create a Meeting</h2>
+            <p class="text-sm text-[#1c2e1a]/80 mt-1">Schedule a new session and invite your team.</p>
+          </div>
+          <button class="bg-[#450C21] text-[#FBF2DA] px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow hover:brightness-110 active:scale-95 transition-all shrink-0">
+            <span class="material-symbols-outlined">add</span>
+            New Meeting
+          </button>
+        </div>
+
+        <!-- Recent Meetings -->
+        <div class="bg-[#FBF2DA] p-6 rounded-xl">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-[#450C21]">Recent Meetings</h3>
+            <a href="#" class="text-[#A33E43] text-sm font-semibold hover:underline flex items-center gap-1">
+              View All <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            </a>
+          </div>
+          <div class="space-y-3">
+            @for (meeting of recentMeetings; track meeting.title) {
+              <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-[#450C21]/10">
+                <div>
+                  <p class="text-sm font-semibold text-[#450C21]">{{ meeting.title }}</p>
+                  <p class="text-xs text-[#450C21]/60">{{ meeting.date }} · {{ meeting.attendees }} attendees</p>
+                </div>
+                <span class="bg-[#8CA888] text-white px-2 py-1 rounded-full text-[10px] font-bold uppercase">{{ meeting.tag }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Today's Tasks -->
+        <div class="bg-[#A33E43] p-6 rounded-xl">
+          <h3 class="text-lg font-bold text-[#FBF2DA] mb-4">Today's Tasks</h3>
+          <div class="space-y-3">
+            @for (task of tasks; track task.title) {
+              <div class="p-3 rounded-lg flex items-center gap-3 bg-[#450C21]/40 border border-[#FBF2DA]/10">
+                <div class="flex-1" [class.opacity-50]="task.done">
+                  <p class="text-sm font-semibold text-[#FBF2DA]" [class.line-through]="task.done">{{ task.title }}</p>
+                  <p class="text-xs text-[#FBF2DA]/60">{{ task.meta }}</p>
+                </div>
+                <span class="bg-[#75C3D1] text-[#450C21] px-2 py-1 rounded-full text-[10px] font-bold uppercase">{{ task.tag }}</span>
+                <button
+                  type="button"
+                  (click)="toggleTaskDone(task)"
+                  class="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0"
+                  [class.bg-[#D9FFD2]]="task.done"
+                  [class.text-[#1c2e1a]]="task.done"
+                  [class.bg-[#FBF2DA]]="!task.done"
+                  [class.text-[#450C21]]="!task.done"
+                  [class.hover:brightness-95]="true"
+                >
+                  <span class="material-symbols-outlined text-sm">{{ task.done ? 'check_circle' : 'radio_button_unchecked' }}</span>
+                  {{ task.done ? 'Completed' : 'Mark complete' }}
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div class="col-span-12 lg:col-span-4 space-y-6">
+        <!-- Upcoming Events -->
+        <div class="bg-[#75C3D1] p-6 rounded-xl">
+          <h3 class="text-lg font-bold text-[#450C21] mb-4">Upcoming Events</h3>
+          <div class="space-y-3">
+            @for (event of upcomingEvents; track event.title) {
+              <div class="flex gap-3">
+                <div class="flex flex-col items-center w-10 shrink-0">
+                  <span class="text-[10px] font-bold text-[#450C21]/70">{{ event.day }}</span>
+                  <span class="text-xl font-bold text-[#450C21]">{{ event.date }}</span>
+                </div>
+                <div class="flex-1 bg-white/70 rounded-lg p-3 border-l-4 border-[#450C21]">
+                  <p class="text-sm font-bold text-[#450C21]">{{ event.title }}</p>
+                  <p class="text-xs text-[#450C21]/60">{{ event.time }}</p>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Calendar with marked meeting days -->
+        <div class="bg-[#FBF2DA] p-6 rounded-xl">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-lg font-bold text-[#450C21]">{{ viewMonthLabel }}</span>
+            <div class="flex gap-1">
+              <button type="button" (click)="previousMonth()" class="p-1 hover:bg-[#450C21]/10 rounded-full text-[#450C21]"><span class="material-symbols-outlined">chevron_left</span></button>
+              <button type="button" (click)="nextMonth()" class="p-1 hover:bg-[#450C21]/10 rounded-full text-[#450C21]"><span class="material-symbols-outlined">chevron_right</span></button> 
+            </div>
+          </div>
+          <div class="grid grid-cols-7 gap-y-2 text-center">
+            @for (label of weekdayLabels; track label) {
+              <span class="text-[10px] font-bold text-[#450C21]/50 uppercase">{{ label }}</span>
+            }
+            @for (cell of calendarDays; track $index) {
+              <span
+                class="py-2 text-sm relative text-[#450C21]"
+                [class.opacity-30]="cell.muted"
+                [class.font-bold]="cell.isToday"
+                [class.bg-[#A33E43]]="cell.isToday"
+                [class.text-white]="cell.isToday"
+                [class.rounded-full]="cell.isToday"
+              >
+                {{ cell.day }}
+                @if (cell.hasMeeting && !cell.isToday) {
+                  <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#8CA888] rounded-full"></span>
+                }
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>

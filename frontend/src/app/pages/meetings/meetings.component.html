@@ -1,0 +1,225 @@
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#A33E43] shadow-sm flex flex-col py-2 z-50">
+  <div class="px-6 py-4 mb-8 flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-[#450C21] flex items-center justify-center text-[#FBF2DA]">
+      <span class="material-symbols-outlined">dashboard</span>
+    </div>
+  </div>
+
+  <nav class="flex-1 space-y-1">
+    <a routerLink="/dashboard"
+       class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+      <span class="material-symbols-outlined">home</span>
+      <span class="text-sm font-semibold">Home</span>
+    </a>
+    <a routerLink="/calendar"
+       class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+      <span class="material-symbols-outlined">calendar_today</span>
+      <span class="text-sm font-semibold">Calendar</span>
+    </a>
+    <a routerLink="/meetings"
+       class="flex items-center gap-3 pl-4 py-3 mx-2 rounded-lg text-[#450C21] bg-[#FBF2DA] font-bold transition-all">
+      <span class="material-symbols-outlined">groups</span>
+      <span class="text-sm font-semibold">Meetings</span>
+    </a>
+    <a routerLink="/chat"
+       class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+      <span class="material-symbols-outlined">chat</span>
+      <span class="text-sm font-semibold">Chat</span>
+    </a>
+    <a href="#" class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+      <span class="material-symbols-outlined">settings</span>
+      <span class="text-sm font-semibold">Settings</span>
+    </a>
+  </nav>
+
+  <div class="mt-auto px-4 pb-6">
+    <button routerLink="/" class="w-full flex items-center gap-3 pl-5 py-3 text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors rounded-lg">
+      <span class="material-symbols-outlined">logout</span>
+      <span class="text-sm font-semibold">Logout</span>
+    </button>
+  </div>
+</aside>
+
+<header class="h-16 fixed top-0 right-0 left-64 bg-[#450C21] border-b border-[#FBF2DA]/10 flex items-center justify-between px-6 z-40">
+  <div class="flex items-center bg-[#A33E43] rounded-full px-4 py-2 w-96 border border-[#FBF2DA]/10">
+    <span class="material-symbols-outlined text-[#FBF2DA]/60">search</span>
+    <input class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2 text-[#FBF2DA] placeholder:text-[#FBF2DA]/50" placeholder="Search tasks or events..." type="text" />
+  </div>
+  <div class="flex items-center gap-4">
+    <div class="flex items-center gap-3 pl-4 border-l border-[#FBF2DA]/15">
+      <div class="text-right">
+        <p class="text-sm font-semibold leading-none text-[#FBF2DA]">Raina J.</p>
+        <p class="text-[10px] text-[#D9FFD2] uppercase tracking-wider mt-1">Admin Access</p>
+      </div>
+      <div class="w-10 h-10 rounded-full bg-[#75C3D1] flex items-center justify-center text-[#450C21] font-bold">R</div>
+    </div>
+  </div>
+</header>
+
+<main class="ml-64 pt-16 min-h-screen bg-[#450C21]">
+  <div class="p-8 max-w-7xl mx-auto space-y-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <h1 class="text-3xl font-bold text-[#FBF2DA]">Meetings</h1>
+      <button
+        type="button"
+        (click)="openCreateModal()"
+        class="bg-[#D9FFD2] text-[#1c2e1a] px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow hover:brightness-95 active:scale-95 transition-all"
+      >
+        <span class="material-symbols-outlined">add</span>
+        Create a New Meeting
+      </button>
+    </div>
+
+    <!-- Search -->
+    <div class="relative max-w-md">
+      <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#450C21]/40">search</span>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        placeholder="Search by title..."
+        class="w-full pl-11 pr-4 py-3 bg-[#FBF2DA] text-[#450C21] placeholder-[#450C21]/40 border-2 border-[#FBF2DA] focus:border-[#75C3D1] rounded-xl transition-all outline-none text-sm"
+      />
+    </div>
+
+    <!-- Table -->
+    <div class="bg-[#FBF2DA] rounded-xl overflow-hidden">
+      <table class="w-full text-left">
+        <thead>
+          <tr class="bg-[#A33E43] text-[#FBF2DA]">
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Title</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Date &amp; Time</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Attendees</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Action Items</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (meeting of filteredMeetings; track meeting.title) {
+            <tr class="border-b border-[#450C21]/10 hover:bg-white/60 transition-colors">
+              <td class="px-6 py-4 text-sm font-semibold text-[#450C21]">{{ meeting.title }}</td>
+              <td class="px-6 py-4 text-sm text-[#450C21]/70">{{ meeting.dateTime }}</td>
+              <td class="px-6 py-4">
+                <span class="bg-[#75C3D1] text-[#450C21] px-2 py-1 rounded-full text-xs font-bold">{{ meeting.attendees }}</span>
+              </td>
+              <td class="px-6 py-4">
+                <span class="bg-[#8CA888] text-white px-2 py-1 rounded-full text-xs font-bold">{{ meeting.actionItems }}</span>
+              </td>
+              <td class="px-6 py-4">
+                <button routerLink="/meeting-details" class="flex items-center gap-1 text-[#A33E43] hover:underline text-sm font-semibold">
+                  <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+                  AI View Details
+                </button>
+              </td>
+            </tr>
+          }
+          @if (filteredMeetings.length === 0) {
+            <tr>
+              <td colspan="5" class="px-6 py-10 text-center text-sm text-[#450C21]/50">No meetings match your search.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+@if (showCreateModal) {
+  <div class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-[#FBF2DA] rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
+      <h2 class="text-xl font-bold text-[#450C21] mb-5">Create Meeting</h2>
+
+      <div class="space-y-4">
+        <div>
+          <label class="text-sm font-semibold text-[#450C21] block mb-1">Name</label>
+          <input
+            type="text"
+            [(ngModel)]="newMeetingName"
+            name="meetingName"
+            placeholder="Meeting name"
+            class="w-full px-4 py-2.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-sm text-[#450C21]"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-sm font-semibold text-[#450C21] block mb-1">When</label>
+            <input
+              type="date"
+              [(ngModel)]="newMeetingDate"
+              name="meetingDate"
+              class="w-full px-4 py-2.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-sm text-[#450C21]"
+            />
+          </div>
+          <div>
+            <label class="text-sm font-semibold text-[#450C21] block mb-1">Time</label>
+            <input
+              type="time"
+              [(ngModel)]="newMeetingTime"
+              name="meetingTime"
+              class="w-full px-4 py-2.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-sm text-[#450C21]"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="text-sm font-semibold text-[#450C21] block mb-1">People to invite</label>
+          <input
+            type="text"
+            [(ngModel)]="peopleSearch"
+            name="peopleSearch"
+            placeholder="Search a list of people..."
+            class="w-full px-4 py-2.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-sm text-[#450C21]"
+          />
+          @if (peopleSuggestions.length > 0) {
+            <div class="mt-1 bg-white rounded-lg border border-[#450C21]/10 overflow-hidden">
+              @for (person of peopleSuggestions; track person) {
+                <button
+                  type="button"
+                  (click)="addPerson(person)"
+                  class="w-full text-left px-4 py-2 text-sm text-[#450C21] hover:bg-[#75C3D1]/20 transition-colors"
+                >{{ person }}</button>
+              }
+            </div>
+          }
+
+          @if (invitedPeople.length > 0) {
+            <div class="flex flex-wrap gap-2 mt-3">
+              @for (person of invitedPeople; track person) {
+                <span class="flex items-center gap-1 bg-[#A33E43] text-[#FBF2DA] px-3 py-1 rounded-full text-xs font-semibold">
+                  {{ person }}
+                  <button type="button" (click)="removePerson(person)" class="hover:text-[#D9FFD2]">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                  </button>
+                </span>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="space-y-2 pt-2">
+          <label class="flex items-center gap-2 text-sm text-[#450C21] cursor-pointer">
+            <input type="checkbox" [(ngModel)]="notifyPeople" name="notifyPeople" class="w-4 h-4 rounded accent-[#A33E43]" />
+            Notify people
+          </label>
+          <label class="flex items-center gap-2 text-sm text-[#450C21] cursor-pointer">
+            <input type="checkbox" [(ngModel)]="addToCalendar" name="addToCalendar" class="w-4 h-4 rounded accent-[#A33E43]" />
+            Add to my calendar
+          </label>
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <button
+          type="button"
+          (click)="closeCreateModal()"
+          class="flex-1 py-3 rounded-xl border-2 border-[#450C21]/20 text-[#450C21] font-semibold text-sm hover:bg-[#450C21]/5 transition-all"
+        >Cancel</button>
+        <button
+          type="button"
+          (click)="createMeeting()"
+          class="flex-1 py-3 rounded-xl bg-[#A33E43] text-[#FBF2DA] font-semibold text-sm hover:brightness-110 active:scale-95 transition-all"
+        >Create Meeting</button>
+      </div>
+    </div>
+  </div>
+}
