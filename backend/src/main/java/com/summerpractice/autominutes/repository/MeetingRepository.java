@@ -10,4 +10,6 @@ public interface MeetingRepository extends JpaRepository<Meeting, UUID> {
     List<Meeting> findByTitleContainingIgnoreCaseOrderByMeetingDatetimeDesc(String title);
 
     List<Meeting> findAllByOrderByMeetingDatetimeDesc();
+
+    List<Meeting> findByOwnerIdOrderByMeetingDatetimeDesc(UUID ownerId);
 }

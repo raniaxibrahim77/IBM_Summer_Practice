@@ -5,6 +5,8 @@ import com.summerpractice.autominutes.dto.MeetingResponse;
 import com.summerpractice.autominutes.model.Meeting;
 import com.summerpractice.autominutes.repository.MeetingRepository;
 import com.summerpractice.autominutes.dto.MeetingUpdateRequest;
+import com.summerpractice.autominutes.model.AppUser;
+import com.summerpractice.autominutes.repository.AppUserRepository;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -14,9 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class MeetingService {
 
     private final MeetingRepository meetingRepository;
+    private final AppUserRepository appUserRepository;
 
-    public MeetingService(MeetingRepository meetingRepository) {
+    public MeetingService(MeetingRepository meetingRepository, AppUserRepository appUserRepository) {
         this.meetingRepository = meetingRepository;
+        this.appUserRepository = appUserRepository;
     }
 
     @Transactional
@@ -26,6 +30,12 @@ public class MeetingService {
                 request.getDescription(),
                 request.getMeetingDatetime()
         );
+
+        if (request.getOwnerId() != null) {
+            AppUser owner = appUserRepository.findById(request.getOwnerId())
+                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + request.getOwnerId()));
+            meeting.setOwner(owner);
+        }
 
         return MeetingResponse.from(meetingRepository.save(meeting));
     }

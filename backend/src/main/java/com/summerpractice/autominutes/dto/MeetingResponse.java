@@ -13,12 +13,14 @@ public class MeetingResponse {
     private String processingStatus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private UUID ownerId;
 
     public MeetingResponse() {
     }
 
     public MeetingResponse(UUID id, String title, String description, LocalDateTime meetingDatetime,
-                           String processingStatus, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                           String processingStatus, LocalDateTime createdAt, LocalDateTime updatedAt,
+                           UUID ownerId) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -26,6 +28,7 @@ public class MeetingResponse {
         this.processingStatus = processingStatus;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.ownerId = ownerId;
     }
 
     public static MeetingResponse from(Meeting meeting) {
@@ -36,7 +39,8 @@ public class MeetingResponse {
                 meeting.getMeetingDatetime(),
                 meeting.getProcessingStatus(),
                 meeting.getCreatedAt(),
-                meeting.getUpdatedAt()
+                meeting.getUpdatedAt(),
+                meeting.getOwner() != null ? meeting.getOwner().getId() : null
         );
     }
 
@@ -95,4 +99,8 @@ public class MeetingResponse {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public UUID getOwnerId() { return ownerId; }
+
+    public void setOwnerId(UUID ownerId) { this.ownerId = ownerId; }
 }

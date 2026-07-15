@@ -27,6 +27,10 @@ public class Meeting {
 
     private LocalDateTime updatedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    private AppUser owner;
+
     public Meeting() {
     }
 
@@ -94,4 +98,8 @@ public class Meeting {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public AppUser getOwner() { return owner; }
+
+    public void setOwner(AppUser owner) { this.owner = owner; }
 }
