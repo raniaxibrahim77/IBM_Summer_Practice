@@ -1,5 +1,6 @@
 package com.summerpractice.autominutes.dto;
 
+import com.summerpractice.autominutes.model.Attendee;
 import com.summerpractice.autominutes.model.MeetingAttendee;
 import java.util.UUID;
 
@@ -18,6 +19,15 @@ public class AttendeeResponse {
         this.name = name;
         this.email = email;
         this.roleInMeeting = roleInMeeting;
+    }
+
+    public static AttendeeResponse from(Attendee attendee) {
+        return new AttendeeResponse(
+                attendee.getId(),
+                attendee.getName(),
+                attendee.getEmail(),
+                null
+        );
     }
 
     public static AttendeeResponse from(MeetingAttendee meetingAttendee) {

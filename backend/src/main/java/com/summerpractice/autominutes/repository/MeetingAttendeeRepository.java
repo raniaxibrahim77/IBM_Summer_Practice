@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MeetingAttendeeRepository extends JpaRepository<MeetingAttendee, MeetingAttendeeId> {
 
-    List<MeetingAttendee> findByMeeting_Id(UUID meetingId);
+    List<MeetingAttendee> findByMeeting_IdOrderByAttendee_NameAsc(UUID meetingId);
 }

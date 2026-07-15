@@ -11,7 +11,6 @@ public class AttendeeCreateRequest {
     @Email(message = "Email must be valid")
     private String email;
 
-    private String roleInMeeting;
 
     public AttendeeCreateRequest() {
     }
@@ -30,13 +29,5 @@ public class AttendeeCreateRequest {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getRoleInMeeting() {
-        return roleInMeeting;
-    }
-
-    public void setRoleInMeeting(String roleInMeeting) {
-        this.roleInMeeting = roleInMeeting;
     }
 }

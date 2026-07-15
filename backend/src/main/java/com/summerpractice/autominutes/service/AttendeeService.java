@@ -3,12 +3,7 @@ package com.summerpractice.autominutes.service;
 import com.summerpractice.autominutes.dto.AttendeeCreateRequest;
 import com.summerpractice.autominutes.dto.AttendeeResponse;
 import com.summerpractice.autominutes.model.Attendee;
-import com.summerpractice.autominutes.model.Meeting;
-import com.summerpractice.autominutes.model.MeetingAttendee;
-import com.summerpractice.autominutes.model.MeetingAttendeeId;
 import com.summerpractice.autominutes.repository.AttendeeRepository;
-import com.summerpractice.autominutes.repository.MeetingAttendeeRepository;
-import com.summerpractice.autominutes.repository.MeetingRepository;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -17,44 +12,68 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AttendeeService {
 
-    private final MeetingRepository meetingRepository;
     private final AttendeeRepository attendeeRepository;
-    private final MeetingAttendeeRepository meetingAttendeeRepository;
 
-    public AttendeeService(MeetingRepository meetingRepository,
-                           AttendeeRepository attendeeRepository,
-                           MeetingAttendeeRepository meetingAttendeeRepository) {
-        this.meetingRepository = meetingRepository;
+    public AttendeeService(AttendeeRepository attendeeRepository) {
         this.attendeeRepository = attendeeRepository;
-        this.meetingAttendeeRepository = meetingAttendeeRepository;
     }
 
     @Transactional
-    public AttendeeResponse addAttendee(UUID meetingId, AttendeeCreateRequest request) {
-        Meeting meeting = meetingRepository.findById(meetingId)
-                .orElseThrow(() -> new IllegalArgumentException("Meeting not found: " + meetingId));
+    public Attendee createAttendee(AttendeeCreateRequest request) {
+        Attendee attendee = new Attendee(
+                request.getName().trim(),
+                normalizeBlank(request.getEmail())
+        );
 
-        Attendee attendee = new Attendee(request.getName(), request.getEmail());
-        Attendee savedAttendee = attendeeRepository.save(attendee);
+        return attendeeRepository.save(attendee);
+    }
 
-        MeetingAttendee meetingAttendee = new MeetingAttendee();
-        meetingAttendee.setId(new MeetingAttendeeId(meeting.getId(), savedAttendee.getId()));
-        meetingAttendee.setMeeting(meeting);
-        meetingAttendee.setAttendee(savedAttendee);
-        meetingAttendee.setRoleInMeeting(request.getRoleInMeeting());
-
-        return AttendeeResponse.from(meetingAttendeeRepository.save(meetingAttendee));
+    @Transactional
+    public AttendeeResponse createAttendeeResponse(AttendeeCreateRequest request) {
+        return AttendeeResponse.from(createAttendee(request));
     }
 
     @Transactional(readOnly = true)
-    public List<AttendeeResponse> getAttendees(UUID meetingId) {
-        if (!meetingRepository.existsById(meetingId)) {
-            throw new IllegalArgumentException("Meeting not found: " + meetingId);
-        }
-
-        return meetingAttendeeRepository.findByMeeting_Id(meetingId)
+    public List<AttendeeResponse> getAttendees() {
+        return attendeeRepository.findAll()
                 .stream()
                 .map(AttendeeResponse::from)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public AttendeeResponse getAttendee(UUID id) {
+        Attendee attendee = attendeeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Attendee not found: " + id));
+
+        return AttendeeResponse.from(attendee);
+    }
+
+    @Transactional
+    public AttendeeResponse updateAttendee(UUID id, AttendeeCreateRequest request) {
+        Attendee attendee = attendeeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Attendee not found: " + id));
+
+        attendee.setName(request.getName().trim());
+        attendee.setEmail(normalizeBlank(request.getEmail()));
+
+        return AttendeeResponse.from(attendeeRepository.save(attendee));
+    }
+
+    @Transactional
+    public void deleteAttendee(UUID id) {
+        if (!attendeeRepository.existsById(id)) {
+            throw new RuntimeException("Attendee not found: " + id);
+        }
+
+        attendeeRepository.deleteById(id);
+    }
+
+    private String normalizeBlank(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        return value.trim();
     }
 }
