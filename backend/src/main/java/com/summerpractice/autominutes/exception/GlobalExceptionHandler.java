@@ -20,13 +20,43 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .badRequest()
-                .body(new ApiErrorResponse(HttpStatus.BAD_REQUEST.value(), "Validation failed", messages));
+                .body(new ApiErrorResponse(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "Validation failed",
+                        messages
+                ));
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ApiErrorResponse(
+                        HttpStatus.NOT_FOUND.value(),
+                        "Not found",
+                        List.of(ex.getMessage())
+                ));
+    }
+
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleAlreadyExists(ResourceAlreadyExistsException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ApiErrorResponse(
+                        HttpStatus.CONFLICT.value(),
+                        "Resource already exists",
+                        List.of(ex.getMessage())
+                ));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiErrorResponse> handleNotFound(IllegalArgumentException ex) {
+    public ResponseEntity<ApiErrorResponse> handleBadRequest(IllegalArgumentException ex) {
         return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(new ApiErrorResponse(HttpStatus.NOT_FOUND.value(), "Not found", List.of(ex.getMessage())));
+                .badRequest()
+                .body(new ApiErrorResponse(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "Bad request",
+                        List.of(ex.getMessage())
+                ));
     }
 }
