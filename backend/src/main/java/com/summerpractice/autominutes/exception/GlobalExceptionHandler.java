@@ -59,4 +59,15 @@ public class GlobalExceptionHandler {
                         List.of(ex.getMessage())
                 ));
     }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiErrorResponse> handleServiceUnavailable(IllegalStateException ex) {
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new ApiErrorResponse(
+                        HttpStatus.SERVICE_UNAVAILABLE.value(),
+                        "Service unavailable",
+                        List.of(ex.getMessage())
+                ));
+    }
 }
