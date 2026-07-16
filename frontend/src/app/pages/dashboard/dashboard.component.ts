@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 interface Task {
@@ -38,7 +39,7 @@ const MONTH_NAMES = [
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule,  RouterLink],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
@@ -131,5 +132,99 @@ export class DashboardComponent {
   toggleTaskDone(task: Task): void {
     task.done = !task.done;
     task.meta = task.done ? 'Completed' : task.meta.replace('Completed', 'Due today');
+  }
+
+  // --- Create Meeting modal state ---
+  showCreateModal = false;
+
+  newMeetingName = '';
+  newMeetingDate = '';
+  newMeetingTime = '';
+  peopleSearch = '';
+  processWithAI = true;
+
+  transcriptFile: File | null = null;
+  transcriptError: string | null = null;
+
+  readonly allPeople = ['Alex', 'Alex Baker', 'Alex Caleb', 'Ana Barbona', 'Maria Maria', 'Roana'];
+  invitedPeople: string[] = [];
+
+  get peopleSuggestions(): string[] {
+    const term = this.peopleSearch.trim().toLowerCase();
+    if (!term) {
+      return [];
+    }
+    return this.allPeople.filter(
+      (p) => p.toLowerCase().includes(term) && !this.invitedPeople.includes(p)
+    );
+  }
+
+  openCreateModal(): void {
+    this.showCreateModal = true;
+  }
+
+  closeCreateModal(): void {
+    this.showCreateModal = false;
+    this.newMeetingName = '';
+    this.newMeetingDate = '';
+    this.newMeetingTime = '';
+    this.peopleSearch = '';
+    this.invitedPeople = [];
+    this.processWithAI = true;
+    this.transcriptFile = null;
+    this.transcriptError = null;
+  }
+
+  addPerson(person: string): void {
+    if (!this.invitedPeople.includes(person)) {
+      this.invitedPeople.push(person);
+    }
+    this.peopleSearch = '';
+  }
+
+  removePerson(person: string): void {
+    this.invitedPeople = this.invitedPeople.filter((p) => p !== person);
+  }
+
+  onTranscriptFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+
+    if (!file) {
+      this.transcriptFile = null;
+      return;
+    }
+
+    const isValidType = file.name.toLowerCase().endsWith('.txt') || file.name.toLowerCase().endsWith('.docx');
+    if (!isValidType) {
+      this.transcriptError = 'Please upload a .txt or .docx file.';
+      this.transcriptFile = null;
+      input.value = '';
+      return;
+    }
+
+    this.transcriptError = null;
+    this.transcriptFile = file;
+  }
+
+  removeTranscriptFile(): void {
+    this.transcriptFile = null;
+  }
+
+  createMeeting(): void {
+    if (!this.newMeetingName.trim()) {
+      return;
+    }
+    if (!this.transcriptFile) {
+      this.transcriptError = 'A transcript file is required to create a meeting.';
+      return;
+    }
+
+    // TODO: multipart POST to your backend — meeting metadata + transcript file.
+    // Backend kicks off async processing (per your AIResult/status-polling design);
+    // this mock just marks it "Processing" until you wire the real endpoint + polling.
+    console.log('Creating meeting with transcript:', this.transcriptFile.name);
+
+    this.closeCreateModal();
   }
 }

@@ -62,15 +62,17 @@
     <div class="grid grid-cols-12 gap-6">
       <!-- Left column -->
       <div class="col-span-12 lg:col-span-8 space-y-6">
-        <!-- Create a Meeting -->
+        <!-- Log a Meeting -->
         <div class="bg-[#D9FFD2] rounded-xl p-6 text-[#1c2e1a] flex items-center justify-between gap-4">
           <div>
-            <h2 class="text-xl font-bold">Create a Meeting</h2>
-            <p class="text-sm text-[#1c2e1a]/80 mt-1">Schedule a new session and invite your team.</p>
+            <h2 class="text-xl font-bold">Log a Meeting</h2>
+            <p class="text-sm text-[#1c2e1a]/80 mt-1">Upload a transcript and let AI pull out the summary and action items.</p>
           </div>
-          <button class="bg-[#450C21] text-[#FBF2DA] px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow hover:brightness-110 active:scale-95 transition-all shrink-0">
-            <span class="material-symbols-outlined">add</span>
-            New Meeting
+          <button 
+            (click)="openCreateModal()"
+            class="bg-[#450C21] text-[#FBF2DA] px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow hover:brightness-110 active:scale-95 transition-all shrink-0">
+            <span class="material-symbols-outlined">upload_file</span>
+            Log Meeting
           </button>
         </div>
 
@@ -180,3 +182,124 @@
     </div>
   </div>
 </main>
+
+@if (showCreateModal) {
+  <div class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-[#FBF2DA] rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
+      <h2 class="text-xl font-bold text-[#450C21] mb-5">Create Meeting</h2>
+
+      <div class="space-y-4">
+        <div>
+          <label class="text-sm font-semibold text-[#450C21] block mb-1">Name</label>
+          <input
+            type="text"
+            [(ngModel)]="newMeetingName"
+            name="meetingName"
+            placeholder="Meeting name"
+            class="w-full px-4 py-2.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-sm text-[#450C21]"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-sm font-semibold text-[#450C21] block mb-1">When</label>
+            <input
+              type="date"
+              [(ngModel)]="newMeetingDate"
+              name="meetingDate"
+              class="w-full px-4 py-2.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-sm text-[#450C21]"
+            />
+          </div>
+          <div>
+            <label class="text-sm font-semibold text-[#450C21] block mb-1">Time</label>
+            <input
+              type="time"
+              [(ngModel)]="newMeetingTime"
+              name="meetingTime"
+              class="w-full px-4 py-2.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-sm text-[#450C21]"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="text-sm font-semibold text-[#450C21] block mb-1">Attendees</label>
+          <input
+            type="text"
+            [(ngModel)]="peopleSearch"
+            name="peopleSearch"
+            placeholder="Search a list of people..."
+            class="w-full px-4 py-2.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-sm text-[#450C21]"
+          />
+          @if (peopleSuggestions.length > 0) {
+            <div class="mt-1 bg-white rounded-lg border border-[#450C21]/10 overflow-hidden">
+              @for (person of peopleSuggestions; track person) {
+                <button
+                  type="button"
+                  (click)="addPerson(person)"
+                  class="w-full text-left px-4 py-2 text-sm text-[#450C21] hover:bg-[#75C3D1]/20 transition-colors"
+                >{{ person }}</button>
+              }
+            </div>
+          }
+
+          @if (invitedPeople.length > 0) {
+            <div class="flex flex-wrap gap-2 mt-3">
+              @for (person of invitedPeople; track person) {
+                <span class="flex items-center gap-1 bg-[#A33E43] text-[#FBF2DA] px-3 py-1 rounded-full text-xs font-semibold">
+                  {{ person }}
+                  <button type="button" (click)="removePerson(person)" class="hover:text-[#D9FFD2]">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                  </button>
+                </span>
+              }
+            </div>
+          }
+        </div>
+
+        <div>
+          <label class="text-sm font-semibold text-[#450C21] block mb-1">Transcript <span class="text-[#A33E43]">*</span></label>
+
+          @if (!transcriptFile) {
+            <label class="flex flex-col items-center justify-center gap-1 w-full px-4 py-6 bg-white border-2 border-dashed border-[#450C21]/20 hover:border-[#75C3D1] rounded-lg cursor-pointer transition-colors">
+              <span class="material-symbols-outlined text-[#450C21]/40">upload_file</span>
+              <span class="text-xs text-[#450C21]/60">Click to upload .txt or .docx</span>
+              <input type="file" accept=".txt,.docx" class="hidden" (change)="onTranscriptFileSelected($event)" />
+            </label>
+          } @else {
+            <div class="flex items-center justify-between px-4 py-2.5 bg-white border-2 border-[#450C21]/10 rounded-lg">
+              <span class="flex items-center gap-2 text-sm text-[#450C21] truncate">
+                <span class="material-symbols-outlined text-base text-[#8CA888]">description</span>
+                {{ transcriptFile.name }}
+              </span>
+              <button type="button" (click)="removeTranscriptFile()" class="text-[#450C21]/40 hover:text-[#A33E43]">
+                <span class="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+          }
+
+          @if (transcriptError) {
+            <p class="text-xs text-[#A33E43] font-semibold mt-1">{{ transcriptError }}</p>
+          }
+        </div>
+
+        <label class="flex items-center gap-2 text-sm text-[#450C21] cursor-pointer pt-2">
+          <input type="checkbox" [(ngModel)]="processWithAI" name="processWithAI" class="w-4 h-4 rounded accent-[#A33E43]" />
+          Process with AI now
+        </label>
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <button
+          type="button"
+          (click)="closeCreateModal()"
+          class="flex-1 py-3 rounded-xl border-2 border-[#450C21]/20 text-[#450C21] font-semibold text-sm hover:bg-[#450C21]/5 transition-all"
+        >Cancel</button>
+        <button
+          type="button"
+          (click)="createMeeting()"
+          class="flex-1 py-3 rounded-xl bg-[#A33E43] text-[#FBF2DA] font-semibold text-sm hover:brightness-110 active:scale-95 transition-all"
+        >Create Meeting</button>
+      </div>
+    </div>
+  </div>
+}
