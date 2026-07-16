@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 interface MeetingRow {
+  id: number
   title: string;
   dateTime: string;
   attendees: number;
@@ -21,10 +22,10 @@ export class MeetingsComponent {
   searchTerm = '';
 
   readonly meetings: MeetingRow[] = [
-    { title: 'Product Launch Meeting', dateTime: 'Jul 12, 2026 · 10:00 AM', attendees: 3, actionItems: 4 },
-    { title: 'Quarterly Performance Sync', dateTime: 'Jul 2, 2026 · 10:00 AM', attendees: 6, actionItems: 2 },
-    { title: 'Design Workshop', dateTime: 'Jun 28, 2026 · 2:00 PM', attendees: 4, actionItems: 1 },
-    { title: 'Client Onboarding Call', dateTime: 'Jun 25, 2026 · 11:00 AM', attendees: 3, actionItems: 3 },
+    {id: 1, title: 'Product Launch Meeting', dateTime: 'Jul 12, 2026 · 10:00 AM', attendees: 3, actionItems: 4 },
+    {id: 2, title: 'Quarterly Performance Sync', dateTime: 'Jul 2, 2026 · 10:00 AM', attendees: 6, actionItems: 2 },
+    {id: 3, title: 'Design Workshop', dateTime: 'Jun 28, 2026 · 2:00 PM', attendees: 4, actionItems: 1 },
+    {id: 4, title: 'Client Onboarding Call', dateTime: 'Jun 25, 2026 · 11:00 AM', attendees: 3, actionItems: 3 },
   ];
 
   get filteredMeetings(): MeetingRow[] {
@@ -89,7 +90,9 @@ export class MeetingsComponent {
       return;
     }
 
+    const nextId = Math.max(0, ...this.meetings.map((m) => m.id)) + 1;
     this.meetings.unshift({
+      id: nextId,
       title: this.newMeetingName,
       dateTime: `${this.newMeetingDate || 'TBD'} · ${this.newMeetingTime || 'TBD'}`,
       attendees: this.invitedPeople.length,

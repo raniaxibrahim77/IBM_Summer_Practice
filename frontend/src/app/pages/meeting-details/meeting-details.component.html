@@ -1,0 +1,244 @@
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#A33E43] shadow-sm flex flex-col py-2 z-50">
+  <div class="px-6 py-4 mb-8 flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-[#450C21] flex items-center justify-center text-[#FBF2DA]">
+      <span class="material-symbols-outlined">dashboard</span>
+    </div>
+  </div>
+
+  <nav class="flex-1 space-y-1">
+    <a routerLink="/dashboard"
+       class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+      <span class="material-symbols-outlined">home</span>
+      <span class="text-sm font-semibold">Home</span>
+    </a>
+    <a routerLink="/calendar"
+       class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+      <span class="material-symbols-outlined">calendar_today</span>
+      <span class="text-sm font-semibold">Calendar</span>
+    </a>
+    <a routerLink="/meetings"
+       class="flex items-center gap-3 pl-4 py-3 mx-2 rounded-lg text-[#450C21] bg-[#FBF2DA] font-bold transition-all">
+      <span class="material-symbols-outlined">groups</span>
+      <span class="text-sm font-semibold">Meetings</span>
+    </a>
+    <a routerLink="/chat"
+       class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+      <span class="material-symbols-outlined">chat</span>
+      <span class="text-sm font-semibold">Chat</span>
+    </a>
+    <a href="#" class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+      <span class="material-symbols-outlined">settings</span>
+      <span class="text-sm font-semibold">Settings</span>
+    </a>
+  </nav>
+
+  <div class="mt-auto px-4 pb-6">
+    <button routerLink="/" class="w-full flex items-center gap-3 pl-5 py-3 text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors rounded-lg">
+      <span class="material-symbols-outlined">logout</span>
+      <span class="text-sm font-semibold">Logout</span>
+    </button>
+  </div>
+</aside>
+
+<header class="h-16 fixed top-0 right-0 left-64 bg-[#450C21] border-b border-[#FBF2DA]/10 flex items-center justify-between px-6 z-40">
+  <button routerLink="/meetings" class="flex items-center gap-2 text-[#FBF2DA]/85 hover:text-[#FBF2DA] text-sm font-semibold transition-colors">
+    <span class="material-symbols-outlined text-lg">arrow_back</span>
+    Back to Meetings
+  </button>
+  <div class="flex items-center gap-4">
+    <div class="flex items-center gap-3 pl-4 border-l border-[#FBF2DA]/15">
+      <div class="text-right">
+        <p class="text-sm font-semibold leading-none text-[#FBF2DA]">Raina J.</p>
+        <p class="text-[10px] text-[#D9FFD2] uppercase tracking-wider mt-1">Admin Access</p>
+      </div>
+      <div class="w-10 h-10 rounded-full bg-[#75C3D1] flex items-center justify-center text-[#450C21] font-bold">R</div>
+    </div>
+  </div>
+</header>
+
+<main class="ml-64 pt-16 min-h-screen bg-[#450C21]">
+  <div class="p-8 max-w-7xl mx-auto space-y-6">
+
+    <!-- Header card -->
+    <div class="bg-[#FBF2DA] rounded-xl p-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-3 mb-2">
+          <span class="px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wide" [ngClass]="statusClasses">
+            {{ meeting.status }}
+          </span>
+          <span class="text-sm text-[#450C21]/60">{{ meeting.date }}</span>
+        </div>
+        <h1 class="text-3xl font-bold text-[#450C21]">{{ meeting.title }}</h1>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button class="w-10 h-10 rounded-lg border-2 border-[#450C21]/15 text-[#450C21] flex items-center justify-center hover:bg-[#450C21]/5 transition-colors" title="Edit meeting">
+          <span class="material-symbols-outlined text-lg">edit</span>
+        </button>
+        <button class="w-10 h-10 rounded-lg border-2 border-[#A33E43]/30 text-[#A33E43] flex items-center justify-center hover:bg-[#A33E43]/10 transition-colors" title="Delete meeting">
+          <span class="material-symbols-outlined text-lg">delete</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Two column layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+      <!-- LEFT: transcript + summary -->
+      <div class="lg:col-span-2 space-y-6">
+
+        <!-- Transcript -->
+        <div class="bg-[#FBF2DA] rounded-xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-[#A33E43]">Meeting Transcript</h2>
+            <div class="relative w-56">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#450C21]/40 text-base">search</span>
+              <input
+                type="text"
+                [(ngModel)]="transcriptSearch"
+                placeholder="Search transcript..."
+                class="w-full pl-9 pr-3 py-1.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-xs text-[#450C21]"
+              />
+            </div>
+          </div>
+
+          <div class="space-y-4 max-h-80 overflow-y-auto pr-2">
+            @for (line of filteredTranscript; track $index) {
+              <div>
+                <div class="flex items-baseline gap-2">
+                  <span class="text-xs font-mono text-[#450C21]/40">{{ line.time }}</span>
+                  <span class="text-sm font-bold text-[#450C21]">{{ line.speaker }}</span>
+                </div>
+                <p class="text-sm text-[#450C21]/80 mt-0.5">{{ line.text }}</p>
+              </div>
+            }
+            @if (filteredTranscript.length === 0) {
+              <p class="text-sm text-[#450C21]/50 text-center py-6">No transcript lines match your search.</p>
+            }
+          </div>
+        </div>
+
+        <!-- AI Summary -->
+        <div class="bg-[#FBF2DA] rounded-xl p-6">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-[#A33E43]">AI Summary</h2>
+            <button (click)="regenerateSummary()" class="flex items-center gap-1 text-xs font-semibold text-[#A33E43] hover:underline">
+              <span class="material-symbols-outlined text-sm">refresh</span>
+              Regenerate
+            </button>
+          </div>
+          <p class="text-sm text-[#450C21]/80 leading-relaxed">{{ meeting.aiSummary }}</p>
+
+          <h3 class="text-xs font-bold uppercase tracking-wider text-[#A33E43] mt-5 mb-3">
+            Action Items
+            <span class="normal-case font-normal text-[#450C21]/50">({{ completedActionCount }}/{{ meeting.actionItems.length }} done)</span>
+          </h3>
+          <div class="space-y-2">
+            @for (item of meeting.actionItems; track item.id) {
+              <label class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/60 cursor-pointer">
+                <input
+                  type="checkbox"
+                  [checked]="item.done"
+                  (change)="toggleActionItem(item)"
+                  class="w-4 h-4 rounded accent-[#8CA888]"
+                />
+                <span class="text-sm text-[#450C21]" [class.line-through]="item.done" [class.opacity-50]="item.done">
+                  {{ item.text }}
+                </span>
+              </label>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: attendees + assistant -->
+      <div class="space-y-6">
+
+        <!-- Attendees -->
+        <div class="bg-[#FBF2DA] rounded-xl p-6">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-[#A33E43] mb-4">Attendees</h2>
+          <div class="space-y-3">
+            @for (attendee of meeting.attendees; track attendee.email) {
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+                  [style.background-color]="attendee.color"
+                >{{ attendee.initials }}</div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-semibold text-[#450C21] truncate">{{ attendee.name }}</p>
+                  <p class="text-xs text-[#450C21]/50 truncate">{{ attendee.email }}</p>
+                </div>
+                <button (click)="removeAttendee(attendee)" class="text-[#450C21]/30 hover:text-[#A33E43] transition-colors">
+                  <span class="material-symbols-outlined text-lg">close</span>
+                </button>
+              </div>
+            }
+            @if (meeting.attendees.length === 0) {
+              <p class="text-sm text-[#450C21]/50">No attendees added yet.</p>
+            }
+          </div>
+
+          <div class="flex gap-2 mt-4">
+            <input
+              type="email"
+              [(ngModel)]="newAttendeeEmail"
+              (keydown.enter)="addAttendee()"
+              placeholder="Add attendee email..."
+              class="flex-1 min-w-0 px-3 py-2 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-xs text-[#450C21]"
+            />
+            <button
+              (click)="addAttendee()"
+              class="w-9 h-9 shrink-0 rounded-lg bg-[#A33E43] text-[#FBF2DA] flex items-center justify-center hover:brightness-110 transition-all"
+            >
+              <span class="material-symbols-outlined text-lg">add</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Meeting Assistant -->
+        <div class="bg-[#FBF2DA] rounded-xl p-6 flex flex-col">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-[#A33E43] mb-4">Meeting Assistant</h2>
+
+          <div class="space-y-2 max-h-64 overflow-y-auto pr-1 mb-3">
+            @for (msg of chatMessages; track $index) {
+              <div
+                class="text-sm px-3 py-2 rounded-xl max-w-[90%]"
+                [ngClass]="msg.from === 'assistant'
+                  ? 'bg-[#75C3D1]/25 text-[#450C21] rounded-tl-none'
+                  : 'bg-[#A33E43] text-[#FBF2DA] rounded-tr-none ml-auto'"
+              >{{ msg.text }}</div>
+            }
+          </div>
+
+          <div class="flex flex-wrap gap-2 mb-3">
+            <button (click)="runQuickAction('summarize')" class="px-3 py-1.5 rounded-full bg-[#8CA888]/20 text-[#3d5a3a] text-xs font-semibold hover:bg-[#8CA888]/35 transition-colors">Summarize</button>
+            <button (click)="runQuickAction('risks')" class="px-3 py-1.5 rounded-full bg-[#8CA888]/20 text-[#3d5a3a] text-xs font-semibold hover:bg-[#8CA888]/35 transition-colors">Key risks</button>
+            <button (click)="runQuickAction('followup')" class="px-3 py-1.5 rounded-full bg-[#8CA888]/20 text-[#3d5a3a] text-xs font-semibold hover:bg-[#8CA888]/35 transition-colors">Follow-up notes</button>
+          </div>
+
+          <div class="flex gap-2">
+            <input
+              type="text"
+              [(ngModel)]="chatInput"
+              (keydown.enter)="sendMessage()"
+              placeholder="Ask a question..."
+              class="flex-1 min-w-0 px-3 py-2 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-xs text-[#450C21]"
+            />
+            <button
+              (click)="sendMessage()"
+              class="w-9 h-9 shrink-0 rounded-lg bg-[#A33E43] text-[#FBF2DA] flex items-center justify-center hover:brightness-110 transition-all"
+            >
+              <span class="material-symbols-outlined text-lg">send</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-center pt-2">
+      <button routerLink="/meetings" class="flex items-center gap-2 bg-[#FBF2DA] text-[#450C21] px-6 py-3 rounded-xl font-bold hover:brightness-95 active:scale-95 transition-all">
+        <span class="material-symbols-outlined">arrow_back</span>
+        Back to Meetings
+      </button>
+    </div>
+  </div>
+</main>
