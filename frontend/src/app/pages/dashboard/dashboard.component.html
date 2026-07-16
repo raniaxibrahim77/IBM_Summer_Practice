@@ -62,17 +62,17 @@
     <div class="grid grid-cols-12 gap-6">
       <!-- Left column -->
       <div class="col-span-12 lg:col-span-8 space-y-6">
-        <!-- Log a Meeting -->
+        <!-- Create a Meeting -->
         <div class="bg-[#D9FFD2] rounded-xl p-6 text-[#1c2e1a] flex items-center justify-between gap-4">
           <div>
-            <h2 class="text-xl font-bold">Log a Meeting</h2>
-            <p class="text-sm text-[#1c2e1a]/80 mt-1">Upload a transcript and let AI pull out the summary and action items.</p>
+            <h2 class="text-xl font-bold">Add a Meeting</h2>
+            <p class="text-sm text-[#1c2e1a]/80 mt-1">Schedule a new session and invite your team.</p>
           </div>
           <button 
             (click)="openCreateModal()"
             class="bg-[#450C21] text-[#FBF2DA] px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow hover:brightness-110 active:scale-95 transition-all shrink-0">
-            <span class="material-symbols-outlined">upload_file</span>
-            Log Meeting
+            <span class="material-symbols-outlined">add</span>
+            New Meeting
           </button>
         </div>
 
@@ -222,7 +222,7 @@
         </div>
 
         <div>
-          <label class="text-sm font-semibold text-[#450C21] block mb-1">Attendees</label>
+          <label class="text-sm font-semibold text-[#450C21] block mb-1">People to invite</label>
           <input
             type="text"
             [(ngModel)]="peopleSearch"
@@ -256,36 +256,16 @@
           }
         </div>
 
-        <div>
-          <label class="text-sm font-semibold text-[#450C21] block mb-1">Transcript <span class="text-[#A33E43]">*</span></label>
-
-          @if (!transcriptFile) {
-            <label class="flex flex-col items-center justify-center gap-1 w-full px-4 py-6 bg-white border-2 border-dashed border-[#450C21]/20 hover:border-[#75C3D1] rounded-lg cursor-pointer transition-colors">
-              <span class="material-symbols-outlined text-[#450C21]/40">upload_file</span>
-              <span class="text-xs text-[#450C21]/60">Click to upload .txt or .docx</span>
-              <input type="file" accept=".txt,.docx" class="hidden" (change)="onTranscriptFileSelected($event)" />
-            </label>
-          } @else {
-            <div class="flex items-center justify-between px-4 py-2.5 bg-white border-2 border-[#450C21]/10 rounded-lg">
-              <span class="flex items-center gap-2 text-sm text-[#450C21] truncate">
-                <span class="material-symbols-outlined text-base text-[#8CA888]">description</span>
-                {{ transcriptFile.name }}
-              </span>
-              <button type="button" (click)="removeTranscriptFile()" class="text-[#450C21]/40 hover:text-[#A33E43]">
-                <span class="material-symbols-outlined text-lg">close</span>
-              </button>
-            </div>
-          }
-
-          @if (transcriptError) {
-            <p class="text-xs text-[#A33E43] font-semibold mt-1">{{ transcriptError }}</p>
-          }
+        <div class="space-y-2 pt-2">
+          <label class="flex items-center gap-2 text-sm text-[#450C21] cursor-pointer">
+            <input type="checkbox" [(ngModel)]="notifyPeople" name="notifyPeople" class="w-4 h-4 rounded accent-[#A33E43]" />
+            Notify people
+          </label>
+          <label class="flex items-center gap-2 text-sm text-[#450C21] cursor-pointer">
+            <input type="checkbox" [(ngModel)]="addToCalendar" name="addToCalendar" class="w-4 h-4 rounded accent-[#A33E43]" />
+            Add to my calendar
+          </label>
         </div>
-
-        <label class="flex items-center gap-2 text-sm text-[#450C21] cursor-pointer pt-2">
-          <input type="checkbox" [(ngModel)]="processWithAI" name="processWithAI" class="w-4 h-4 rounded accent-[#A33E43]" />
-          Process with AI now
-        </label>
       </div>
 
       <div class="flex gap-3 mt-6">

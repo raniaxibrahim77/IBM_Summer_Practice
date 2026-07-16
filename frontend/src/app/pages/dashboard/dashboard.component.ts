@@ -39,7 +39,7 @@ const MONTH_NAMES = [
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule,  RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
@@ -141,10 +141,8 @@ export class DashboardComponent {
   newMeetingDate = '';
   newMeetingTime = '';
   peopleSearch = '';
-  processWithAI = true;
-
-  transcriptFile: File | null = null;
-  transcriptError: string | null = null;
+  notifyPeople = true;
+  addToCalendar = true;
 
   readonly allPeople = ['Alex', 'Alex Baker', 'Alex Caleb', 'Ana Barbona', 'Maria Maria', 'Roana'];
   invitedPeople: string[] = [];
@@ -170,9 +168,8 @@ export class DashboardComponent {
     this.newMeetingTime = '';
     this.peopleSearch = '';
     this.invitedPeople = [];
-    this.processWithAI = true;
-    this.transcriptFile = null;
-    this.transcriptError = null;
+    this.notifyPeople = true;
+    this.addToCalendar = true;
   }
 
   addPerson(person: string): void {
@@ -186,45 +183,12 @@ export class DashboardComponent {
     this.invitedPeople = this.invitedPeople.filter((p) => p !== person);
   }
 
-  onTranscriptFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0] ?? null;
-
-    if (!file) {
-      this.transcriptFile = null;
-      return;
-    }
-
-    const isValidType = file.name.toLowerCase().endsWith('.txt') || file.name.toLowerCase().endsWith('.docx');
-    if (!isValidType) {
-      this.transcriptError = 'Please upload a .txt or .docx file.';
-      this.transcriptFile = null;
-      input.value = '';
-      return;
-    }
-
-    this.transcriptError = null;
-    this.transcriptFile = file;
-  }
-
-  removeTranscriptFile(): void {
-    this.transcriptFile = null;
-  }
-
   createMeeting(): void {
     if (!this.newMeetingName.trim()) {
       return;
     }
-    if (!this.transcriptFile) {
-      this.transcriptError = 'A transcript file is required to create a meeting.';
-      return;
-    }
-
-    // TODO: multipart POST to your backend — meeting metadata + transcript file.
-    // Backend kicks off async processing (per your AIResult/status-polling design);
-    // this mock just marks it "Processing" until you wire the real endpoint + polling.
-    console.log('Creating meeting with transcript:', this.transcriptFile.name);
-
+    // TODO: this should POST to your backend and/or push into a shared
+    // meetings store once Dashboard and Meetings share real data.
     this.closeCreateModal();
   }
 }

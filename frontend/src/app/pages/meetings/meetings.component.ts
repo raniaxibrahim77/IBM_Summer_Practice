@@ -43,8 +43,10 @@ export class MeetingsComponent {
   newMeetingDate = '';
   newMeetingTime = '';
   peopleSearch = '';
-  notifyPeople = true;
-  addToCalendar = true;
+  processWithAI = true;
+    
+  transcriptFile: File | null = null;
+  transcriptError: string | null = null;
 
   readonly allPeople = ['Alex', 'Alex Baker', 'Alex Caleb', 'Ana Barbona', 'Maria Maria', 'Roana'];
   invitedPeople: string[] = [];
@@ -70,8 +72,9 @@ export class MeetingsComponent {
     this.newMeetingTime = '';
     this.peopleSearch = '';
     this.invitedPeople = [];
-    this.notifyPeople = true;
-    this.addToCalendar = true;
+    this.processWithAI = true;
+    this.transcriptFile = null;
+    this.transcriptError = null;
   }
 
   addPerson(person: string): void {
@@ -85,11 +88,40 @@ export class MeetingsComponent {
     this.invitedPeople = this.invitedPeople.filter((p) => p !== person);
   }
 
+  onTranscriptFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+
+    if (!file) {
+      this.transcriptFile = null;
+      return;
+    }
+
+    const isValidType = file.name.toLowerCase().endsWith('.txt') || file.name.toLowerCase().endsWith('.docx');
+    if (!isValidType) {
+      this.transcriptError = 'Please upload a .txt or .docx file.';
+      this.transcriptFile = null;
+      input.value = '';
+      return;
+    }
+
+    this.transcriptError = null;
+    this.transcriptFile = file;
+  }
+
+  removeTranscriptFile(): void {
+    this.transcriptFile = null;
+  }
+
   createMeeting(): void {
     if (!this.newMeetingName.trim()) {
       return;
     }
-
+    if (!this.transcriptFile) {
+      this.transcriptError = 'A transcript file is required to create a meeting.';
+      return;
+    }
+  
     const nextId = Math.max(0, ...this.meetings.map((m) => m.id)) + 1;
     this.meetings.unshift({
       id: nextId,
@@ -99,6 +131,8 @@ export class MeetingsComponent {
       actionItems: 0,
     });
 
+    // TODO: multipart POST to your backend — meeting metadata + transcript file.
+    console.log('Creating meeting with transcript:', this.transcriptFile.name);
     this.closeCreateModal();
   }
 }
