@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { MeetingService, MeetingResponse } from '../../services/meeting.service'; 
 
 interface CalendarCell {
   day: number;
@@ -36,7 +37,7 @@ const MONTH_NAMES = [
   templateUrl: './calendar.component.html',
   styleUrl: './calendar.component.css',
 })
-export class CalendarComponent {
+export class CalendarComponent implements OnInit {
   private today = new Date();
   viewYear = this.today.getFullYear();
   viewMonth = this.today.getMonth();
@@ -45,13 +46,7 @@ export class CalendarComponent {
 
   cells: CalendarCell[] = [];
 
-  private readonly demoEvents: Record<number, { title: string; kind: 'primary' | 'secondary' | 'tertiary' }[]> = {
-    3: [{ title: 'Audit Kickoff', kind: 'tertiary' }],
-    8: [
-      { title: 'Client Meeting', kind: 'primary' },
-      { title: 'Design Review', kind: 'secondary' },
-    ],
-  };
+  private meetings: MeetingResponse[] = [];
 
   taskReminders: TaskReminder[] = [
     { title: 'Prepare Q3 Slides', status: 'Due Today • 4:00 PM', done: false, tag: 'Presentation' },
@@ -59,15 +54,19 @@ export class CalendarComponent {
     { title: 'Review Audit Reports', status: 'Completed', done: true, tag: 'Audit' },
   ];
 
-  readonly timeline: TimelineItem[] = [
-    { time: '8:00 AM', title: 'Deep Focus Block', subtitle: 'Solo productivity session', kind: 'muted' },
-    { time: '9:00 AM', title: '8 AM Client Meeting', subtitle: '', kind: 'primary' },
-    { time: '11:00 AM', title: 'Design Review', subtitle: 'Product team meeting', kind: 'secondary' },
-    { time: '2:30 PM', title: 'Available Slot', subtitle: '', kind: 'empty' },
-  ];
+  timeline: TimelineItem[] = [];
 
-  constructor() {
-    this.buildCalendar();
+  constructor(private meetingService: MeetingService) {}
+
+  ngOnInit(): void {
+    this.meetingService.getMeetings().subscribe({
+      next: (meetings) => {
+        this.meetings = meetings;
+        this.buildCalendar();
+        this.buildTimeline();
+      },
+      error: (err) => console.error('Failed to load meetings', err),
+    });
   }
 
   get viewMonthLabel(): string {
@@ -124,7 +123,7 @@ export class CalendarComponent {
         muted: false,
         isToday: isCurrentRealMonth && d === this.today.getDate(),
         isWeekend: weekdayIndex === 5 || weekdayIndex === 6,
-        events: this.demoEvents[d] ?? [],
+        events: this.getEventsForDay(d),
       });
     }
 
@@ -134,5 +133,29 @@ export class CalendarComponent {
     }
 
     this.cells = cells;
+  }
+
+  private getEventsForDay(day: number): { title: string; kind: 'primary' | 'secondary' | 'tertiary' }[] {
+    return this.meetings
+      .filter((m) => {
+        const d = new Date(m.meetingDatetime);
+        return d.getFullYear() === this.viewYear && d.getMonth() === this.viewMonth && d.getDate() === day;
+      })
+      .map((m) => ({ title: m.title, kind: 'primary' as const }));
+  }
+
+  private buildTimeline(): void {
+    const now = new Date();
+    const upcoming = this.meetings.filter((m) => new Date(m.meetingDatetime) > now);
+
+    this.timeline = upcoming
+      .sort((a, b) => new Date(a.meetingDatetime).getTime() - new Date(b.meetingDatetime).getTime())
+      .slice(0, 5)
+      .map((m, i) => ({
+        time: new Date(m.meetingDatetime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+        title: m.title,
+        subtitle: m.description ?? '',
+        kind: i % 2 === 0 ? ('primary' as const) : ('secondary' as const),
+      }));
   }
 }
