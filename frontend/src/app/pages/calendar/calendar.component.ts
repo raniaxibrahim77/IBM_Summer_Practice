@@ -1,17 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MeetingService, MeetingResponse } from '../../services/meeting.service'; 
+import { ActionItemService, ActionItemResponse } from '../../services/action-item.service';
 
 interface CalendarCell {
   day: number;
   muted: boolean;
   isToday: boolean;
   isWeekend: boolean;
-  events: { title: string; kind: 'primary' | 'secondary' | 'tertiary' }[];
+  events: { id: string; title: string; kind: 'primary' | 'secondary' | 'tertiary' }[];
 }
 
 interface TaskReminder {
+  id: string;
   title: string;
   status: string;
   done: boolean;
@@ -19,6 +21,8 @@ interface TaskReminder {
 }
 
 interface TimelineItem {
+  id: string;
+  day: string;
   time: string;
   title: string;
   subtitle: string;
@@ -48,24 +52,38 @@ export class CalendarComponent implements OnInit {
 
   private meetings: MeetingResponse[] = [];
 
-  taskReminders: TaskReminder[] = [
-    { title: 'Prepare Q3 Slides', status: 'Due Today • 4:00 PM', done: false, tag: 'Presentation' },
-    { title: 'Send Invite', status: 'Upcoming • Tomorrow', done: false, tag: 'Meetings' },
-    { title: 'Review Audit Reports', status: 'Completed', done: true, tag: 'Audit' },
-  ];
+  taskReminders: TaskReminder[] = [];
+  private actionItems: ActionItemResponse[] = [];
 
   timeline: TimelineItem[] = [];
 
-  constructor(private meetingService: MeetingService) {}
+  constructor(
+    private meetingService: MeetingService,
+    private actionItemService: ActionItemService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.meetingService.getMeetings().subscribe({
       next: (meetings) => {
+        console.log('meetings response received', meetings.length);
         this.meetings = meetings;
         this.buildCalendar();
         this.buildTimeline();
+        this.cdr.markForCheck();
       },
       error: (err) => console.error('Failed to load meetings', err),
+    });
+
+    this.actionItemService.getActionItems().subscribe({
+      next: (items) => {
+        this.actionItems = items;
+        this.buildTaskReminders();
+        this.buildCalendar();
+        this.cdr.markForCheck();
+      },
+      error: (err) => console.error('Failed to load action items', err),
     });
   }
 
@@ -98,8 +116,18 @@ export class CalendarComponent implements OnInit {
   }
 
   toggleTask(task: TaskReminder): void {
-    task.done = !task.done;
-    task.status = task.done ? 'Completed' : task.status.replace('Completed', 'Due Today • 4:00 PM');
+    const newStatus = task.done ? 'OPEN' : 'DONE';
+    this.actionItemService.updateStatus(task.id, newStatus).subscribe({
+      next: (updated) => {
+        task.done = updated.status === 'DONE';
+        task.status = task.done ? 'Completed' : this.formatDeadline(updated.deadline);
+      },
+      error: (err) => console.error('Failed to update task status', err),
+    });
+  }
+
+  goToMeeting(id: string): void {
+    this.router.navigate(['/meeting-details', id]);
   }
 
   private buildCalendar(): void {
@@ -135,13 +163,40 @@ export class CalendarComponent implements OnInit {
     this.cells = cells;
   }
 
-  private getEventsForDay(day: number): { title: string; kind: 'primary' | 'secondary' | 'tertiary' }[] {
-    return this.meetings
+  private getEventsForDay(day: number): { id: string; title: string; kind: 'primary' | 'secondary' | 'tertiary' }[] {
+    const meetingEvents = this.meetings
       .filter((m) => {
         const d = new Date(m.meetingDatetime);
         return d.getFullYear() === this.viewYear && d.getMonth() === this.viewMonth && d.getDate() === day;
       })
-      .map((m) => ({ title: m.title, kind: 'primary' as const }));
+      .map((m) => ({ id: m.id, title: m.title, kind: 'primary' as const }));
+
+    const deadlineEvents = this.actionItems
+      .filter((item) => {
+        if (!item.deadline) return false;
+        const d = new Date(item.deadline);
+        return d.getFullYear() === this.viewYear && d.getMonth() === this.viewMonth && d.getDate() === day;
+      })
+      .map((item) => ({ id: item.id, title: item.description, kind: 'tertiary' as const }));
+
+    return [...meetingEvents, ...deadlineEvents];
+  }
+
+  private buildTaskReminders(): void {
+    this.taskReminders = this.actionItems.map((item) => ({
+      id: item.id,
+      title: item.description,
+      status: item.status === 'DONE' ? 'Completed' : this.formatDeadline(item.deadline),
+      done: item.status === 'DONE',
+      tag: item.proposedAssignee ?? 'Task',
+    }));
+  }
+
+  private formatDeadline(deadline: string | null): string {
+    if (!deadline) return 'No deadline';
+    const d = new Date(deadline);
+    const isToday = d.toDateString() === new Date().toDateString();
+    return isToday ? 'Due Today' : `Due ${d.toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
   }
 
   private buildTimeline(): void {
@@ -151,11 +206,16 @@ export class CalendarComponent implements OnInit {
     this.timeline = upcoming
       .sort((a, b) => new Date(a.meetingDatetime).getTime() - new Date(b.meetingDatetime).getTime())
       .slice(0, 5)
-      .map((m, i) => ({
-        time: new Date(m.meetingDatetime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
-        title: m.title,
-        subtitle: m.description ?? '',
-        kind: i % 2 === 0 ? ('primary' as const) : ('secondary' as const),
-      }));
+      .map((m, i) => {
+        const d = new Date(m.meetingDatetime);
+        return {
+          id: m.id,
+          day: d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }),
+          time: d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+          title: m.title,
+          subtitle: m.description ?? '',
+          kind: i % 2 === 0 ? ('primary' as const) : ('secondary' as const),
+        };
+      });
   }
 }
