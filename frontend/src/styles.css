@@ -9,3 +9,11 @@
   --color-accent-blue: #75C3D1;
   --color-accent-green: #D9FFD2;
 }
+
+*, *::before, *::after {
+  border-radius: 0 !important;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+}

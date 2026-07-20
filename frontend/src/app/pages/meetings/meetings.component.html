@@ -89,7 +89,7 @@
             <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Title</th>
             <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Date &amp; Time</th>
             <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Attendees</th>
-            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Action Items</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Add Transcript</th>
             <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
@@ -102,7 +102,14 @@
                 <span class="bg-[#75C3D1] text-[#450C21] px-2 py-1 rounded-full text-xs font-bold">{{ meeting.attendees }}</span>
               </td>
               <td class="px-6 py-4">
-                <span class="bg-[#8CA888] text-white px-2 py-1 rounded-full text-xs font-bold">{{ meeting.actionItems }}</span>
+                <label class="cursor-pointer inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold transition-colors"
+                      [class.bg-[#8CA888]]="!meeting.transcriptFile"
+                      [class.text-white]="!meeting.transcriptFile"
+                      [class.bg-[#75C3D1]]="meeting.transcriptFile"
+                      [class.text-[#450C21]]="meeting.transcriptFile">
+                  {{ meeting.transcriptFile ? 'Uploaded' : 'Add Transcript' }}
+                  <input type="file" accept=".txt,.docx" class="hidden" (change)="onRowTranscriptSelected($event, meeting)" />
+                </label>
               </td>
               <td class="px-6 py-4">
                 <button [routerLink]="['/meeting-details', meeting.id]" class="flex items-center gap-1 text-[#A33E43] hover:underline text-sm font-semibold">

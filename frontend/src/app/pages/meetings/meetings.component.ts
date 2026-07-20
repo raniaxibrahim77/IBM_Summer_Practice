@@ -8,7 +8,7 @@ interface MeetingRow {
   title: string;
   dateTime: string;
   attendees: number;
-  actionItems: number;
+  transcriptFile: File | null;
 }
 
 @Component({
@@ -21,11 +21,11 @@ interface MeetingRow {
 export class MeetingsComponent {
   searchTerm = '';
 
-  readonly meetings: MeetingRow[] = [
-    {id: 1, title: 'Product Launch Meeting', dateTime: 'Jul 12, 2026 · 10:00 AM', attendees: 3, actionItems: 4 },
-    {id: 2, title: 'Quarterly Performance Sync', dateTime: 'Jul 2, 2026 · 10:00 AM', attendees: 6, actionItems: 2 },
-    {id: 3, title: 'Design Workshop', dateTime: 'Jun 28, 2026 · 2:00 PM', attendees: 4, actionItems: 1 },
-    {id: 4, title: 'Client Onboarding Call', dateTime: 'Jun 25, 2026 · 11:00 AM', attendees: 3, actionItems: 3 },
+   readonly meetings: MeetingRow[] = [
+    { id: 1, title: 'Product Launch Meeting', dateTime: 'Jul 12, 2026 · 10:00 AM', attendees: 3, transcriptFile: null },
+    { id: 2, title: 'Quarterly Performance Sync', dateTime: 'Jul 2, 2026 · 10:00 AM', attendees: 6, transcriptFile: null },
+    { id: 3, title: 'Design Workshop', dateTime: 'Jun 28, 2026 · 2:00 PM', attendees: 4, transcriptFile: null },
+    { id: 4, title: 'Client Onboarding Call', dateTime: 'Jun 25, 2026 · 11:00 AM', attendees: 3, transcriptFile: null },
   ];
 
   get filteredMeetings(): MeetingRow[] {
@@ -36,7 +36,32 @@ export class MeetingsComponent {
     return this.meetings.filter((m) => m.title.toLowerCase().includes(term));
   }
 
-  // --- Create Meeting modal state ---
+  onRowTranscriptSelected(event: Event, meeting: MeetingRow): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    if (!file) {
+      return;
+    }
+
+    const isValidType = file.name.toLowerCase().endsWith('.txt') || file.name.toLowerCase().endsWith('.docx');
+    if (!isValidType) {
+      alert('Please upload a .txt or .docx file.');
+      input.value = '';
+      return;
+    }
+
+    meeting.transcriptFile = file;
+    input.value = '';
+
+    // TODO: POST this file to your backend, e.g.:
+    // const formData = new FormData();
+    // formData.append('transcript', file);
+    // this.http.post(`/api/meetings/${meeting.id}/transcript`, formData).subscribe();
+    console.log(`Transcript "${file.name}" attached to meeting ${meeting.id}`);
+  }
+
+
+  // Meeting modal state 
   showCreateModal = false;
 
   newMeetingName = '';
@@ -128,7 +153,7 @@ export class MeetingsComponent {
       title: this.newMeetingName,
       dateTime: `${this.newMeetingDate || 'TBD'} · ${this.newMeetingTime || 'TBD'}`,
       attendees: this.invitedPeople.length,
-      actionItems: 0,
+      transcriptFile: this.transcriptFile,
     });
 
     // TODO: multipart POST to your backend — meeting metadata + transcript file.
