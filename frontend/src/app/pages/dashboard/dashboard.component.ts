@@ -1,9 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { MeetingCreateRequest, MeetingResponse, MeetingService } from '../../services/meeting.service';
+import { ActionItemResponse, ActionItemService } from '../../services/action-item.service';
 
 interface Task {
+  id: string;
   title: string;
   meta: string;
   done: boolean;
@@ -43,24 +46,12 @@ const MONTH_NAMES = [
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
-export class DashboardComponent {
-  tasks: Task[] = [
-    { title: 'Review client feedback for Project X', meta: 'Due at 4:00 PM', done: false, tag: 'Project X' },
-    { title: 'Draft weekly internal newsletter', meta: 'Completed', done: true, tag: 'Marketing' },
-    { title: 'Prepare slides for Stakeholder Meeting', meta: 'Tomorrow at 9:00 AM', done: false, tag: 'Presentation' },
-  ];
+export class DashboardComponent implements OnInit {
+  tasks: Task[] = [];
 
-  readonly recentMeetings: RecentMeeting[] = [
-    { title: 'Quarterly Performance Sync', date: 'Jul 2, 2026', attendees: 6, tag: 'Strategy' },
-    { title: 'Design Workshop', date: 'Jun 28, 2026', attendees: 4, tag: 'Design' },
-    { title: 'Client Onboarding Call', date: 'Jun 25, 2026', attendees: 3, tag: 'Client' },
-  ];
+  recentMeetings: RecentMeeting[] = [];
 
-  readonly upcomingEvents: UpcomingEvent[] = [
-    { day: 'MON', date: '08', title: 'Board Review', time: '09:00 - 10:30 AM' },
-    { day: 'TUE', date: '09', title: 'Design Workshop', time: '02:00 - 04:00 PM' },
-    { day: 'THU', date: '11', title: 'Client Sync', time: '11:00 - 11:30 AM' },
-  ];
+  upcomingEvents: UpcomingEvent[] = [];
 
   readonly weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
@@ -68,10 +59,148 @@ export class DashboardComponent {
   viewYear = this.today.getFullYear();
   viewMonth = this.today.getMonth(); // 0-indexed
 
+  private meetings: MeetingResponse[] = [];
+
   calendarDays: CalendarDay[] = [];
 
-  constructor() {
+  constructor(
+    private meetingService: MeetingService,
+    private actionItemService: ActionItemService
+  ) {
     this.buildCalendar();
+  }
+
+  ngOnInit(): void {
+    this.loadRecentMeetings();
+    this.loadTasks();
+  }
+
+  searchTerm = '';
+
+  get filteredRecentMeetings(): RecentMeeting[] {
+    const term = this.searchTerm.trim().toLowerCase();
+
+    if (!term) {
+      return this.recentMeetings;
+    }
+
+    return this.recentMeetings.filter((meeting) =>
+      meeting.title.toLowerCase().includes(term)
+    );
+  }
+
+  get filteredUpcomingEvents(): UpcomingEvent[] {
+    const term = this.searchTerm.trim().toLowerCase();
+
+    if (!term) {
+      return this.upcomingEvents;
+    }
+
+    return this.upcomingEvents.filter((event) =>
+      event.title.toLowerCase().includes(term)
+    );
+  }
+
+  get filteredTasks(): Task[] {
+    const term = this.searchTerm.trim().toLowerCase();
+
+    if (!term) {
+      return this.tasks;
+    }
+
+    return this.tasks.filter((task) =>
+      task.title.toLowerCase().includes(term)
+    );
+  }
+
+  private loadRecentMeetings(): void {
+    this.meetingService.getMeetings().subscribe({
+      next: (meetings) => {
+        this.meetings = meetings;
+        this.recentMeetings = meetings
+          .slice()
+          .sort(
+            (a, b) =>
+              new Date(b.meetingDatetime).getTime() -
+              new Date(a.meetingDatetime).getTime()
+          )
+          .slice(0, 3)
+          .map((meeting) => this.toRecentMeeting(meeting));
+
+        const now = new Date();
+
+        this.upcomingEvents = meetings
+          .filter((meeting) => new Date(meeting.meetingDatetime) >= now)
+          .sort(
+            (a, b) =>
+              new Date(a.meetingDatetime).getTime() -
+              new Date(b.meetingDatetime).getTime()
+          )
+          .slice(0, 3)
+          .map((meeting) => this.toUpcomingEvent(meeting));
+
+        this.buildCalendar();
+      },
+      error: (error) => {
+        console.error('Failed to load recent meetings', error);
+      }
+    });
+  }
+
+  private toRecentMeeting(meeting: MeetingResponse): RecentMeeting {
+    const date = new Date(meeting.meetingDatetime);
+
+    return {
+      title: meeting.title,
+      date: date.toLocaleDateString([], {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      }),
+      attendees: 0,
+      tag: meeting.processingStatus
+    };
+  }
+
+  private toUpcomingEvent(meeting: MeetingResponse): UpcomingEvent {
+    const date = new Date(meeting.meetingDatetime);
+
+    return {
+      day: date
+        .toLocaleDateString([], { weekday: 'short' })
+        .toUpperCase(),
+      date: date.getDate().toString().padStart(2, '0'),
+      title: meeting.title,
+      time: date.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    };
+  }
+
+  private loadTasks(): void {
+    this.actionItemService.getActionItems().subscribe({
+      next: (items) => {
+        this.tasks = items
+          .slice(0, 3)
+          .map((item) => this.toTask(item));
+      },
+      error: (error) => {
+        console.error('Failed to load tasks', error);
+      }
+    });
+  }
+
+  private toTask(item: ActionItemResponse): Task {
+    return {
+      id: item.id,
+      title: item.description,
+      meta: item.deadline
+        ? `Due ${new Date(item.deadline).toLocaleDateString()}`
+        : 'No deadline',
+      done: item.status === 'DONE',
+      tag: item.proposedAssignee || 'Unassigned'
+    };
   }
 
   get viewMonthLabel(): string {
@@ -113,10 +242,20 @@ export class DashboardComponent {
     }
 
     for (let d = 1; d <= daysInMonth; d++) {
+      const hasMeeting = this.meetings.some((meeting) => {
+        const date = new Date(meeting.meetingDatetime);
+
+        return (
+          date.getFullYear() === this.viewYear &&
+          date.getMonth() === this.viewMonth &&
+          date.getDate() === d
+        );
+      });
+
       cells.push({
         day: d,
         muted: false,
-        hasMeeting: false,
+        hasMeeting,
         isToday: isCurrentRealMonth && d === this.today.getDate(),
       });
     }
@@ -130,8 +269,21 @@ export class DashboardComponent {
   }
 
   toggleTaskDone(task: Task): void {
-    task.done = !task.done;
-    task.meta = task.done ? 'Completed' : task.meta.replace('Completed', 'Due today');
+    const newStatus = task.done ? 'OPEN' : 'DONE';
+
+    this.actionItemService.updateStatus(task.id, newStatus).subscribe({
+      next: (updatedItem) => {
+        task.done = updatedItem.status === 'DONE';
+        task.meta = task.done
+          ? 'Completed'
+          : updatedItem.deadline
+            ? `Due ${new Date(updatedItem.deadline).toLocaleDateString()}`
+            : 'No deadline';
+      },
+      error: (error) => {
+        console.error('Failed to update task', error);
+      }
+    });
   }
 
   // --- Create Meeting modal state ---
@@ -184,11 +336,29 @@ export class DashboardComponent {
   }
 
   createMeeting(): void {
-    if (!this.newMeetingName.trim()) {
+    if (
+      !this.newMeetingName.trim() ||
+      !this.newMeetingDate ||
+      !this.newMeetingTime
+    ) {
       return;
     }
-    // TODO: this should POST to your backend and/or push into a shared
-    // meetings store once Dashboard and Meetings share real data.
-    this.closeCreateModal();
+
+    const request: MeetingCreateRequest = {
+      title: this.newMeetingName.trim(),
+      description: '',
+      meetingDatetime: `${this.newMeetingDate}T${this.newMeetingTime}:00`,
+      ownerId: null
+    };
+
+    this.meetingService.createMeeting(request).subscribe({
+      next: (createdMeeting) => {
+        this.closeCreateModal();
+        this.loadRecentMeetings();
+      },
+      error: (error) => {
+        console.error('Failed to create meeting', error);
+      }
+    });
   }
 }
