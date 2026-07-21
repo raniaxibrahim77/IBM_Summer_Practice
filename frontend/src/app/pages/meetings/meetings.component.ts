@@ -27,7 +27,6 @@ export class MeetingsComponent implements OnInit {
   constructor(private meetingService: MeetingService) {}
 
   ngOnInit(): void {
-    console.log('MeetingsComponent ngOnInit running');
     this.meetingService.getMeetings().subscribe({
       next: (meetings) => {
         this.meetings = meetings.map((m) => this.toMeetingRow(m));
