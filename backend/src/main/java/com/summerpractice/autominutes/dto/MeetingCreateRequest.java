@@ -1,7 +1,10 @@
 package com.summerpractice.autominutes.dto;
 
 import jakarta.validation.constraints.NotBlank;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class MeetingCreateRequest {
@@ -14,6 +17,8 @@ public class MeetingCreateRequest {
     private LocalDateTime meetingDatetime;
 
     private UUID ownerId;
+
+    private List<UUID> attendeeIds = new ArrayList<>();
 
     public MeetingCreateRequest() {
     }
@@ -38,11 +43,13 @@ public class MeetingCreateRequest {
         return meetingDatetime;
     }
 
-    public void setMeetingDatetime(LocalDateTime meetingDatetime) {
-        this.meetingDatetime = meetingDatetime;
-    }
+    public void setMeetingDatetime(LocalDateTime meetingDatetime) { this.meetingDatetime = meetingDatetime; }
 
     public UUID getOwnerId() { return ownerId; }
 
     public void setOwnerId(UUID ownerId) { this.ownerId = ownerId; }
+
+    public List<UUID> getAttendeeIds() { return attendeeIds; }
+
+    public void setAttendeeIds(List<UUID> attendeeIds) { this.attendeeIds = attendeeIds; }
 }

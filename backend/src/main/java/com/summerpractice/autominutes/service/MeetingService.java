@@ -7,8 +7,17 @@ import com.summerpractice.autominutes.repository.MeetingRepository;
 import com.summerpractice.autominutes.dto.MeetingUpdateRequest;
 import com.summerpractice.autominutes.model.AppUser;
 import com.summerpractice.autominutes.repository.AppUserRepository;
+import com.summerpractice.autominutes.exception.ResourceNotFoundException;
+import com.summerpractice.autominutes.model.Attendee;
+import com.summerpractice.autominutes.model.MeetingAttendee;
+import com.summerpractice.autominutes.repository.AttendeeRepository;
+import com.summerpractice.autominutes.repository.MeetingAttendeeRepository;
+
 import java.util.List;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,14 +26,39 @@ public class MeetingService {
 
     private final MeetingRepository meetingRepository;
     private final AppUserRepository appUserRepository;
+    private final AttendeeRepository attendeeRepository;
+    private final MeetingAttendeeRepository meetingAttendeeRepository;
 
-    public MeetingService(MeetingRepository meetingRepository, AppUserRepository appUserRepository) {
+    public MeetingService(MeetingRepository meetingRepository, AppUserRepository appUserRepository, AttendeeRepository attendeeRepository, MeetingAttendeeRepository meetingAttendeeRepository) {
         this.meetingRepository = meetingRepository;
         this.appUserRepository = appUserRepository;
+        this.attendeeRepository = attendeeRepository;
+        this.meetingAttendeeRepository = meetingAttendeeRepository;
     }
 
     @Transactional
     public MeetingResponse createMeeting(MeetingCreateRequest request) {
+        List<UUID> attendeeIds = request.getAttendeeIds() == null
+                ? List.of()
+                : new ArrayList<>(new LinkedHashSet<>(request.getAttendeeIds()));
+
+        if (attendeeIds.contains(null)) {
+            throw new IllegalArgumentException(
+                    "Attendee IDs must not contain null values"
+            );
+        }
+
+        List<Attendee> attendees = attendeeIds.stream()
+                .map(attendeeId ->
+                        attendeeRepository.findById(attendeeId)
+                                .orElseThrow(() ->
+                                        new ResourceNotFoundException(
+                                                "Attendee not found: " + attendeeId
+                                        )
+                                )
+                )
+                .toList();
+
         Meeting meeting = new Meeting(
                 request.getTitle(),
                 request.getDescription(),
@@ -33,11 +67,28 @@ public class MeetingService {
 
         if (request.getOwnerId() != null) {
             AppUser owner = appUserRepository.findById(request.getOwnerId())
-                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + request.getOwnerId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found: " + request.getOwnerId()));
             meeting.setOwner(owner);
         }
 
-        return MeetingResponse.from(meetingRepository.save(meeting));
+        Meeting savedMeeting = meetingRepository.save(meeting);
+
+        List<MeetingAttendee> meetingAttendees = attendees.stream()
+                .map(attendee ->
+                        new MeetingAttendee(
+                                savedMeeting,
+                                attendee,
+                                null
+                        )
+                )
+                .toList();
+
+        meetingAttendeeRepository.saveAll(meetingAttendees);
+
+        return MeetingResponse.from(
+                savedMeeting,
+                meetingAttendees.size()
+        );
     }
 
     @Transactional(readOnly = true)
@@ -50,15 +101,28 @@ public class MeetingService {
         }
 
         return meetings.stream()
-                .map(MeetingResponse::from)
+                .map(meeting -> MeetingResponse.from(
+                        meeting,
+                        meetingAttendeeRepository.countByMeeting_Id(
+                                meeting.getId()
+                        )
+                ))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public MeetingResponse getMeeting(UUID id) {
-        return meetingRepository.findById(id)
-                .map(MeetingResponse::from)
-                .orElseThrow(() -> new IllegalArgumentException("Meeting not found: " + id));
+        Meeting meeting = meetingRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Meeting not found: " + id
+                        )
+                );
+
+        long attendeeCount =
+                meetingAttendeeRepository.countByMeeting_Id(id);
+
+        return MeetingResponse.from(meeting, attendeeCount);
     }
 
     @Transactional
@@ -71,7 +135,15 @@ public class MeetingService {
         meeting.setMeetingDatetime(request.getMeetingDatetime());
         meeting.setUpdatedAt(java.time.LocalDateTime.now());
 
-        return MeetingResponse.from(meetingRepository.save(meeting));
+        Meeting savedMeeting = meetingRepository.save(meeting);
+
+        long attendeeCount =
+                meetingAttendeeRepository.countByMeeting_Id(id);
+
+        return MeetingResponse.from(
+                savedMeeting,
+                attendeeCount
+        );
     }
 
     @Transactional

@@ -14,13 +14,11 @@ public class MeetingResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private UUID ownerId;
-
-    public MeetingResponse() {
-    }
+    private long attendeeCount;
 
     public MeetingResponse(UUID id, String title, String description, LocalDateTime meetingDatetime,
                            String processingStatus, LocalDateTime createdAt, LocalDateTime updatedAt,
-                           UUID ownerId) {
+                           UUID ownerId, long attendeeCount) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -29,9 +27,10 @@ public class MeetingResponse {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.ownerId = ownerId;
+        this.attendeeCount = attendeeCount;
     }
 
-    public static MeetingResponse from(Meeting meeting) {
+    public static MeetingResponse from(Meeting meeting, long attendeeCount) {
         return new MeetingResponse(
                 meeting.getId(),
                 meeting.getTitle(),
@@ -40,7 +39,8 @@ public class MeetingResponse {
                 meeting.getProcessingStatus(),
                 meeting.getCreatedAt(),
                 meeting.getUpdatedAt(),
-                meeting.getOwner() != null ? meeting.getOwner().getId() : null
+                meeting.getOwner() != null ? meeting.getOwner().getId() : null,
+                attendeeCount
         );
     }
 
@@ -103,4 +103,8 @@ public class MeetingResponse {
     public UUID getOwnerId() { return ownerId; }
 
     public void setOwnerId(UUID ownerId) { this.ownerId = ownerId; }
+
+    public long getAttendeeCount() { return attendeeCount; }
+
+    public void setAttendeeCount(long attendeeCount) { this.attendeeCount = attendeeCount; }
 }
