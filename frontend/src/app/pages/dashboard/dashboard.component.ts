@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MeetingCreateRequest, MeetingResponse, MeetingService } from '../../services/meeting.service';
 import { ActionItemResponse, ActionItemService } from '../../services/action-item.service';
+import { AttendeeResponse, AttendeeService } from '../../services/attendee.service';
 
 interface Task {
   id: string;
@@ -53,6 +54,8 @@ export class DashboardComponent implements OnInit {
 
   upcomingEvents: UpcomingEvent[] = [];
 
+  attendees: AttendeeResponse[] = [];
+
   readonly weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
   private today = new Date();
@@ -65,7 +68,9 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private meetingService: MeetingService,
-    private actionItemService: ActionItemService
+    private actionItemService: ActionItemService,
+    private attendeeService: AttendeeService,
+    private cdr: ChangeDetectorRef
   ) {
     this.buildCalendar();
   }
@@ -73,6 +78,7 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.loadRecentMeetings();
     this.loadTasks();
+    this.loadAttendees();
   }
 
   searchTerm = '';
@@ -140,9 +146,22 @@ export class DashboardComponent implements OnInit {
           .map((meeting) => this.toUpcomingEvent(meeting));
 
         this.buildCalendar();
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Failed to load recent meetings', error);
+      }
+    });
+  }
+
+  private loadAttendees(): void {
+    this.attendeeService.getAttendees().subscribe({
+      next: (attendees) => {
+        this.attendees = attendees;
+        console.log('Attendees received:', attendees);
+      },
+      error: (error) => {
+        console.error('Failed to load attendees', error);
       }
     });
   }
@@ -157,7 +176,7 @@ export class DashboardComponent implements OnInit {
         day: 'numeric',
         year: 'numeric'
       }),
-      attendees: 0,
+      attendees: meeting.attendeeCount,
       tag: meeting.processingStatus
     };
   }
@@ -288,28 +307,42 @@ export class DashboardComponent implements OnInit {
 
   // --- Create Meeting modal state ---
   showCreateModal = false;
-
+  isCreatingMeeting = false;
+  showAddAttendeeForm = false;
+  isCreatingAttendee = false;
+  createMeetingError = '';
   newMeetingName = '';
   newMeetingDate = '';
   newMeetingTime = '';
   peopleSearch = '';
+  newAttendeeName = '';
+  newAttendeeEmail = '';
+  createAttendeeError = ''; 
   notifyPeople = true;
   addToCalendar = true;
 
-  readonly allPeople = ['Alex', 'Alex Baker', 'Alex Caleb', 'Ana Barbona', 'Maria Maria', 'Roana'];
-  invitedPeople: string[] = [];
+  invitedPeople: AttendeeResponse[] = [];
 
-  get peopleSuggestions(): string[] {
+  get peopleSuggestions(): AttendeeResponse[] {
     const term = this.peopleSearch.trim().toLowerCase();
+
     if (!term) {
       return [];
     }
-    return this.allPeople.filter(
-      (p) => p.toLowerCase().includes(term) && !this.invitedPeople.includes(p)
-    );
+    return this.attendees.filter((attendee) => {
+      const matchesSearch =
+        attendee.name.toLowerCase().includes(term) ||
+        (attendee.email?.toLowerCase().includes(term) ?? false);
+
+      const alreadyInvited = this.invitedPeople.some(
+        (invited) => invited.id === attendee.id
+      );
+      return matchesSearch && !alreadyInvited;
+    });
   }
 
   openCreateModal(): void {
+    this.createMeetingError = '';
     this.showCreateModal = true;
   }
 
@@ -322,25 +355,63 @@ export class DashboardComponent implements OnInit {
     this.invitedPeople = [];
     this.notifyPeople = true;
     this.addToCalendar = true;
+    this.isCreatingMeeting = false;
+    this.createMeetingError = '';
+    this.showAddAttendeeForm = false;
+    this.isCreatingAttendee = false;
+    this.newAttendeeName = '';
+    this.newAttendeeEmail = '';
+    this.createAttendeeError = '';
   }
 
-  addPerson(person: string): void {
-    if (!this.invitedPeople.includes(person)) {
-      this.invitedPeople.push(person);
+  openAddAttendeeForm(): void {
+    this.newAttendeeName = this.peopleSearch.trim();
+    this.newAttendeeEmail = '';
+    this.createAttendeeError = '';
+    this.showAddAttendeeForm = true;
+  }
+
+  closeAddAttendeeForm(): void {
+    this.showAddAttendeeForm = false;
+    this.isCreatingAttendee = false;
+    this.newAttendeeName = '';
+    this.newAttendeeEmail = '';
+    this.createAttendeeError = '';
+  }
+
+  addPerson(attendee: AttendeeResponse): void {
+    const alreadyInvited = this.invitedPeople.some(
+      (invited) => invited.id === attendee.id
+    );
+
+    if (!alreadyInvited) {
+      this.invitedPeople.push(attendee);
     }
     this.peopleSearch = '';
   }
 
-  removePerson(person: string): void {
-    this.invitedPeople = this.invitedPeople.filter((p) => p !== person);
+  removePerson(attendeeId: string): void {
+    this.invitedPeople = this.invitedPeople.filter(
+      (attendee) => attendee.id !== attendeeId
+    );
   }
 
   createMeeting(): void {
-    if (
-      !this.newMeetingName.trim() ||
-      !this.newMeetingDate ||
-      !this.newMeetingTime
-    ) {
+    this.createMeetingError = '';
+
+    if (!this.newMeetingName.trim()) {
+        this.createMeetingError = 'Please enter a meeting name.';
+    return;
+    }
+    if (!this.newMeetingDate) {
+      this.createMeetingError = 'Please select a meeting date.';
+      return;
+    }
+    if (!this.newMeetingTime) {
+      this.createMeetingError = 'Please select a meeting time.';
+     return;
+    }
+    if (this.isCreatingMeeting) {
       return;
     }
 
@@ -348,16 +419,78 @@ export class DashboardComponent implements OnInit {
       title: this.newMeetingName.trim(),
       description: '',
       meetingDatetime: `${this.newMeetingDate}T${this.newMeetingTime}:00`,
-      ownerId: null
+      ownerId: null,
+      attendeeIds: this.invitedPeople.map((attendee) => attendee.id)
     };
 
+    this.isCreatingMeeting = true;
+
     this.meetingService.createMeeting(request).subscribe({
-      next: (createdMeeting) => {
+      next: () => {
+        this.isCreatingMeeting = false;
         this.closeCreateModal();
         this.loadRecentMeetings();
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Failed to create meeting', error);
+
+        this.isCreatingMeeting = false;
+        this.createMeetingError =
+          error.error?.message ||
+          'The meeting could not be created. Please try again.';
+
+          this.cdr.markForCheck();
+      }
+    });
+  }
+
+  createAttendee(): void {
+    this.createAttendeeError = '';
+
+    const name = this.newAttendeeName.trim();
+    const email = this.newAttendeeEmail.trim();
+
+    if (!name) {
+      this.createAttendeeError =
+        'Please enter the attendee name.';
+      return;
+    }
+
+    if (this.isCreatingAttendee) {
+      return;
+    }
+
+    this.isCreatingAttendee = true;
+
+    this.attendeeService.createAttendee({
+      name,
+      email: email || null
+    }).subscribe({
+      next: (createdAttendee) => {
+        this.attendees = [
+          ...this.attendees,
+          createdAttendee
+        ];
+
+        this.invitedPeople = [
+          ...this.invitedPeople,
+          createdAttendee
+        ];
+
+        this.peopleSearch = '';
+        this.closeAddAttendeeForm();
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.error('Failed to create attendee', error);
+
+        this.isCreatingAttendee = false;
+        this.createAttendeeError =
+          error.error?.message ||
+          'The attendee could not be created.';
+
+        this.cdr.markForCheck();
       }
     });
   }
