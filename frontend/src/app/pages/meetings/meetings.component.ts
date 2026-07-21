@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -24,7 +24,10 @@ export class MeetingsComponent implements OnInit {
 
   meetings: MeetingRow[] = [];
 
-  constructor(private meetingService: MeetingService) {}
+  constructor(
+    private meetingService: MeetingService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.meetingService.getMeetings().subscribe({
