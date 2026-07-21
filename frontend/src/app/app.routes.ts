@@ -3,7 +3,6 @@ import { LoginComponent } from './pages/login/login.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { CalendarComponent } from './pages/calendar/calendar.component';
 import { MeetingsComponent } from './pages/meetings/meetings.component';
-import { ChatComponent } from './pages/chat/chat.component';
 import { MeetingDetailsComponent } from './pages/meeting-details/meeting-details.component';
 
 export const routes: Routes = [
@@ -12,6 +11,5 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent },
   { path: 'calendar', component: CalendarComponent },
   { path: 'meetings', component: MeetingsComponent },
-  { path: 'chat', component: ChatComponent },
   { path: 'meeting-details/:id', component: MeetingDetailsComponent },
 ];

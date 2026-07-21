@@ -1,0 +1,46 @@
+@if (sidebarService.isOpen()) {
+  <div class="fixed inset-0 bg-black/50 z-40 md:hidden" (click)="sidebarService.close()"></div>
+}
+
+<aside
+  class="h-screen w-64 fixed left-0 top-0 bg-[#A33E43] shadow-sm flex flex-col py-2 z-50 transition-transform duration-200 md:translate-x-0"
+  [class.-translate-x-full]="!sidebarService.isOpen()"
+>
+  <div class="px-6 py-4 mb-8 flex items-center gap-3">
+    <div class="w-10 h-10 bg-[#450C21] flex items-center justify-center text-[#FBF2DA]">
+      <span class="material-symbols-outlined">dashboard</span>
+    </div>
+  </div>
+
+  <nav class="flex-1 space-y-1">
+    <a routerLink="/dashboard" (click)="sidebarService.close()"
+       routerLinkActive="text-[#450C21] bg-[#FBF2DA] font-bold"
+       class="flex items-center gap-3 pl-5 py-3 mx-2 text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+      <span class="material-symbols-outlined">home</span>
+      <span class="text-sm font-semibold">Home</span>
+    </a>
+    <a routerLink="/calendar" (click)="sidebarService.close()"
+       routerLinkActive="text-[#450C21] bg-[#FBF2DA] font-bold"
+       class="flex items-center gap-3 pl-5 py-3 mx-2 text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+      <span class="material-symbols-outlined">calendar_today</span>
+      <span class="text-sm font-semibold">Calendar</span>
+    </a>
+    <a routerLink="/meetings" (click)="sidebarService.close()"
+       routerLinkActive="text-[#450C21] bg-[#FBF2DA] font-bold"
+       class="flex items-center gap-3 pl-5 py-3 mx-2 text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+      <span class="material-symbols-outlined">groups</span>
+      <span class="text-sm font-semibold">Meetings</span>
+    </a>
+    <a href="#" class="flex items-center gap-3 pl-5 py-3 mx-2 text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+      <span class="material-symbols-outlined">settings</span>
+      <span class="text-sm font-semibold">Settings</span>
+    </a>
+  </nav>
+
+  <div class="mt-auto px-4 pb-6">
+    <button routerLink="/" class="w-full flex items-center gap-3 pl-5 py-3 text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+      <span class="material-symbols-outlined">logout</span>
+      <span class="text-sm font-semibold">Logout</span>
+    </button>
+  </div>
+</aside>

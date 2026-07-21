@@ -8,7 +8,7 @@ type MeetingStatus = 'Completed' | 'Processing' | 'Draft';
 interface TranscriptLine {
   time: string;
   speaker: string;
-  text: string;
+  text: string
 }
 
 interface Attendee {
@@ -157,6 +157,23 @@ export class MeetingDetailsComponent {
     // Placeholder for wiring to the async AIResult processing endpoint.
     this.chatMessages.push({ from: 'assistant', text: 'Regenerating the summary from the latest transcript…' });
   }
+
+  downloadTranscript(): void {
+  if (this.meeting.transcript.length === 0) {
+    return;
+  }
+  const content = this.meeting.transcript
+    .map((line) => `[${line.time}] ${line.speaker}: ${line.text}`)
+    .join('\n\n');
+
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${this.meeting.title.replace(/\s+/g, '_')}_transcript.txt`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
   runQuickAction(action: 'summarize' | 'risks' | 'followup'): void {
     const prompts: Record<typeof action, string> = {

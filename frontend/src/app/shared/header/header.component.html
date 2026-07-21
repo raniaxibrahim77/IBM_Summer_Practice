@@ -1,0 +1,18 @@
+<header class="h-16 fixed top-0 right-0 left-0 md:left-64 bg-[#450C21] border-b border-[#FBF2DA]/10 flex items-center justify-between px-4 md:px-6 z-30">
+  <div class="flex items-center gap-3 min-w-0">
+    <button class="md:hidden text-[#FBF2DA] shrink-0" (click)="sidebarService.toggle()">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+    <ng-content></ng-content>
+  </div>
+  <div class="flex items-center gap-4 shrink-0">
+    <div class="hidden sm:flex items-center gap-3 pl-4 border-l border-[#FBF2DA]/15">
+      <div class="text-right">
+        <p class="text-sm font-semibold leading-none text-[#FBF2DA]">{{ userName }}</p>
+        <p class="text-[10px] text-[#D9FFD2] uppercase tracking-wider mt-1">Admin Access</p>
+      </div>
+      <div class="w-10 h-10 rounded-full bg-[#75C3D1] flex items-center justify-center text-[#450C21] font-bold">{{ userInitial }}</div>
+    </div>
+    <div class="sm:hidden w-9 h-9 rounded-full bg-[#75C3D1] flex items-center justify-center text-[#450C21] font-bold">{{ userInitial }}</div>
+  </div>
+</header>
