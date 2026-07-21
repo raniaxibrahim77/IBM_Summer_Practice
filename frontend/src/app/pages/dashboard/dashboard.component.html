@@ -1,4 +1,4 @@
-<aside class="h-screen w-64 fixed left-0 top-0 bg-[#A33E43] shadow-sm flex flex-col py-2 z-50">
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#A33E43] shadow-sm flex flex-col py-2 z-50 overflow-y-auto">
   <div class="px-6 py-4 mb-8 flex items-center gap-3">
     <div class="w-10 h-10 rounded-xl bg-[#450C21] flex items-center justify-center text-[#FBF2DA]">
       <span class="material-symbols-outlined">dashboard</span>
@@ -97,11 +97,12 @@
           <h3 class="text-lg font-bold text-[#FBF2DA] mb-4">Today's Tasks</h3>
           <div class="space-y-3">
             @for (task of tasks; track task.title) {
-              <div class="p-3 rounded-lg flex items-center gap-3 bg-[#450C21]/40 border border-[#FBF2DA]/10">
+              <div class="p-3 rounded-lg flex flex-col sm:flex-row sm:items-center gap-3 bg-[#450C21]/40 border border-[#FBF2DA]/10">
                 <div class="flex-1" [class.opacity-50]="task.done">
                   <p class="text-sm font-semibold text-[#FBF2DA]" [class.line-through]="task.done">{{ task.title }}</p>
                   <p class="text-xs text-[#FBF2DA]/60">{{ task.meta }}</p>
                 </div>
+                <div class="flex items-center gap-2 shrink-0">
                 <span class="bg-[#75C3D1] text-[#450C21] px-2 py-1 rounded-full text-[10px] font-bold uppercase">{{ task.tag }}</span>
                 <button
                   type="button"
@@ -117,6 +118,7 @@
                   {{ task.done ? 'Completed' : 'Mark complete' }}
                 </button>
               </div>
+            </div>
             }
           </div>
         </div>
@@ -153,7 +155,7 @@
             </div>
           </div>
           <div class="grid grid-cols-7 gap-y-2 text-center">
-            @for (label of weekdayLabels; track label) {
+            @for (label of weekdayLabels; track $index) {
               <span class="text-[10px] font-bold text-[#450C21]/50 uppercase">{{ label }}</span>
             }
             @for (cell of calendarDays; track $index) {

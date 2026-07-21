@@ -1,4 +1,4 @@
-<aside class="h-screen w-64 fixed left-0 top-0 bg-[#A33E43] shadow-sm flex flex-col py-2 z-50">
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#A33E43] shadow-sm flex flex-col py-2 z-50 overflow-y-auto">
   <div class="px-6 py-4 mb-8 flex items-center gap-3">
     <div class="w-10 h-10 rounded-xl bg-[#450C21] flex items-center justify-center text-[#FBF2DA]">
       <span class="material-symbols-outlined">dashboard</span>
@@ -77,7 +77,8 @@
     </div>
 
     <!-- Table -->
-    <div class="bg-[#FBF2DA] rounded-xl overflow-hidden">
+   <div class="bg-[#FBF2DA] rounded-xl overflow-hidden">
+    <div class="overflow-x-auto">
       <table class="w-full text-left">
         <thead>
           <tr class="bg-[#A33E43] text-[#FBF2DA]">
@@ -118,9 +119,10 @@
               <td colspan="5" class="px-6 py-10 text-center text-sm text-[#450C21]/50">No meetings match your search.</td>
             </tr>
           }
-        </tbody>
-      </table>
-    </div>
+          </tbody>
+        </table>
+      </div>
+    </div>  
   </div>
 </main>
 
