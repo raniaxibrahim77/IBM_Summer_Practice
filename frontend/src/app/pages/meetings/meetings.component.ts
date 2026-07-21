@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { MeetingService, MeetingResponse } from '../../services/meeting.service';
 
 interface MeetingRow {
-  id: number
+  id: string;
   title: string;
   dateTime: string;
   attendees: number;
@@ -18,15 +19,35 @@ interface MeetingRow {
   templateUrl: './meetings.component.html',
   styleUrl: './meetings.component.css',
 })
-export class MeetingsComponent {
+export class MeetingsComponent implements OnInit {
   searchTerm = '';
 
-   readonly meetings: MeetingRow[] = [
-    { id: 1, title: 'Product Launch Meeting', dateTime: 'Jul 12, 2026 · 10:00 AM', attendees: 3, transcriptFile: null },
-    { id: 2, title: 'Quarterly Performance Sync', dateTime: 'Jul 2, 2026 · 10:00 AM', attendees: 6, transcriptFile: null },
-    { id: 3, title: 'Design Workshop', dateTime: 'Jun 28, 2026 · 2:00 PM', attendees: 4, transcriptFile: null },
-    { id: 4, title: 'Client Onboarding Call', dateTime: 'Jun 25, 2026 · 11:00 AM', attendees: 3, transcriptFile: null },
-  ];
+  meetings: MeetingRow[] = [];
+
+  constructor(private meetingService: MeetingService) {}
+
+  ngOnInit(): void {
+    this.meetingService.getMeetings().subscribe({
+      next: (meetings) => {
+        this.meetings = meetings.map((m) => this.toMeetingRow(m));
+      },
+      error: (err) => console.error('Failed to load meetings', err),
+    });
+  }
+
+  private toMeetingRow(m: MeetingResponse): MeetingRow {
+    const d = new Date(m.meetingDatetime);
+    const dateTime = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) +
+      ' · ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+      return {
+      id: m.id,
+      title: m.title,
+      dateTime,
+      attendees: 0, // backend doesn't return attendee count yet
+      transcriptFile: null,
+    };
+  }
 
   get filteredMeetings(): MeetingRow[] {
     const term = this.searchTerm.trim().toLowerCase();
@@ -147,16 +168,8 @@ export class MeetingsComponent {
       return;
     }
   
-    const nextId = Math.max(0, ...this.meetings.map((m) => m.id)) + 1;
-    this.meetings.unshift({
-      id: nextId,
-      title: this.newMeetingName,
-      dateTime: `${this.newMeetingDate || 'TBD'} · ${this.newMeetingTime || 'TBD'}`,
-      attendees: this.invitedPeople.length,
-      transcriptFile: this.transcriptFile,
-    });
-
-    // TODO: multipart POST to your backend — meeting metadata + transcript file.
+    // TODO: replace with a real POST to /api/meetings (multipart: metadata + transcript file),
+    // then re-fetch or prepend the returned MeetingResponse instead of faking an id locally.
     console.log('Creating meeting with transcript:', this.transcriptFile.name);
     this.closeCreateModal();
   }
