@@ -33,6 +33,7 @@ export class MeetingsComponent implements OnInit {
     this.meetingService.getMeetings().subscribe({
       next: (meetings) => {
         this.meetings = meetings.map((m) => this.toMeetingRow(m));
+        this.cdr.markForCheck();
       },
       error: (err) => console.error('Failed to load meetings', err),
     });
