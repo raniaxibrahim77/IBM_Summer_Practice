@@ -59,23 +59,23 @@
       <div>
         <div class="flex items-center gap-3 mb-2">
           <span class="px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wide" [ngClass]="statusClasses">
-            {{ meeting.status }}
+            {{ status }}
           </span>
-          <span class="text-sm text-[#450C21]/60">{{ meeting.date }}</span>
+          <span class="text-sm text-[#450C21]/60">{{ date }}</span>
         </div>
-        <h1 class="text-3xl font-bold text-[#450C21]">{{ meeting.title }}</h1>
+        <h1 class="text-3xl font-bold text-[#450C21]">{{ title }}</h1>
       </div>
 
       <!-- Attendee bubbles -->
       <div class="relative group shrink-0">
         <div class="flex -space-x-2 cursor-pointer">
-          @for (attendee of meeting.attendees; track attendee.email) {
+          @for (attendee of attendees; track attendee.email) {
             <div
               class="w-9 h-9 rounded-full border-2 border-[#FBF2DA] flex items-center justify-center text-white text-xs font-bold shadow-sm"
               [style.background-color]="attendee.color"
             >{{ attendee.initials }}</div>
           }
-          @if (meeting.attendees.length === 0) {
+          @if (attendees.length === 0) {
             <span class="text-sm text-[#450C21]/50">No attendees</span>
           }
         </div>
@@ -83,7 +83,7 @@
         <div class="hidden group-hover:block absolute right-0 top-full mt-2 w-72 bg-white border border-[#450C21]/10 shadow-lg p-3 z-50">
           <h3 class="text-xs font-bold uppercase tracking-wider text-[#A33E43] mb-2">Attendees</h3>
           <div class="space-y-2 max-h-56 overflow-y-auto">
-            @for (attendee of meeting.attendees; track attendee.email) {
+            @for (attendee of attendees; track attendee.email) {
               <div class="flex items-center gap-2">
                 <div
                   class="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0"
@@ -166,7 +166,7 @@
       <h2 class="text-xs font-bold uppercase tracking-wider text-[#A33E43] mb-3">Meeting Transcript</h2>
       <button
         (click)="downloadTranscript()"
-        [disabled]="meeting.transcript.length === 0"
+        [disabled]="!transcriptText"
         class="w-full flex items-center justify-center gap-2 bg-[#75C3D1] text-[#450C21] px-4 py-3 font-bold text-sm hover:brightness-95 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
       >
         <span class="material-symbols-outlined text-lg">download</span>
@@ -183,14 +183,14 @@
               Regenerate
             </button>
           </div>
-          <p class="text-sm text-[#450C21]/80 leading-relaxed">{{ meeting.aiSummary }}</p>
+          <p class="text-sm text-[#450C21]/80 leading-relaxed">{{ aiSummary }}</p>
 
           <h3 class="text-xs font-bold uppercase tracking-wider text-[#A33E43] mt-5 mb-3">
             Action Items
-            <span class="normal-case font-normal text-[#450C21]/50">({{ completedActionCount }}/{{ meeting.actionItems.length }} done)</span>
+            <span class="normal-case font-normal text-[#450C21]/50">({{ completedActionCount }}/{{ actionItems.length }} done)</span>
           </h3>
           <div class="space-y-2">
-            @for (item of meeting.actionItems; track item.id) {
+            @for (item of actionItems; track item.id) {
               <label class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/60 cursor-pointer">
                 <input
                   type="checkbox"
