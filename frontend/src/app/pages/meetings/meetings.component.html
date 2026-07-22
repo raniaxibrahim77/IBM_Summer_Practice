@@ -104,7 +104,7 @@
                       [class.bg-[#75C3D1]]="meeting.transcriptFile"
                       [class.text-[#450C21]]="meeting.transcriptFile">
                   {{ meeting.transcriptFile ? 'Uploaded' : 'Add Transcript' }}
-                  <input type="file" accept=".txt,.docx" class="hidden" (change)="onRowTranscriptSelected($event, meeting)" />
+                  <input type="file" accept=".txt" class="hidden" (change)="onRowTranscriptSelected($event, meeting)" />
                 </label>
               </td>
               <td class="px-6 py-4">
@@ -205,8 +205,8 @@
           @if (!transcriptFile) {
             <label class="flex flex-col items-center justify-center gap-1 w-full px-4 py-6 bg-white border-2 border-dashed border-[#450C21]/20 hover:border-[#75C3D1] rounded-lg cursor-pointer transition-colors">
               <span class="material-symbols-outlined text-[#450C21]/40">upload_file</span>
-              <span class="text-xs text-[#450C21]/60">Click to upload .txt or .docx</span>
-              <input type="file" accept=".txt,.docx" class="hidden" (change)="onTranscriptFileSelected($event)" />
+              <span class="text-xs text-[#450C21]/60">Click to upload .txt</span>
+              <input type="file" accept=".txt" class="hidden" (change)="onTranscriptFileSelected($event)" />
             </label>
           } @else {
             <div class="flex items-center justify-between px-4 py-2.5 bg-white border-2 border-[#450C21]/10 rounded-lg">

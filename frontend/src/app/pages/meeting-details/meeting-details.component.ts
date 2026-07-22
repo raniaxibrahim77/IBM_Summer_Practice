@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MeetingService, MeetingResponse } from '../../services/meeting.service';
+import { TranscriptService } from '../../services/transcript.service';
 
 interface Attendee {
   name: string;
@@ -55,6 +56,7 @@ export class MeetingDetailsComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private meetingService: MeetingService,
+    private transcriptService: TranscriptService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -89,7 +91,17 @@ export class MeetingDetailsComponent implements OnInit {
         this.cdr.markForCheck();
       },
     });
+      this.transcriptService.getTranscript(id).subscribe({
+        next: (t) => {
+          this.transcriptText = t.content;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.transcriptText = ''; // no transcript yet — expected, not a real error
+        },
+    });
   }
+
 
   private applyMeeting(m: MeetingResponse): void {
     this.title = m.title;

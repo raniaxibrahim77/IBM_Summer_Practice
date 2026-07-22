@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MeetingService, MeetingResponse } from '../../services/meeting.service';
+import { TranscriptService } from '../../services/transcript.service';
 
 interface MeetingRow {
   id: string;
@@ -26,6 +27,7 @@ export class MeetingsComponent implements OnInit {
 
   constructor(
     private meetingService: MeetingService,
+    private transcriptService: TranscriptService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -68,22 +70,40 @@ export class MeetingsComponent implements OnInit {
       return;
     }
 
-    const isValidType = file.name.toLowerCase().endsWith('.txt') || file.name.toLowerCase().endsWith('.docx');
+    const isValidType = file.name.toLowerCase().endsWith('.txt');
     if (!isValidType) {
-      alert('Please upload a .txt or .docx file.');
+      alert('Please upload a .txt file.');
       input.value = '';
       return;
     }
 
-    meeting.transcriptFile = file;
-    input.value = '';
+    const reader = new FileReader();
+  reader.onload = () => {
+    const content = reader.result as string;
 
-    // TODO: POST this file to your backend, e.g.:
-    // const formData = new FormData();
-    // formData.append('transcript', file);
-    // this.http.post(`/api/meetings/${meeting.id}/transcript`, formData).subscribe();
-    console.log(`Transcript "${file.name}" attached to meeting ${meeting.id}`);
-  }
+    this.transcriptService.createTranscript(meeting.id, content).subscribe({
+      next: () => {
+        meeting.transcriptFile = file;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        // 409 or similar = transcript already exists, so update instead
+        this.transcriptService.updateTranscript(meeting.id, content).subscribe({
+          next: () => {
+            meeting.transcriptFile = file;
+            this.cdr.markForCheck();
+          },
+          error: (updateErr) => {
+            console.error('Failed to upload transcript', updateErr);
+            alert('Failed to upload transcript.');
+          },
+        });
+      },
+    });
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
 
 
   // Meeting modal state 
