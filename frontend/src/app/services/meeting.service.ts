@@ -11,6 +11,7 @@ export interface MeetingResponse {
   createdAt: string;
   updatedAt: string;
   ownerId: string | null;
+  attendeeCount: number;
 }
 
 export interface MeetingCreateRequest {
@@ -18,6 +19,7 @@ export interface MeetingCreateRequest {
   description: string;
   meetingDatetime: string;
   ownerId: string | null;
+  attendeeIds: string[];
 }
 
 @Injectable({ providedIn: 'root' })
