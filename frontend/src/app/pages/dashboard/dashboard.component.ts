@@ -128,9 +128,16 @@ export class DashboardComponent implements OnInit {
   private loadRecentMeetings(): void {
     this.meetingService.getMeetings().subscribe({
       next: (meetings) => {
+        const now = new Date();
+
         this.meetings = meetings;
+
         this.recentMeetings = meetings
-          .slice()
+          .filter(
+            (meeting) =>
+                new Date(meeting.meetingDatetime).getTime() <=
+                now.getTime()
+          )
           .sort(
             (a, b) =>
               new Date(b.meetingDatetime).getTime() -
@@ -139,10 +146,12 @@ export class DashboardComponent implements OnInit {
           .slice(0, 3)
           .map((meeting) => this.toRecentMeeting(meeting));
 
-        const now = new Date();
-
-        this.upcomingEvents = meetings
-          .filter((meeting) => new Date(meeting.meetingDatetime) >= now)
+          this.upcomingEvents = meetings
+            .filter(
+              (meeting) =>
+                new Date(meeting.meetingDatetime).getTime() >
+                now.getTime()
+          )
           .sort(
             (a, b) =>
               new Date(a.meetingDatetime).getTime() -
