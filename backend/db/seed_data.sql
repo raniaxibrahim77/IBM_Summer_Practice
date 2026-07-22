@@ -19,3 +19,34 @@ FROM new_user, (VALUES
                     ('Client Demo', 'Feature walkthrough', '2026-07-27 10:00:00', 'NOT_STARTED'),
                     ('Team Offsite Prep', 'Logistics planning', '2026-07-29 09:00:00', 'NOT_STARTED')
 ) AS meetings(title, description, meeting_datetime, status);
+
+-- Part 2: attendees + links to existing meetings
+WITH new_attendees AS (
+INSERT INTO attendee (id, name, email)
+VALUES
+    (gen_random_uuid(), 'Alex Rivers', 'a.rivers@example.com'),
+    (gen_random_uuid(), 'Elena Chen', 'e.chen@example.com'),
+    (gen_random_uuid(), 'Marcus Thorne', 'm.thorne@example.com'),
+    (gen_random_uuid(), 'Priya Nair', 'p.nair@example.com'),
+    (gen_random_uuid(), 'Sam Diaz', 's.diaz@example.com')
+    RETURNING id, name
+    )
+INSERT INTO meeting_attendee (meeting_id, attendee_id, role_in_meeting)
+SELECT m.id, a.id, 'Participant'
+FROM meeting m
+         CROSS JOIN LATERAL (
+    SELECT id FROM new_attendees ORDER BY random() LIMIT (2 + floor(random() * 3)::int)
+    ) a;
+
+-- Part 3: sample transcripts for meetings
+INSERT INTO transcript (id, meeting_id, content, created_at, updated_at)
+SELECT
+    gen_random_uuid(),
+    m.id,
+    'This is a placeholder transcript for "' || m.title || '". ' ||
+    'Attendees discussed the agenda, reviewed open items, and agreed on next steps. ' ||
+    'Further details would go here in a real meeting transcript.',
+    now(),
+    now()
+FROM meeting m
+WHERE m.processing_status = 'DONE';
