@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { SidebarService } from '../sidebar.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-header',
@@ -7,8 +8,12 @@ import { SidebarService } from '../sidebar.service';
   templateUrl: './header.component.html',
 })
 export class HeaderComponent {
-  @Input() userName = 'Rania I.';
-  @Input() userInitial = 'R';
+  userName = 'Guest';
+  get userInitial(): string {
+    return this.userName.charAt(0).toUpperCase();
+  }
 
-  constructor(public sidebarService: SidebarService) {}
+  constructor(public sidebarService: SidebarService, private authService: AuthService) {
+    this.userName = this.authService.getCurrentUser()?.username ?? 'Guest';
+  }
 }

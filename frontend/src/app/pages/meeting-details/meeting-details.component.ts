@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MeetingService, MeetingResponse } from '../../services/meeting.service';
 import { TranscriptService } from '../../services/transcript.service';
+import { HeaderComponent } from '../../shared/header/header.component';
 
 interface Attendee {
   name: string;
@@ -28,7 +29,7 @@ const AVATAR_COLORS = ['#75C3D1', '#A33E43', '#8CA888', '#D9A24B'];
 @Component({
   selector: 'app-meeting-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, HeaderComponent],
   templateUrl: './meeting-details.component.html',
   styleUrl: './meeting-details.component.css',
 })

@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MeetingService, MeetingResponse } from '../../services/meeting.service';
 import { TranscriptService } from '../../services/transcript.service';
+import { AuthService } from '../../services/auth.service';
+import { HeaderComponent } from '../../shared/header/header.component';
 
 interface MeetingRow {
   id: string;
@@ -16,7 +18,7 @@ interface MeetingRow {
 @Component({
   selector: 'app-meetings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, HeaderComponent],
   templateUrl: './meetings.component.html',
   styleUrl: './meetings.component.css',
 })
@@ -27,12 +29,13 @@ export class MeetingsComponent implements OnInit {
 
   constructor(
     private meetingService: MeetingService,
+    private authService: AuthService,
     private transcriptService: TranscriptService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.meetingService.getMeetings().subscribe({
+    this.meetingService.getMeetings(this.authService.getCurrentUser()?.id).subscribe({
       next: (meetings) => {
         this.meetings = meetings.map((m) => this.toMeetingRow(m));
         this.cdr.markForCheck();

@@ -5,6 +5,8 @@ import { RouterLink } from '@angular/router';
 import { MeetingCreateRequest, MeetingResponse, MeetingService } from '../../services/meeting.service';
 import { ActionItemResponse, ActionItemService } from '../../services/action-item.service';
 import { AttendeeResponse, AttendeeService } from '../../services/attendee.service';
+import { AuthService } from '../../services/auth.service';
+import { HeaderComponent } from '../../shared/header/header.component';
 
 interface Task {
   id: string;
@@ -45,7 +47,7 @@ const MONTH_NAMES = [
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, HeaderComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
@@ -74,6 +76,7 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private meetingService: MeetingService,
+    private authService: AuthService,
     private actionItemService: ActionItemService,
     private attendeeService: AttendeeService,
     private cdr: ChangeDetectorRef
@@ -126,7 +129,7 @@ export class DashboardComponent implements OnInit {
   }
 
   private loadRecentMeetings(): void {
-    this.meetingService.getMeetings().subscribe({
+    this.meetingService.getMeetings(this.authService.getCurrentUser()?.id).subscribe({
       next: (meetings) => {
         const now = new Date();
 
@@ -469,7 +472,7 @@ export class DashboardComponent implements OnInit {
       title: this.newMeetingName.trim(),
       description: '',
       meetingDatetime: `${this.newMeetingDate}T${this.newMeetingTime}:00`,
-      ownerId: null,
+      ownerId: this.authService.getCurrentUser()?.id ?? null,
       attendeeIds: this.invitedPeople.map((attendee) => attendee.id)
     };
 

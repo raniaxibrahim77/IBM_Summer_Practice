@@ -28,8 +28,9 @@ export class MeetingService {
 
   constructor(private http: HttpClient) {}
 
-  getMeetings(): Observable<MeetingResponse[]> {
-  return this.http.get<MeetingResponse[]>(`${this.apiUrl}/meetings`);
+  getMeetings(ownerId?: string): Observable<MeetingResponse[]> {
+    const params: Record<string, string> = ownerId ? { ownerId } : {};
+    return this.http.get<MeetingResponse[]>(`${this.apiUrl}/meetings`, { params });
   }
 
   getMeeting(id: string): Observable<MeetingResponse> {

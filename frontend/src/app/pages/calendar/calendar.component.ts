@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { MeetingService, MeetingResponse } from '../../services/meeting.service'; 
 import { ActionItemService, ActionItemResponse } from '../../services/action-item.service';
+import { AuthService } from '../../services/auth.service';
+import { HeaderComponent } from '../../shared/header/header.component';
 
 interface CalendarCell {
   day: number;
@@ -37,7 +39,7 @@ const MONTH_NAMES = [
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, HeaderComponent],
   templateUrl: './calendar.component.html',
   styleUrl: './calendar.component.css',
 })
@@ -59,13 +61,14 @@ export class CalendarComponent implements OnInit {
 
   constructor(
     private meetingService: MeetingService,
+    private authService: AuthService,
     private actionItemService: ActionItemService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.meetingService.getMeetings().subscribe({
+    this.meetingService.getMeetings(this.authService.getCurrentUser()?.id).subscribe({
       next: (meetings) => {
         console.log('meetings response received', meetings.length);
         this.meetings = meetings;
