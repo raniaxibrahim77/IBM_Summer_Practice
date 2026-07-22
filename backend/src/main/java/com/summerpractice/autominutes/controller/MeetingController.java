@@ -38,8 +38,9 @@ public class MeetingController {
     }
 
     @GetMapping
-    public List<MeetingResponse> getMeetings(@RequestParam(required = false) String title) {
-        return meetingService.getMeetings(title);
+    public List<MeetingResponse> getMeetings(@RequestParam(required = false) String title,
+                                          @RequestParam(required = false) UUID ownerId) {
+            return meetingService.getMeetings(title, ownerId);
     }
 
     @GetMapping("/{id}")

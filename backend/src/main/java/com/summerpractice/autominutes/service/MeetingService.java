@@ -92,13 +92,17 @@ public class MeetingService {
     }
 
     @Transactional(readOnly = true)
-    public List<MeetingResponse> getMeetings(String title) {
+    public List<MeetingResponse> getMeetings(String title, UUID ownerId) {
         List<Meeting> meetings;
-        if (title == null || title.isBlank()) {
-            meetings = meetingRepository.findAllByOrderByMeetingDatetimeDesc();
-        } else {
-            meetings = meetingRepository.findByTitleContainingIgnoreCaseOrderByMeetingDatetimeDesc(title.trim());
-        }
+        if (ownerId == null) {
+                meetings = (title == null || title.isBlank())
+                                ? meetingRepository.findAllByOrderByMeetingDatetimeDesc()
+                                : meetingRepository.findByTitleContainingIgnoreCaseOrderByMeetingDatetimeDesc(title.trim());
+            } else {
+                meetings = (title == null || title.isBlank())
+                                ? meetingRepository.findByOwner_IdOrderByMeetingDatetimeDesc(ownerId)
+                                : meetingRepository.findByOwner_IdAndTitleContainingIgnoreCaseOrderByMeetingDatetimeDesc(ownerId, title.trim());
+            }
 
         return meetings.stream()
                 .map(meeting -> MeetingResponse.from(
