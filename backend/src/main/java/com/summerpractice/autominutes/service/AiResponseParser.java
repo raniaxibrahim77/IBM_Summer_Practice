@@ -9,9 +9,9 @@ import java.util.regex.Pattern;
 
 public class AiResponseParser {
 
-    private static final Pattern SECTION_PATTERN = Pattern.compile(
-            "^(CONCISE_SUMMARY|DETAILED_SUMMARY|KEY_POINTS|DECISIONS|FOLLOW_UP_NOTES|ACTION_ITEMS):\\s*$",
-            Pattern.MULTILINE
+    private static final List<String> SECTION_LABELS = List.of(
+            "CONCISE_SUMMARY", "DETAILED_SUMMARY", "KEY_POINTS",
+            "DECISIONS", "FOLLOW_UP_NOTES", "ACTION_ITEMS"
     );
 
     public static ParsedAiResult parseRawResponse(String raw) {
@@ -21,43 +21,54 @@ public class AiResponseParser {
 
         String normalized = raw.replace("\r\n", "\n").trim();
 
-        String conciseSummary = extractSingleLineSection(normalized, "CONCISE_SUMMARY");
-        String detailedSummary = extractSingleLineSection(normalized, "DETAILED_SUMMARY");
-        String keyPoints = extractBulletSection(normalized, "KEY_POINTS");
-        String decisions = extractBulletSection(normalized, "DECISIONS");
-        String followUpNotes = extractSingleLineSection(normalized, "FOLLOW_UP_NOTES");
-        List<ParsedActionItem> actionItems = extractActionItems(normalized);
+        String conciseSummary = cleanProse(extractRawBlock(normalized, "CONCISE_SUMMARY"));
+        String detailedSummary = cleanProse(extractRawBlock(normalized, "DETAILED_SUMMARY"));
+        String keyPoints = extractBullets(extractRawBlock(normalized, "KEY_POINTS"));
+        String decisions = extractBullets(extractRawBlock(normalized, "DECISIONS"));
+        String followUpNotes = cleanProse(extractRawBlock(normalized, "FOLLOW_UP_NOTES"));
+        List<ParsedActionItem> actionItems = extractActionItems(extractRawBlock(normalized, "ACTION_ITEMS"));
 
-        return new ParsedAiResult(
-                conciseSummary,
-                detailedSummary,
-                keyPoints,
-                decisions,
-                followUpNotes,
-                actionItems
-        );
+        return new ParsedAiResult(conciseSummary, detailedSummary, keyPoints, decisions, followUpNotes, actionItems);
     }
 
     /**
-     * Extracts everything between "LABEL:" and the next section header (or end of text),
+     * Finds "LABEL:" anywhere at the start of a line (content may follow on the
+     * same line, or start on the next line) and returns everything up to the
+     * next section label or end of text.
      */
-    private static String extractSingleLineSection(String text, String label) {
-        String block = extractRawBlock(text, label);
-        if (block == null) {
+    private static String extractRawBlock(String text, String label) {
+        Pattern labelPattern = Pattern.compile("(?m)^" + Pattern.quote(label) + ":");
+        Matcher matcher = labelPattern.matcher(text);
+        if (!matcher.find()) {
+            return "";
+        }
+        int contentStart = matcher.end();
+
+        Pattern anyLabel = Pattern.compile(
+                "(?m)^(" + String.join("|", SECTION_LABELS) + "):"
+        );
+        Matcher next = anyLabel.matcher(text);
+        next.region(contentStart, text.length());
+
+        int contentEnd = text.length();
+        if (next.find()) {
+            contentEnd = next.start();
+        }
+
+        return text.substring(contentStart, contentEnd).strip();
+    }
+
+    private static String cleanProse(String block) {
+        if (block.isBlank() || block.equalsIgnoreCase("none")) {
             return "";
         }
         return block.strip();
     }
 
-    /**
-     * Extracts a bullet-point section (KEY_POINTS, DECISIONS) and joins the bullets
-     */
-    private static String extractBulletSection(String text, String label) {
-        String block = extractRawBlock(text, label);
-        if (block == null) {
+    private static String extractBullets(String block) {
+        if (block.isBlank()) {
             return "";
         }
-
         List<String> lines = new ArrayList<>();
         for (String line : block.split("\n")) {
             String cleaned = line.strip();
@@ -71,13 +82,9 @@ public class AiResponseParser {
         return String.join("\n", lines);
     }
 
-    /**
-     * Extracts ACTION_ITEMS bullets in the form:
-     */
-    private static List<ParsedActionItem> extractActionItems(String text) {
+    private static List<ParsedActionItem> extractActionItems(String block) {
         List<ParsedActionItem> items = new ArrayList<>();
-        String block = extractRawBlock(text, "ACTION_ITEMS");
-        if (block == null) {
+        if (block.isBlank()) {
             return items;
         }
 
@@ -112,28 +119,8 @@ public class AiResponseParser {
         try {
             return LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE);
         } catch (Exception e) {
-            return null; // malformed date from the model — skip rather than fail the whole parse
-        }
-    }
-
-    /**
-     * Finds the text between a given section label and the next section header (or end of string).
-     */
-    private static String extractRawBlock(String text, String label) {
-        Matcher matcher = Pattern.compile("^" + label + ":\\s*$", Pattern.MULTILINE).matcher(text);
-        if (!matcher.find()) {
             return null;
         }
-        int contentStart = matcher.end();
-
-        Matcher nextSection = SECTION_PATTERN.matcher(text);
-        int contentEnd = text.length();
-        nextSection.region(contentStart, text.length());
-        if (nextSection.find()) {
-            contentEnd = nextSection.start();
-        }
-
-        return text.substring(contentStart, contentEnd).strip();
     }
 
     public record ParsedActionItem(String description, String assignee, LocalDate deadline) {}
