@@ -1,15 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-
-type MeetingStatus = 'Completed' | 'Processing' | 'Draft';
-
-interface TranscriptLine {
-  time: string;
-  speaker: string;
-  text: string
-}
+import { MeetingService, MeetingResponse } from '../../services/meeting.service';
 
 interface Attendee {
   name: string;
@@ -19,7 +12,7 @@ interface Attendee {
 }
 
 interface ActionItem {
-  id: number;
+  id: string;
   text: string;
   done: boolean;
 }
@@ -29,18 +22,6 @@ interface ChatMessage {
   text: string;
 }
 
-interface MeetingDetail {
-  id: number;
-  title: string;
-  date: string;
-  status: MeetingStatus;
-  transcript: TranscriptLine[];
-  attendees: Attendee[];
-  aiSummary: string;
-  actionItems: ActionItem[];
-}
-
-// Same accent rotation used for attendee avatars, echoing the header's blue avatar chip.
 const AVATAR_COLORS = ['#75C3D1', '#A33E43', '#8CA888', '#D9A24B'];
 
 @Component({
@@ -50,10 +31,20 @@ const AVATAR_COLORS = ['#75C3D1', '#A33E43', '#8CA888', '#D9A24B'];
   templateUrl: './meeting-details.component.html',
   styleUrl: './meeting-details.component.css',
 })
-export class MeetingDetailsComponent {
-  meeting!: MeetingDetail;
+export class MeetingDetailsComponent implements OnInit {
+  loading = true;
+  notFound = false;
 
-  transcriptSearch = '';
+  meetingId = '';
+  title = '';
+  date = '';
+  status: 'Completed' | 'Processing' | 'Draft' = 'Draft';
+
+  attendees: Attendee[] = [];
+  aiSummary = 'No AI summary is available for this meeting yet.';
+  actionItems: ActionItem[] = [];
+  transcriptText = '';
+
   newAttendeeEmail = '';
   chatInput = '';
 
@@ -61,61 +52,65 @@ export class MeetingDetailsComponent {
     { from: 'assistant', text: "Hi, I've read through this meeting. Want a summary, key risks, or the action items again?" },
   ];
 
-  private readonly mockMeetings: MeetingDetail[] = [
-    {
-      id: 1,
-      title: 'Product Launch Meeting',
-      date: 'Jul 12, 2026 · 10:00 AM',
-      status: 'Completed',
-      transcript: [
-        { time: '00:45', speaker: 'Elena Chen', text: 'Welcome everyone. Today we\'re finalizing the Q3 roadmap. Let\'s start with the AI feature priorities.' },
-        { time: '02:45', speaker: 'Elena Chen', text: 'The sentiment analysis module is 80% ready. We need to decide if we\'re launching real-time translation concurrently or in Q4.' },
-        { time: '05:12', speaker: 'Marcus Thorne', text: 'I\'d push translation to Q4. We should focus on stability of core transcription first — enterprise clients are asking for better multi-speaker detection.' },
-        { time: '08:20', speaker: 'Alex Rivers', text: 'Agreed. Let\'s mark translation for the October kickoff. Now, about the mobile app overhaul...' },
-      ],
-      attendees: [
-        { name: 'Alex Rivers', email: 'a.rivers@enterprise.com', initials: 'AR', color: AVATAR_COLORS[0] },
-        { name: 'Elena Chen', email: 'e.chen@enterprise.com', initials: 'EC', color: AVATAR_COLORS[1] },
-        { name: 'Marcus Thorne', email: 'm.thorne@enterprise.com', initials: 'MT', color: AVATAR_COLORS[2] },
-      ],
-      aiSummary: 'The team prioritized AI features for the Q3 roadmap, focusing on sentiment analysis stability and multi-speaker detection, and deferred real-time translation to Q4 (October) to protect core platform reliability.',
-      actionItems: [
-        { id: 1, text: 'Refine speaker detection logic', done: false },
-        { id: 2, text: 'Schedule Q4 kickoff for translation feature', done: false },
-        { id: 3, text: 'Finalize sentiment API documentation', done: true },
-        { id: 4, text: 'Share mobile app overhaul brief with design', done: false },
-      ],
-    },
-  ];
+  constructor(
+    private route: ActivatedRoute,
+    private meetingService: MeetingService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
-  private readonly fallbackMeeting: MeetingDetail = {
-    id: 0,
-    title: 'Meeting not found',
-    date: '—',
-    status: 'Draft',
-    transcript: [],
-    attendees: [],
-    aiSummary: 'No AI summary is available for this meeting yet.',
-    actionItems: [],
-  };
-
-  constructor(private route: ActivatedRoute) {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.meeting = this.mockMeetings.find((m) => m.id === id) ?? this.mockMeetings[0] ?? this.fallbackMeeting;
+  ngOnInit(): void {
+    this.route.paramMap.subscribe((params) => {
+      const id = params.get('id');
+      if (!id) {
+        this.notFound = true;
+        this.loading = false;
+        this.cdr.markForCheck();
+        return;
+      }
+      this.loadMeeting(id);
+    });
   }
 
-  get filteredTranscript(): TranscriptLine[] {
-    const term = this.transcriptSearch.trim().toLowerCase();
-    if (!term) {
-      return this.meeting.transcript;
-    }
-    return this.meeting.transcript.filter(
-      (line) => line.text.toLowerCase().includes(term) || line.speaker.toLowerCase().includes(term)
-    );
+  private loadMeeting(id: string): void {
+    this.loading = true;
+    this.notFound = false;
+    this.meetingId = id;
+
+    this.meetingService.getMeeting(id).subscribe({
+      next: (m) => {
+        this.applyMeeting(m);
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('Failed to load meeting', err);
+        this.notFound = true;
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  private applyMeeting(m: MeetingResponse): void {
+    this.title = m.title;
+    const d = new Date(m.meetingDatetime);
+    this.date = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) +
+      ' · ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+    this.status = m.processingStatus === 'DONE' ? 'Completed'
+      : m.processingStatus === 'PROCESSING' ? 'Processing'
+      : 'Draft';
+
+    // TODO: attendees, AI summary, and action items need their own endpoints
+    // (GET /api/meetings/{id}/attendees, GET /api/meetings/{id}/ai-result)
+    // once those exist on the backend — for now they stay empty/placeholder.
+    this.attendees = [];
+    this.aiSummary = 'No AI summary is available for this meeting yet.';
+    this.actionItems = [];
   }
 
   get statusClasses(): string {
-    switch (this.meeting.status) {
+    switch (this.status) {
       case 'Completed':
         return 'bg-[#8CA888] text-white';
       case 'Processing':
@@ -126,7 +121,7 @@ export class MeetingDetailsComponent {
   }
 
   get completedActionCount(): number {
-    return this.meeting.actionItems.filter((a) => a.done).length;
+    return this.actionItems.filter((a) => a.done).length;
   }
 
   toggleActionItem(item: ActionItem): void {
@@ -134,7 +129,7 @@ export class MeetingDetailsComponent {
   }
 
   removeAttendee(attendee: Attendee): void {
-    this.meeting.attendees = this.meeting.attendees.filter((a) => a !== attendee);
+    this.attendees = this.attendees.filter((a) => a !== attendee);
   }
 
   addAttendee(): void {
@@ -144,36 +139,32 @@ export class MeetingDetailsComponent {
     }
     const namePart = email.split('@')[0] || 'New attendee';
     const initials = namePart.slice(0, 2).toUpperCase();
-    this.meeting.attendees.push({
+    this.attendees.push({
       name: namePart,
       email,
       initials,
-      color: AVATAR_COLORS[this.meeting.attendees.length % AVATAR_COLORS.length],
+      color: AVATAR_COLORS[this.attendees.length % AVATAR_COLORS.length],
     });
     this.newAttendeeEmail = '';
   }
 
   regenerateSummary(): void {
-    // Placeholder for wiring to the async AIResult processing endpoint.
+    // TODO: wire to POST /api/meetings/{id}/process once AiResultController exists.
     this.chatMessages.push({ from: 'assistant', text: 'Regenerating the summary from the latest transcript…' });
   }
 
   downloadTranscript(): void {
-  if (this.meeting.transcript.length === 0) {
-    return;
+    if (!this.transcriptText) {
+      return;
+    }
+    const blob = new Blob([this.transcriptText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${this.title.replace(/\s+/g, '_')}_transcript.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
   }
-  const content = this.meeting.transcript
-    .map((line) => `[${line.time}] ${line.speaker}: ${line.text}`)
-    .join('\n\n');
-
-  const blob = new Blob([content], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${this.meeting.title.replace(/\s+/g, '_')}_transcript.txt`;
-  link.click();
-  URL.revokeObjectURL(url);
-}
 
   runQuickAction(action: 'summarize' | 'risks' | 'followup'): void {
     const prompts: Record<typeof action, string> = {
@@ -191,7 +182,6 @@ export class MeetingDetailsComponent {
     }
     this.chatMessages.push({ from: 'user', text: content });
     this.chatInput = '';
-    // Placeholder response — replace with a real call to the LLM service layer.
     this.chatMessages.push({
       from: 'assistant',
       text: 'This is a placeholder reply — connect this to the AIResult service to answer from the real transcript.',
