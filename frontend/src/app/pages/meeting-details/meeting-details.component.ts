@@ -6,6 +6,7 @@ import { MeetingService, MeetingResponse } from '../../services/meeting.service'
 import { TranscriptService } from '../../services/transcript.service';
 import { HeaderComponent } from '../../shared/header/header.component';
 import { AttendeeResponse, AttendeeService, } from '../../services/attendee.service';
+import { MeetingAiService, AiResultResponse, } from '../../services/meeting-ai.service';
 
 interface Attendee {
   id: string;
@@ -57,6 +58,9 @@ export class MeetingDetailsComponent implements OnInit {
   actionItems: ActionItem[] = [];
   transcriptText = '';
 
+  isGeneratingSummary = false;
+  isSendingMessage = false;
+
   selectedAttendeeId = '';
   chatInput = '';
 
@@ -69,6 +73,7 @@ export class MeetingDetailsComponent implements OnInit {
     private meetingService: MeetingService,
     private transcriptService: TranscriptService,
     private attendeeService: AttendeeService,
+    private meetingAiService: MeetingAiService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -181,8 +186,7 @@ export class MeetingDetailsComponent implements OnInit {
   private formatMeetingProcessingStatus(
     status: string
   ): MeetingProcessingStatusLabel {
-    // Support both the current backend values and the values
-    // defined in the project requirements.
+
     switch (status) {
       case 'DONE':
       case 'COMPLETED':
@@ -214,6 +218,42 @@ export class MeetingDetailsComponent implements OnInit {
     // TODO: Load the AI summary and action items from their dedicated endpoints.
     this.aiSummary = 'No AI summary is available for this meeting yet.';
     this.actionItems = [];
+  }
+
+  private applyAiResult(result: AiResultResponse): void {
+    this.aiSummary =
+      result.conciseSummary ??
+      result.detailedSummary ??
+      'The AI response did not contain a summary.';
+
+    this.actionItems = (result.actionItems ?? []).map(
+      (item) => ({
+        id: item.id,
+        text: item.description,
+        done:
+          item.status === 'DONE' ||
+          item.status === 'COMPLETED',
+      })
+    );
+  }
+
+  private getAiErrorMessage(
+    error: any,
+    fallback: string
+  ): string {
+    if (error.status === 404) {
+      return 'This meeting does not have a transcript yet.';
+    }
+
+    if (error.status === 503) {
+      return 'The AI service is unavailable. Make sure Ollama is running.';
+    }
+
+    if (error.status === 0) {
+      return 'The backend could not be reached.';
+    }
+
+    return fallback;
   }
 
   get statusClasses(): string {
@@ -316,8 +356,46 @@ export class MeetingDetailsComponent implements OnInit {
   }
 
   regenerateSummary(): void {
-    // TODO: wire to POST /api/meetings/{id}/process once AiResultController exists.
-    this.chatMessages.push({ from: 'assistant', text: 'Regenerating the summary from the latest transcript…' });
+    if (
+      !this.meetingId ||
+      !this.transcriptText ||
+      this.isGeneratingSummary
+    ) {
+      return;
+    }
+
+    this.isGeneratingSummary = true;
+    this.status = 'Processing';
+
+    this.meetingAiService
+      .generateAiResult(this.meetingId)
+      .subscribe({
+        next: (result) => {
+          this.applyAiResult(result);
+          this.status = 'Processed';
+          this.isGeneratingSummary = false;
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error(
+            'Failed to generate AI result',
+            error
+          );
+
+          this.status = 'Failed';
+          this.isGeneratingSummary = false;
+
+          this.chatMessages.push({
+            from: 'assistant',
+            text: this.getAiErrorMessage(
+              error,
+              'The AI summary could not be generated.'
+            ),
+          });
+
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   downloadTranscript(): void {
@@ -344,14 +422,67 @@ export class MeetingDetailsComponent implements OnInit {
 
   sendMessage(text?: string): void {
     const content = (text ?? this.chatInput).trim();
-    if (!content) {
+
+    if (
+      !content ||
+      !this.meetingId ||
+      this.isSendingMessage
+    ) {
       return;
     }
-    this.chatMessages.push({ from: 'user', text: content });
-    this.chatInput = '';
+
+    // Istoricul trebuie capturat înainte să adăugăm
+    // întrebarea curentă în chat.
+    const previousMessages = this.chatMessages.map(
+      (message) => ({
+        role: message.from,
+        text: message.text,
+      })
+    );
+
     this.chatMessages.push({
-      from: 'assistant',
-      text: 'This is a placeholder reply — connect this to the AIResult service to answer from the real transcript.',
+      from: 'user',
+      text: content,
     });
+
+    this.chatInput = '';
+    this.isSendingMessage = true;
+    this.cdr.markForCheck();
+
+    this.meetingAiService
+      .askMeeting(this.meetingId, {
+        question: content,
+        previousMessages,
+      })
+      .subscribe({
+        next: (response) => {
+          this.chatMessages.push({
+            from: 'assistant',
+            text:
+              response.answer ||
+              'The AI service returned an empty answer.',
+          });
+
+          this.isSendingMessage = false;
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error(
+            'Failed to ask meeting AI',
+            error
+          );
+
+          this.chatMessages.push({
+            from: 'assistant',
+            text: this.getAiErrorMessage(
+              error,
+              'Your question could not be answered.'
+            ),
+          });
+
+          this.isSendingMessage = false;
+          this.cdr.markForCheck();
+        },
+      });
   }
 }
