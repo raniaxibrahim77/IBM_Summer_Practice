@@ -75,6 +75,28 @@
           </button>
         </div>
 
+        @if (meetingSuccessMessage) {
+          <div
+            role="status"
+            class="flex items-center justify-between gap-3 rounded-xl border border-green-300 bg-green-50 px-4 py-3 text-sm font-semibold text-green-800"
+          >
+            <span>
+              {{ meetingSuccessMessage }}
+            </span>
+
+            <button
+              type="button"
+              (click)="meetingSuccessMessage = ''"
+              aria-label="Close success message"
+              class="flex items-center justify-center text-green-800 hover:opacity-60"
+            >
+              <span class="material-symbols-outlined text-lg">
+                close
+              </span>
+            </button>
+          </div>
+        }
+
         <!-- Recent Meetings -->
         <div class="bg-[#FBF2DA] p-6 rounded-xl">
           <div class="flex items-center justify-between mb-4">
@@ -85,7 +107,7 @@
             </a>
           </div>
           <div class="space-y-3">
-            @for (meeting of filteredRecentMeetings; track meeting.title) {
+            @for (meeting of filteredRecentMeetings; track meeting.id) {
             <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-[#450C21]/10">
               <div>
                 <p class="text-sm font-semibold text-[#450C21]">{{ meeting.title }}</p>
@@ -139,7 +161,7 @@
         <div class="bg-[#75C3D1] p-6 rounded-xl">
           <h3 class="text-lg font-bold text-[#450C21] mb-4">Upcoming Events</h3>
           <div class="space-y-3">
-            @for (event of filteredUpcomingEvents; track event.title) {
+            @for (event of filteredUpcomingEvents; track event.id) {
             <div class="flex gap-3">
               <div class="flex flex-col items-center w-10 shrink-0">
                 <span class="text-[10px] font-bold text-[#450C21]/70">{{ event.day }}</span>
@@ -202,8 +224,8 @@
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="text-sm font-semibold text-[#450C21] block mb-1">When</label>
-          <input type="date" [(ngModel)]="newMeetingDate" name="meetingDate"
+          <label class="text-sm font-semibold text-[#450C21] block mb-1">When</label> 
+          <input type="date" [(ngModel)]="newMeetingDate" name="meetingDate" [min]="minimumMeetingDate"
             class="w-full px-4 py-2.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-sm text-[#450C21]" />
         </div>
         <div>
@@ -216,27 +238,51 @@
       <div>
         <label class="text-sm font-semibold text-[#450C21] block mb-1">
           People to invite</label>
-        <input type="text" [(ngModel)]="peopleSearch" name="peopleSearch" placeholder="Search by name or email..." autocomplete="off"
+        <input type="text" [(ngModel)]="peopleSearch" name="peopleSearch" placeholder="Search by name or email..." autocomplete="off" (focus)="peopleSearchFocused = true" (blur)="peopleSearchFocused = false"
           class="w-full px-4 py-2.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-sm text-[#450C21]" />
 
-        @if (peopleSuggestions.length > 0) {
-        <div class="mt-1 bg-white rounded-lg border border-[#450C21]/10 overflow-hidden">
-          @for (person of peopleSuggestions; track person.id) {
-          <button type="button" (click)="addPerson(person)"
-            class="w-full text-left px-4 py-2 text-sm text-[#450C21] hover:bg-[#75C3D1]/20 transition-colors"
-          >
-            <span class="block font-semibold">
-              {{ person.name }}
-            </span>
+        @if (isLoadingAttendees) {
+          <p class="mt-2 text-xs font-semibold text-[#450C21]/60">
+            Loading attendees...
+          </p>
+        }
 
-            @if (person.email) {
-              <span class="block text-xs text-[#450C21]/60">
-                {{ person.email }}
+        @if (attendeeLoadError) {
+          <p role="alert" class="mt-2 text-xs font-semibold text-red-700">
+            {{ attendeeLoadError }}
+          </p>
+        }
+
+        @if (
+          peopleSearchFocused &&
+          !isLoadingAttendees &&
+          !attendeeLoadError &&
+          peopleSearch.trim() &&
+          peopleSuggestions.length === 0
+        ) {
+          <p class="mt-2 text-xs font-semibold text-[#450C21]/60">
+            No matching attendees.
+          </p>
+        }
+
+        @if (peopleSuggestions.length > 0) {
+          <div class="mt-1 bg-white rounded-lg border border-[#450C21]/10 overflow-hidden">
+            @for (person of peopleSuggestions; track person.id) {
+            <button type="button" (mousedown)="addPerson(person); $event.preventDefault()"
+              class="w-full text-left px-4 py-2 text-sm text-[#450C21] hover:bg-[#75C3D1]/20 transition-colors"
+            >
+              <span class="block font-semibold">
+                {{ person.name }}
               </span>
+
+              @if (person.email) {
+                <span class="block text-xs text-[#450C21]/60">
+                  {{ person.email }}
+                </span>
+              }
+            </button>
             }
-          </button>
-          }
-        </div>
+          </div>
         }
 
         @if (!showAddAttendeeForm) {
@@ -319,40 +365,29 @@
         @if (invitedPeople.length > 0) {
         <div class="flex flex-wrap gap-2 mt-3">
           @for (person of invitedPeople; track person.id) {
-          <span
-            class="flex items-center gap-1 bg-[#A33E43] text-[#FBF2DA] px-3 py-1 rounded-full text-xs font-semibold">
-            {{ person.name }}
-            <button type="button" (click)="removePerson(person.id)" [attr.aria-label]="'Remove ' + person.name" class="hover:text-[#D9FFD2]">
-              <span class="material-symbols-outlined text-sm">close</span>
-            </button>
-          </span>
+            <span
+              class="flex items-center gap-1 bg-[#A33E43] text-[#FBF2DA] px-3 py-1 rounded-full text-xs font-semibold"
+            >
+              {{ person.name }}
+              <button type="button" (click)="removePerson(person.id)" [attr.aria-label]="'Remove ' + person.name" class="hover:text-[#D9FFD2]"
+              >
+                <span class="material-symbols-outlined text-sm">close</span>
+              </button>
+            </span>
           }
         </div>
         }
       </div>
-
-      <div class="space-y-2 pt-2">
-        <label class="flex items-center gap-2 text-sm text-[#450C21] cursor-pointer">
-          <input type="checkbox" [(ngModel)]="notifyPeople" name="notifyPeople"
-            class="w-4 h-4 rounded accent-[#A33E43]" />
-          Notify people
-        </label>
-        <label class="flex items-center gap-2 text-sm text-[#450C21] cursor-pointer">
-          <input type="checkbox" [(ngModel)]="addToCalendar" name="addToCalendar"
-            class="w-4 h-4 rounded accent-[#A33E43]" />
-          Add to my calendar
-        </label>
-      </div>
     </div>
 
     @if (createMeetingError) {
-  <div
-    role="alert"
-    class="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
-  >
-    {{ createMeetingError }}
-  </div>
-}
+      <div
+        role="alert"
+        class="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
+      >
+        {{ createMeetingError }}
+      </div>
+    }
 
   <div class="flex gap-3 mt-6">
     <button
@@ -370,7 +405,7 @@
       [disabled]="isCreatingMeeting"
       class="flex-1 py-3 rounded-xl bg-[#A33E43] text-[#FBF2DA] font-semibold text-sm hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
     >
-     @if (isCreatingMeeting) {
+      @if (isCreatingMeeting) {
         Creating...
       } @else {
         Create Meeting

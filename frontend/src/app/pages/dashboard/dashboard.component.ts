@@ -15,6 +15,7 @@ interface Task {
 }
 
 interface RecentMeeting {
+  id: string;
   title: string;
   date: string;
   attendees: number;
@@ -22,6 +23,7 @@ interface RecentMeeting {
 }
 
 interface UpcomingEvent {
+  id: string;
   day: string;
   date: string;
   title: string;
@@ -59,6 +61,10 @@ export class DashboardComponent implements OnInit {
   readonly weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
   private today = new Date();
+  readonly minimumMeetingDate =
+    `${this.today.getFullYear()}-` +
+    `${(this.today.getMonth() + 1).toString().padStart(2, '0')}-` +
+    `${this.today.getDate().toString().padStart(2, '0')}`;
   viewYear = this.today.getFullYear();
   viewMonth = this.today.getMonth(); // 0-indexed
 
@@ -155,13 +161,21 @@ export class DashboardComponent implements OnInit {
   }
 
   private loadAttendees(): void {
+    this.isLoadingAttendees = true;
+    this.attendeeLoadError = '';
+
     this.attendeeService.getAttendees().subscribe({
       next: (attendees) => {
         this.attendees = attendees;
-        console.log('Attendees received:', attendees);
+        this.isLoadingAttendees = false;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Failed to load attendees', error);
+        this.isLoadingAttendees = false;
+        this.attendeeLoadError =
+          'Attendees could not be loaded. Please try again.';
+        this.cdr.markForCheck();
       }
     });
   }
@@ -170,6 +184,7 @@ export class DashboardComponent implements OnInit {
     const date = new Date(meeting.meetingDatetime);
 
     return {
+      id: meeting.id,
       title: meeting.title,
       date: date.toLocaleDateString([], {
         month: 'short',
@@ -185,6 +200,7 @@ export class DashboardComponent implements OnInit {
     const date = new Date(meeting.meetingDatetime);
 
     return {
+      id: meeting.id,
       day: date
         .toLocaleDateString([], { weekday: 'short' })
         .toUpperCase(),
@@ -310,6 +326,8 @@ export class DashboardComponent implements OnInit {
   isCreatingMeeting = false;
   showAddAttendeeForm = false;
   isCreatingAttendee = false;
+  isLoadingAttendees = false;
+  peopleSearchFocused = false;
   createMeetingError = '';
   newMeetingName = '';
   newMeetingDate = '';
@@ -317,32 +335,41 @@ export class DashboardComponent implements OnInit {
   peopleSearch = '';
   newAttendeeName = '';
   newAttendeeEmail = '';
-  createAttendeeError = ''; 
-  notifyPeople = true;
-  addToCalendar = true;
+  createAttendeeError = '';
+  attendeeLoadError = '';
+  meetingSuccessMessage = ''; 
 
   invitedPeople: AttendeeResponse[] = [];
 
   get peopleSuggestions(): AttendeeResponse[] {
-    const term = this.peopleSearch.trim().toLowerCase();
-
-    if (!term) {
+    if (!this.peopleSearchFocused) {
       return [];
     }
-    return this.attendees.filter((attendee) => {
-      const matchesSearch =
-        attendee.name.toLowerCase().includes(term) ||
-        (attendee.email?.toLowerCase().includes(term) ?? false);
 
-      const alreadyInvited = this.invitedPeople.some(
-        (invited) => invited.id === attendee.id
-      );
-      return matchesSearch && !alreadyInvited;
-    });
+    const term = this.peopleSearch.trim().toLowerCase();
+    
+    const availableAttendees = this.attendees.filter(
+      (attendee) =>
+        !this.invitedPeople.some(
+          (invited) => invited.id === attendee.id
+        )
+    );
+
+    if (!term) {
+      return availableAttendees.slice(0, 5);
+    }
+
+    return availableAttendees
+      .filter((attendee) =>
+        attendee.name.toLowerCase().includes(term) ||
+        (attendee.email?.toLowerCase().includes(term) ?? false)
+      )
+      .slice(0, 5);
   }
 
   openCreateModal(): void {
     this.createMeetingError = '';
+    this.meetingSuccessMessage = '';
     this.showCreateModal = true;
   }
 
@@ -353,8 +380,6 @@ export class DashboardComponent implements OnInit {
     this.newMeetingTime = '';
     this.peopleSearch = '';
     this.invitedPeople = [];
-    this.notifyPeople = true;
-    this.addToCalendar = true;
     this.isCreatingMeeting = false;
     this.createMeetingError = '';
     this.showAddAttendeeForm = false;
@@ -362,13 +387,16 @@ export class DashboardComponent implements OnInit {
     this.newAttendeeName = '';
     this.newAttendeeEmail = '';
     this.createAttendeeError = '';
+    this.peopleSearchFocused = false;
   }
 
   openAddAttendeeForm(): void {
     this.newAttendeeName = this.peopleSearch.trim();
     this.newAttendeeEmail = '';
     this.createAttendeeError = '';
+    this.peopleSearch = '';
     this.showAddAttendeeForm = true;
+    this.peopleSearchFocused = false;
   }
 
   closeAddAttendeeForm(): void {
@@ -388,6 +416,7 @@ export class DashboardComponent implements OnInit {
       this.invitedPeople.push(attendee);
     }
     this.peopleSearch = '';
+    this.peopleSearchFocused = false;
   }
 
   removePerson(attendeeId: string): void {
@@ -411,6 +440,18 @@ export class DashboardComponent implements OnInit {
       this.createMeetingError = 'Please select a meeting time.';
      return;
     }
+    const meetingDateTime = new Date(
+      `${this.newMeetingDate}T${this.newMeetingTime}:00`
+    );
+
+    if (
+      Number.isNaN(meetingDateTime.getTime()) ||
+      meetingDateTime.getTime() <= Date.now()
+    ) {
+      this.createMeetingError =
+        'Please select a future date and time.';
+      return;
+    }
     if (this.isCreatingMeeting) {
       return;
     }
@@ -427,8 +468,16 @@ export class DashboardComponent implements OnInit {
 
     this.meetingService.createMeeting(request).subscribe({
       next: () => {
+        const attendeeCount = this.invitedPeople.length;
+
         this.isCreatingMeeting = false;
         this.closeCreateModal();
+
+        this.meetingSuccessMessage =
+          attendeeCount === 1
+            ? 'Meeting created successfully with 1 attendee.'
+            : `Meeting created successfully with ${attendeeCount} attendees.`;
+
         this.loadRecentMeetings();
         this.cdr.markForCheck();
       },
