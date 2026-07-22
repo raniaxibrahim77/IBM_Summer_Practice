@@ -12,7 +12,7 @@ interface MeetingRow {
   title: string;
   dateTime: string;
   attendees: number;
-  transcriptFile: File | null;
+  hasTranscript: boolean;
 }
 
 @Component({
@@ -37,7 +37,12 @@ export class MeetingsComponent implements OnInit {
   ngOnInit(): void {
     this.meetingService.getMeetings(this.authService.getCurrentUser()?.id).subscribe({
       next: (meetings) => {
-        this.meetings = meetings.map((m) => this.toMeetingRow(m));
+        this.meetings = meetings.map((meeting) => this.toMeetingRow(meeting));
+        // MeetingResponse does not currently include transcript availability,
+        // so check the transcript endpoint for each meeting.
+        this.meetings.forEach((meeting) => {
+          this.loadTranscriptStatus(meeting);
+        });
         this.cdr.markForCheck();
       },
       error: (err) => console.error('Failed to load meetings', err),
@@ -53,9 +58,24 @@ export class MeetingsComponent implements OnInit {
       id: m.id,
       title: m.title,
       dateTime,
-      attendees: 0, // backend doesn't return attendee count yet
-      transcriptFile: null,
+      attendees: m.attendeeCount,
+      hasTranscript: false,
     };
+  }
+
+  private loadTranscriptStatus(meeting: MeetingRow): void {
+    this.transcriptService
+      .getTranscript(meeting.id)
+      .subscribe({
+        next: () => {
+          meeting.hasTranscript = true;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          meeting.hasTranscript = false;
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   get filteredMeetings(): MeetingRow[] {
@@ -86,21 +106,32 @@ export class MeetingsComponent implements OnInit {
 
     this.transcriptService.createTranscript(meeting.id, content).subscribe({
       next: () => {
-        meeting.transcriptFile = file;
+        meeting.hasTranscript = true;
         this.cdr.markForCheck();
       },
-      error: (err) => {
-        // 409 or similar = transcript already exists, so update instead
-        this.transcriptService.updateTranscript(meeting.id, content).subscribe({
-          next: () => {
-            meeting.transcriptFile = file;
-            this.cdr.markForCheck();
-          },
-          error: (updateErr) => {
-            console.error('Failed to upload transcript', updateErr);
-            alert('Failed to upload transcript.');
-          },
-        });
+      error: (error) => {
+        if (error.status !== 409) {
+          console.error('Failed to create transcript', error);
+          alert('Failed to upload transcript.');
+          return;
+        }
+
+        // A transcript already exists for this meeting, so replace its content.
+        this.transcriptService
+          .updateTranscript(meeting.id, content)
+          .subscribe({
+            next: () => {
+              meeting.hasTranscript = true;
+              this.cdr.markForCheck();
+            },
+            error: (updateError) => {
+              console.error(
+                'Failed to update transcript',
+                updateError
+              );
+              alert('Failed to update transcript.');
+            },
+          });
       },
     });
   };
@@ -108,8 +139,7 @@ export class MeetingsComponent implements OnInit {
   input.value = '';
 }
 
-
-  // Meeting modal state 
+  // Meeting modal state
   showCreateModal = false;
 
   newMeetingName = '';
@@ -117,7 +147,7 @@ export class MeetingsComponent implements OnInit {
   newMeetingTime = '';
   peopleSearch = '';
   processWithAI = true;
-    
+
   transcriptFile: File | null = null;
   transcriptError: string | null = null;
 
@@ -194,7 +224,7 @@ export class MeetingsComponent implements OnInit {
       this.transcriptError = 'A transcript file is required to create a meeting.';
       return;
     }
-  
+
     // TODO: replace with a real POST to /api/meetings (multipart: metadata + transcript file),
     // then re-fetch or prepend the returned MeetingResponse instead of faking an id locally.
     console.log('Creating meeting with transcript:', this.transcriptFile.name);

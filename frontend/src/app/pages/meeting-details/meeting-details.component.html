@@ -49,7 +49,7 @@
     <div class="bg-[#FBF2DA] rounded-xl p-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
       <div>
         <div class="flex items-center gap-3 mb-2">
-          <span class="px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wide" [ngClass]="statusClasses">
+          <span class="px-2 py-1 rounded-full text-xs font-bold tracking-wide" [ngClass]="statusClasses">
             {{ status }}
           </span>
           <span class="text-sm text-[#450C21]/60">{{ date }}</span>
@@ -60,7 +60,7 @@
       <!-- Attendee bubbles -->
       <div class="relative group shrink-0">
         <div class="flex -space-x-2 cursor-pointer">
-          @for (attendee of attendees; track attendee.email) {
+          @for (attendee of attendees; track attendee.id) {
             <div
               class="w-9 h-9 rounded-full border-2 border-[#FBF2DA] flex items-center justify-center text-white text-xs font-bold shadow-sm"
               [style.background-color]="attendee.color"
@@ -74,7 +74,7 @@
         <div class="hidden group-hover:block absolute right-0 top-full mt-2 w-72 bg-white border border-[#450C21]/10 shadow-lg p-3 z-50">
           <h3 class="text-xs font-bold uppercase tracking-wider text-[#A33E43] mb-2">Attendees</h3>
           <div class="space-y-2 max-h-56 overflow-y-auto">
-            @for (attendee of attendees; track attendee.email) {
+            @for (attendee of attendees; track attendee.id) {
               <div class="flex items-center gap-2">
                 <div
                   class="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0"
@@ -82,7 +82,7 @@
                 >{{ attendee.initials }}</div>
                 <div class="min-w-0 flex-1">
                   <p class="text-xs font-semibold text-[#450C21] truncate">{{ attendee.name }}</p>
-                  <p class="text-[11px] text-[#450C21]/50 truncate">{{ attendee.email }}</p>
+                  <p class="text-[11px] text-[#450C21]/50 truncate">{{ attendee.email || 'No email'}}</p>
                 </div>
                 <button (click)="removeAttendee(attendee)" class="text-[#450C21]/30 hover:text-[#A33E43] transition-colors">
                   <span class="material-symbols-outlined text-sm">close</span>
@@ -91,16 +91,26 @@
             }
           </div>
           <div class="flex gap-2 mt-3 pt-3 border-t border-[#450C21]/10">
-            <input
-              type="email"
-              [(ngModel)]="newAttendeeEmail"
-              (keydown.enter)="addAttendee()"
-              placeholder="Add attendee email..."
+            <select
+              [(ngModel)]="selectedAttendeeId"
               class="flex-1 min-w-0 px-2 py-1.5 bg-[#FBF2DA] border-2 border-[#450C21]/10 focus:border-[#75C3D1] outline-none text-xs text-[#450C21]"
-            />
+            >
+              <option value="" disabled>
+                Select attendee...
+              </option>
+
+              @for (attendee of unassignedAttendees; track attendee.id) {
+                <option [value]="attendee.id">
+                  {{ attendee.name }} — {{ attendee.email || 'No email' }}
+                </option>
+              }
+            </select>
+
             <button
+              type="button"
               (click)="addAttendee()"
-              class="w-8 h-8 shrink-0 bg-[#A33E43] text-[#FBF2DA] flex items-center justify-center hover:brightness-110 transition-all"
+              [disabled]="!selectedAttendeeId"
+              class="w-8 h-8 shrink-0 bg-[#A33E43] text-[#FBF2DA] flex items-center justify-center hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <span class="material-symbols-outlined text-base">add</span>
             </button>

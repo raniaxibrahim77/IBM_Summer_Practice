@@ -16,12 +16,17 @@ interface Task {
   tag: string;
 }
 
+type MeetingProcessingStatusLabel =
+  | 'Not processed'
+  | 'Processing'
+  | 'Processed'
+  | 'Failed';
 interface RecentMeeting {
   id: string;
   title: string;
   date: string;
   attendees: number;
-  tag: string;
+  tag: MeetingProcessingStatusLabel;
 }
 
 interface UpcomingEvent {
@@ -128,6 +133,24 @@ export class DashboardComponent implements OnInit {
     );
   }
 
+  getMeetingProcessingStatusClasses(
+    status: MeetingProcessingStatusLabel
+  ): string {
+    switch (status) {
+      case 'Processed':
+        return 'bg-[#8CA888] text-white';
+
+      case 'Processing':
+        return 'bg-[#75C3D1] text-[#450C21]';
+
+      case 'Failed':
+        return 'bg-[#A33E43] text-white';
+
+      default:
+        return 'bg-[#450C21]/10 text-[#450C21]';
+    }
+  }
+
   private loadRecentMeetings(): void {
     this.meetingService.getMeetings(this.authService.getCurrentUser()?.id).subscribe({
       next: (meetings) => {
@@ -192,6 +215,28 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  private formatMeetingProcessingStatus(
+    status: string
+  ): MeetingProcessingStatusLabel {
+    switch (status) {
+      case 'DONE':
+      case 'COMPLETED':
+        return 'Processed';
+
+      case 'IN_PROGRESS':
+      case 'PROCESSING':
+        return 'Processing';
+
+      case 'FAILED':
+        return 'Failed';
+
+      case 'NOT_STARTED':
+      case 'NOT_PROCESSED':
+      default:
+        return 'Not processed';
+    }
+  }
+
   private toRecentMeeting(meeting: MeetingResponse): RecentMeeting {
     const date = new Date(meeting.meetingDatetime);
 
@@ -204,7 +249,9 @@ export class DashboardComponent implements OnInit {
         year: 'numeric'
       }),
       attendees: meeting.attendeeCount,
-      tag: meeting.processingStatus
+      tag: this.formatMeetingProcessingStatus(
+        meeting.processingStatus
+      )
     };
   }
 
@@ -253,6 +300,8 @@ export class DashboardComponent implements OnInit {
   get viewMonthLabel(): string {
     return `${MONTH_NAMES[this.viewMonth]} ${this.viewYear}`;
   }
+
+
 
   previousMonth(): void {
     this.viewMonth--;
@@ -349,7 +398,7 @@ export class DashboardComponent implements OnInit {
   newAttendeeEmail = '';
   createAttendeeError = '';
   attendeeLoadError = '';
-  meetingSuccessMessage = ''; 
+  meetingSuccessMessage = '';
 
   invitedPeople: AttendeeResponse[] = [];
 
@@ -359,7 +408,7 @@ export class DashboardComponent implements OnInit {
     }
 
     const term = this.peopleSearch.trim().toLowerCase();
-    
+
     const availableAttendees = this.attendees.filter(
       (attendee) =>
         !this.invitedPeople.some(

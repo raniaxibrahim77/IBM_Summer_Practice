@@ -107,8 +107,12 @@
                 <p class="text-sm font-semibold text-[#450C21]">{{ meeting.title }}</p>
                 <p class="text-xs text-[#450C21]/60">{{ meeting.date }} · {{ meeting.attendees }} attendees</p>
               </div>
-              <span class="bg-[#8CA888] text-white px-2 py-1 rounded-full text-[10px] font-bold uppercase">{{
-                meeting.tag }}</span>
+              <span
+                class="px-2 py-1 rounded-full text-[10px] font-bold"
+                [ngClass]="getMeetingProcessingStatusClasses(meeting.tag)"
+              >
+                {{ meeting.tag }}
+              </span>
             </a>
             }
           </div>

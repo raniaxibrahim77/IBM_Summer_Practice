@@ -14,6 +14,11 @@ export interface AttendeeCreateRequest {
   email: string | null;
 }
 
+export interface MeetingAttendeeCreateRequest {
+  attendeeId: string;
+  roleInMeeting: string | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -28,12 +33,39 @@ export class AttendeeService {
     );
   }
 
+  getMeetingAttendees(
+    meetingId: string
+  ): Observable<AttendeeResponse[]> {
+    return this.http.get<AttendeeResponse[]>(
+      `${this.apiUrl}/meetings/${meetingId}/attendees`
+    );
+  }
+
   createAttendee(
     request: AttendeeCreateRequest
   ): Observable<AttendeeResponse> {
     return this.http.post<AttendeeResponse>(
       `${this.apiUrl}/attendees`,
       request
+    );
+  }
+
+  addMeetingAttendee(
+    meetingId: string,
+    request: MeetingAttendeeCreateRequest
+  ): Observable<AttendeeResponse> {
+    return this.http.post<AttendeeResponse>(
+      `${this.apiUrl}/meetings/${meetingId}/attendees`,
+      request
+    );
+  }
+
+  removeMeetingAttendee(
+    meetingId: string,
+    attendeeId: string
+  ): Observable<void> {
+    return this.http.delete<void>(
+      `${this.apiUrl}/meetings/${meetingId}/attendees/${attendeeId}`
     );
   }
 }

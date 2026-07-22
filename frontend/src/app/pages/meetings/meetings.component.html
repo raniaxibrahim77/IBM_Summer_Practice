@@ -92,11 +92,11 @@
               </td>
               <td class="px-6 py-4">
                 <label class="cursor-pointer inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold transition-colors"
-                      [class.bg-[#8CA888]]="!meeting.transcriptFile"
-                      [class.text-white]="!meeting.transcriptFile"
-                      [class.bg-[#75C3D1]]="meeting.transcriptFile"
-                      [class.text-[#450C21]]="meeting.transcriptFile">
-                  {{ meeting.transcriptFile ? 'Uploaded' : 'Add Transcript' }}
+                      [class.bg-[#8CA888]]="!meeting.hasTranscript"
+                      [class.text-white]="!meeting.hasTranscript"
+                      [class.bg-[#75C3D1]]="meeting.hasTranscript"
+                      [class.text-[#450C21]]="meeting.hasTranscript">
+                  {{ meeting.hasTranscript ? 'Edit Transcript' : 'Add Transcript' }}
                   <input type="file" accept=".txt" class="hidden" (change)="onRowTranscriptSelected($event, meeting)" />
                 </label>
               </td>

@@ -5,10 +5,13 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MeetingService, MeetingResponse } from '../../services/meeting.service';
 import { TranscriptService } from '../../services/transcript.service';
 import { HeaderComponent } from '../../shared/header/header.component';
+import { AttendeeResponse, AttendeeService, } from '../../services/attendee.service';
 
 interface Attendee {
+  id: string;
   name: string;
   email: string;
+  roleInMeeting: string | null;
   initials: string;
   color: string;
 }
@@ -26,6 +29,12 @@ interface ChatMessage {
 
 const AVATAR_COLORS = ['#75C3D1', '#A33E43', '#8CA888', '#D9A24B'];
 
+type MeetingProcessingStatusLabel =
+  | 'Not processed'
+  | 'Processing'
+  | 'Processed'
+  | 'Failed';
+
 @Component({
   selector: 'app-meeting-details',
   standalone: true,
@@ -40,14 +49,15 @@ export class MeetingDetailsComponent implements OnInit {
   meetingId = '';
   title = '';
   date = '';
-  status: 'Completed' | 'Processing' | 'Draft' = 'Draft';
+  status: MeetingProcessingStatusLabel = 'Not processed';
 
   attendees: Attendee[] = [];
+  availableAttendees: AttendeeResponse[] = [];
   aiSummary = 'No AI summary is available for this meeting yet.';
   actionItems: ActionItem[] = [];
   transcriptText = '';
 
-  newAttendeeEmail = '';
+  selectedAttendeeId = '';
   chatInput = '';
 
   chatMessages: ChatMessage[] = [
@@ -58,6 +68,7 @@ export class MeetingDetailsComponent implements OnInit {
     private route: ActivatedRoute,
     private meetingService: MeetingService,
     private transcriptService: TranscriptService,
+    private attendeeService: AttendeeService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -78,6 +89,9 @@ export class MeetingDetailsComponent implements OnInit {
     this.loading = true;
     this.notFound = false;
     this.meetingId = id;
+
+    this.loadAttendees();
+    this.loadAvailableAttendees();
 
     this.meetingService.getMeeting(id).subscribe({
       next: (m) => {
@@ -103,6 +117,90 @@ export class MeetingDetailsComponent implements OnInit {
     });
   }
 
+  private loadAttendees(): void {
+    this.attendeeService
+      .getMeetingAttendees(this.meetingId)
+      .subscribe({
+        next: (attendees) => {
+          this.attendees = attendees.map(
+            (attendee, index) =>
+              this.toAttendeeView(attendee, index)
+          );
+
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error(
+            'Failed to load meeting attendees',
+            error
+          );
+
+          this.attendees = [];
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  private loadAvailableAttendees(): void {
+    this.attendeeService.getAttendees().subscribe({
+      next: (attendees) => {
+        this.availableAttendees = attendees;
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.error(
+          'Failed to load available attendees',
+          error
+        );
+      },
+    });
+  }
+
+  private toAttendeeView(
+    attendee: AttendeeResponse,
+    index: number
+  ): Attendee {
+    const initials = attendee.name
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join('');
+
+    return {
+      id: attendee.id,
+      name: attendee.name,
+      email: attendee.email ?? '',
+      roleInMeeting: attendee.roleInMeeting,
+      initials,
+      color: AVATAR_COLORS[index % AVATAR_COLORS.length],
+    };
+  }
+
+  private formatMeetingProcessingStatus(
+    status: string
+  ): MeetingProcessingStatusLabel {
+    // Support both the current backend values and the values
+    // defined in the project requirements.
+    switch (status) {
+      case 'DONE':
+      case 'COMPLETED':
+        return 'Processed';
+
+      case 'IN_PROGRESS':
+      case 'PROCESSING':
+        return 'Processing';
+
+      case 'FAILED':
+        return 'Failed';
+
+      case 'NOT_STARTED':
+      case 'NOT_PROCESSED':
+      default:
+        return 'Not processed';
+    }
+  }
 
   private applyMeeting(m: MeetingResponse): void {
     this.title = m.title;
@@ -110,24 +208,25 @@ export class MeetingDetailsComponent implements OnInit {
     this.date = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) +
       ' · ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 
-    this.status = m.processingStatus === 'DONE' ? 'Completed'
-      : m.processingStatus === 'PROCESSING' ? 'Processing'
-      : 'Draft';
-
-    // TODO: attendees, AI summary, and action items need their own endpoints
-    // (GET /api/meetings/{id}/attendees, GET /api/meetings/{id}/ai-result)
-    // once those exist on the backend — for now they stay empty/placeholder.
-    this.attendees = [];
+    this.status = this.formatMeetingProcessingStatus(
+      m.processingStatus
+    );
+    // TODO: Load the AI summary and action items from their dedicated endpoints.
     this.aiSummary = 'No AI summary is available for this meeting yet.';
     this.actionItems = [];
   }
 
   get statusClasses(): string {
     switch (this.status) {
-      case 'Completed':
+      case 'Processed':
         return 'bg-[#8CA888] text-white';
+
       case 'Processing':
         return 'bg-[#75C3D1] text-[#450C21]';
+
+      case 'Failed':
+        return 'bg-[#A33E43] text-white';
+
       default:
         return 'bg-[#450C21]/10 text-[#450C21]';
     }
@@ -137,28 +236,83 @@ export class MeetingDetailsComponent implements OnInit {
     return this.actionItems.filter((a) => a.done).length;
   }
 
+  get unassignedAttendees(): AttendeeResponse[] {
+    return this.availableAttendees.filter(
+      (candidate) =>
+        candidate.email &&
+        !this.attendees.some(
+          (assigned) => assigned.id === candidate.id
+        )
+    );
+  }
+
   toggleActionItem(item: ActionItem): void {
     item.done = !item.done;
   }
 
   removeAttendee(attendee: Attendee): void {
-    this.attendees = this.attendees.filter((a) => a !== attendee);
+    this.attendeeService
+      .removeMeetingAttendee(
+        this.meetingId,
+        attendee.id
+      )
+      .subscribe({
+        next: () => {
+          this.attendees = this.attendees.filter(
+            (item) => item.id !== attendee.id
+          );
+
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error(
+            'Failed to remove attendee from meeting',
+            error
+          );
+          alert('Failed to remove attendee from the meeting.');
+        },
+      });
   }
 
   addAttendee(): void {
-    const email = this.newAttendeeEmail.trim();
-    if (!email) {
+    if (!this.selectedAttendeeId) {
       return;
     }
-    const namePart = email.split('@')[0] || 'New attendee';
-    const initials = namePart.slice(0, 2).toUpperCase();
-    this.attendees.push({
-      name: namePart,
-      email,
-      initials,
-      color: AVATAR_COLORS[this.attendees.length % AVATAR_COLORS.length],
-    });
-    this.newAttendeeEmail = '';
+
+    const attendee = this.availableAttendees.find(
+      (item) => item.id === this.selectedAttendeeId
+    );
+
+    if (!attendee) {
+      alert('The selected attendee could not be found.');
+      return;
+    }
+
+    this.attendeeService
+      .addMeetingAttendee(this.meetingId, {
+        attendeeId: attendee.id,
+        roleInMeeting: null,
+      })
+      .subscribe({
+        next: (addedAttendee) => {
+          this.attendees.push(
+            this.toAttendeeView(
+              addedAttendee,
+              this.attendees.length
+            )
+          );
+
+          this.selectedAttendeeId = '';
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error(
+            'Failed to add attendee to meeting',
+            error
+          );
+          alert('Failed to add attendee to the meeting.');
+        },
+      });
   }
 
   regenerateSummary(): void {
