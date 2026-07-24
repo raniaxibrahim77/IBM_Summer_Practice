@@ -120,6 +120,15 @@ export class MeetingDetailsComponent implements OnInit {
           this.transcriptText = ''; // no transcript yet — expected, not a real error
         },
     });
+        this.meetingAiService.getLatestAiResult(id).subscribe({
+      next: (result) => {
+        this.applyAiResult(result);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        // no AiResult yet — expected, keep placeholder
+      },
+    });
   }
 
   private loadAttendees(): void {
@@ -215,9 +224,6 @@ export class MeetingDetailsComponent implements OnInit {
     this.status = this.formatMeetingProcessingStatus(
       m.processingStatus
     );
-    // TODO: Load the AI summary and action items from their dedicated endpoints.
-    this.aiSummary = 'No AI summary is available for this meeting yet.';
-    this.actionItems = [];
   }
 
   private applyAiResult(result: AiResultResponse): void {

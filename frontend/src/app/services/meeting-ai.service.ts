@@ -55,4 +55,12 @@ export class MeetingAiService {
       request
     );
   }
+
+  getLatestAiResult(
+  meetingId: string
+  ): Observable<AiResultResponse> {
+    return this.http.get<AiResultResponse>(
+      `${this.apiUrl}/meetings/${meetingId}/ai-result/latest`
+    );
+  }
 }
