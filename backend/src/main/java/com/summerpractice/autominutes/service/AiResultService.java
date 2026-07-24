@@ -7,12 +7,16 @@ import com.summerpractice.autominutes.model.AiResult;
 import com.summerpractice.autominutes.model.Meeting;
 import com.summerpractice.autominutes.model.PromptTemplate;
 import com.summerpractice.autominutes.model.Transcript;
+import com.summerpractice.autominutes.model.ActionItem;
 import com.summerpractice.autominutes.repository.AiResultRepository;
 import com.summerpractice.autominutes.repository.MeetingRepository;
 import com.summerpractice.autominutes.repository.PromptTemplateRepository;
 import com.summerpractice.autominutes.repository.TranscriptRepository;
+import com.summerpractice.autominutes.repository.ActionItemRepository;
 import org.springframework.stereotype.Service;
 
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,17 +30,20 @@ public class AiResultService {
     private final AiResultRepository aiResultRepository;
     private final PromptTemplateRepository promptTemplateRepository;
     private final OllamaService ollamaService;
+    private final ActionItemRepository actionItemRepository;
 
     public AiResultService(MeetingRepository meetingRepository,
                            TranscriptRepository transcriptRepository,
                            AiResultRepository aiResultRepository,
                            PromptTemplateRepository promptTemplateRepository,
-                           OllamaService ollamaService) {
+                           OllamaService ollamaService,
+                           ActionItemRepository actionItemRepository){
         this.meetingRepository = meetingRepository;
         this.transcriptRepository = transcriptRepository;
         this.aiResultRepository = aiResultRepository;
         this.promptTemplateRepository = promptTemplateRepository;
         this.ollamaService = ollamaService;
+        this.actionItemRepository = actionItemRepository;
     }
 
     public AiResultResponse generateAiResult(UUID meetingId) {
@@ -66,8 +73,13 @@ public class AiResultService {
         meeting.setProcessingStatus("COMPLETED");
         meetingRepository.save(meeting);
 
-        // TODO: save parsed ActionItems here once parser exists
-        List<ActionItemResponse> actionItems = List.of();
+        String actionItemsPrompt = "List the action items from this transcript. "
+                + "One action item per line, no numbering, no extra text, no headers.\n\n"
+                + "TRANSCRIPT:\n" + transcript.getContent();
+
+        String actionItemsRaw = ollamaService.generate(actionItemsPrompt);
+
+        List<ActionItemResponse> actionItems = parseAndSaveActionItems(actionItemsRaw, saved);
 
         return toResponse(saved, actionItems);
     }
@@ -104,7 +116,27 @@ public class AiResultService {
             throw new ResourceNotFoundException("No AI result found for meeting: " + meetingId);
         }
         AiResult latest = results.get(0);
-        List<ActionItemResponse> actionItems = List.of(); // TODO: wire real items once parser exists
+        List<ActionItemResponse> actionItems = actionItemRepository
+                .findByAiResultId(latest.getId())
+                .stream()
+                .map(ActionItemResponse::from)
+                .toList();
         return toResponse(latest, actionItems);
+    }
+
+    private List<ActionItemResponse> parseAndSaveActionItems(String rawResponse, AiResult aiResult) {
+        if (rawResponse == null || rawResponse.isBlank()) {
+            return List.of();
+        }
+
+        return Arrays.stream(rawResponse.split("\n"))
+                .map(String::trim)
+                .filter(line -> !line.isBlank())
+                .map(line -> {
+                    ActionItem item = new ActionItem(aiResult, line);
+                    return actionItemRepository.save(item);
+                })
+                .map(ActionItemResponse::from)
+                .toList();
     }
 }
