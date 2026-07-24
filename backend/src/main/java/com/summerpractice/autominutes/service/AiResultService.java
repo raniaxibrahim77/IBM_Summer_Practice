@@ -63,6 +63,9 @@ public class AiResultService {
 
         AiResult saved = aiResultRepository.save(aiResult);
 
+        meeting.setProcessingStatus("COMPLETED");
+        meetingRepository.save(meeting);
+
         // TODO: save parsed ActionItems here once parser exists
         List<ActionItemResponse> actionItems = List.of();
 
@@ -93,5 +96,15 @@ public class AiResultService {
                 aiResult.getGeneratedAt(),
                 actionItems
         );
+    }
+
+    public AiResultResponse getLatestAiResult(UUID meetingId) {
+        List<AiResult> results = aiResultRepository.findByMeetingIdOrderByGeneratedAtDesc(meetingId);
+        if (results.isEmpty()) {
+            throw new ResourceNotFoundException("No AI result found for meeting: " + meetingId);
+        }
+        AiResult latest = results.get(0);
+        List<ActionItemResponse> actionItems = List.of(); // TODO: wire real items once parser exists
+        return toResponse(latest, actionItems);
     }
 }

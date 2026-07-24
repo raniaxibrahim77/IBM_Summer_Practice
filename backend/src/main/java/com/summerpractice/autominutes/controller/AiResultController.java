@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.UUID;
 
@@ -25,4 +26,11 @@ public class AiResultController {
         AiResultResponse response = aiResultService.generateAiResult(meetingId);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/{meetingId}/ai-result/latest")
+    public ResponseEntity<AiResultResponse> getLatestAiResult(@PathVariable UUID meetingId) {
+        AiResultResponse response = aiResultService.getLatestAiResult(meetingId);
+        return ResponseEntity.ok(response);
+    }
 }
+
