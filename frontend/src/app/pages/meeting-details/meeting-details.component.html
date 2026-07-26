@@ -76,7 +76,7 @@
                   <p class="attendee-row__name">{{ attendee.name }}</p>
                   <p class="attendee-row__email">{{ attendee.email || 'No email' }}</p>
                 </div>
-                <button (click)="removeAttendee(attendee)" class="attendee-row__remove"></button>
+                <button (click)="removeAttendee(attendee)" class="attendee-row__remove">
                   <span class="material-symbols-outlined">close</span>
                 </button>
               </div>
@@ -109,11 +109,11 @@
            <div class="chat-bubble" [class.chat-bubble--assistant]="msg.from === 'assistant'" [class.chat-bubble--user]="msg.from !== 'assistant'">{{ msg.text }}</div>
           }
           @if (isSendingMessage) {
-            <div class="chat-bubble chat-bubble--assistant">Thinking..."</div>
+            <div class="chat-bubble chat-bubble--assistant">Thinking...</div>
           }
         </div>
 
-        <div class=quick-actions">
+        <div class="quick-actions">
           <button type="button" (click)="runQuickAction('summarize')" [disabled]="isSendingMessage" class="quick-action-btn">Summarize</button>
           <button type="button" (click)="runQuickAction('risks')" [disabled]="isSendingMessage" class="quick-action-btn">Key risks</button>
           <button type="button" (click)="runQuickAction('followup')" [disabled]="isSendingMessage" class="quick-action-btn">Follow-up notes</button>
@@ -177,6 +177,7 @@
 
     <div class="back-row">
       <button routerLink="/meetings" class="back-btn">
+        <span class="material-symbols-outlined">arrow_back</span>
         Back to Meetings
       </button>
     </div>

@@ -38,7 +38,7 @@
 <app-header>
   <div class="search-bar">
     <span class="material-symbols-outlined search-bar__icon">search</span>
-    <input (ngModel)]="searchTerm" class="search-bar__input" placeholder="Search tasks or events..."type="text" />
+    <input [(ngModel)]="searchTerm" class="search-bar__input" placeholder="Search tasks or events..." type="text" />
   </div>
 </app-header>
 
@@ -56,7 +56,7 @@
             <h2 class="panel__title">Add a Meeting</h2>
             <p class="panel__subtitle">Schedule a new session and invite your team.</p>
           </div>
-          <button (click)="openCreateModal()" class="btn btn--primary-dark"></button>
+          <button (click)="openCreateModal()" class="btn btn--primary-dark">
             <span class="material-symbols-outlined">add</span>
             New Meeting
           </button>
@@ -130,7 +130,7 @@
           <h3 class="panel__title">Upcoming Events</h3>
           <div class="list-stack">
             @for (event of filteredUpcomingEvents; track event.id) {
-            <a [routerLink]="['/meeting-details', event.id]" class="event-row"></a>
+            <a [routerLink]="['/meeting-details', event.id]" class="event-row">
               <div class="event-row__date">
                 <span class="event-row__day">{{ event.day }}</span>
                 <span class="event-row__num">{{ event.date }}</span>
@@ -153,7 +153,7 @@
                 <span class="material-symbols-outlined">chevron_left</span>
               </button>
               <button type="button" (click)="nextMonth()" class="calendar-nav-btn">
-                <span class="material-symbols-outlined">chevron_right"></span>
+                <span class="material-symbols-outlined">chevron_right></span>
               </button>
             </div>
           </div>
@@ -251,7 +251,7 @@
             }
 
             <div class="flex gap-2">
-              <button type=""button" (click)="closeAddAttendeeForm()" [disabled]="isCreatingAttendee" class="btn btn--outline">
+              <button type="button" (click)="closeAddAttendeeForm()" [disabled]="isCreatingAttendee" class="btn btn--outline">
                 Cancel
               </button>
               <button type="button" (click)="createAttendee()" [disabled]="isCreatingAttendee" class="btn btn--primary">

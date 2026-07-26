@@ -1,4 +1,4 @@
-<aside class="sidebar"></aside>
+<aside class="sidebar">
   <div class="sidebar__logo-row">
     <div class="sidebar__logo">
       <span class="material-symbols-outlined">dashboard</span>
@@ -11,12 +11,12 @@
         <span class="nav-link__label">Home</span>
     </a>
 
-    <a routerLink="/calendar" class="nav-link nav-link--active"></a>
+    <a routerLink="/calendar" class="nav-link nav-link--active">
         <span class="material-symbols-outlined">calendar_today</span>
         <span class="nav-link__label">Calendar</span>
     </a>
 
-    <a routerLink="/meetings" class="nav-link"></a>
+    <a routerLink="/meetings" class="nav-link">
         <span class="material-symbols-outlined">groups</span>
         <span class="nav-link__label">Meetings</span>
     </a>
@@ -36,7 +36,7 @@
 </aside>
 
 <app-header>
-  <h1 class="header-title"">Calendar</h1>
+  <h1 class="header-title">Calendar</h1>
 </app-header>
 
 <main class="calendar-main">
@@ -45,7 +45,7 @@
 
       <!-- Main Calendar -->
       <div class="calendar-panel">
-        <div class="calendar-panel__toolba">
+        <div class="calendar-panel__toolbar">
           <div class="calendar-panel__toolbar-left">
             <h1 class="calendar-panel__title">{{ viewMonthLabel }}</h1>
             <div class="month-nav">
@@ -64,7 +64,7 @@
         <div class="calendar-body">
           <div class="weekday-row">
             @for (label of weekdayLabels; track label; let i = $index) {
-              <div class="weekday-cell" [class.weekday-cell--weekend]="i >= 5">{{ label }}</div></div>
+              <div class="weekday-cell" [class.weekday-cell--weekend]="i >= 5">{{ label }}</div>
             }
           </div>
 
@@ -113,7 +113,7 @@
                   <p class="task-row__meta">{{ task.status }}</p>
                 </div>
                 <span class="task-row__tag">{{ task.tag }}</span>
-                <button type="button" (click)="toggleTask(task)" class="task-toggle" [class.task-toggle--done]="task.done"></button>
+                <button type="button" (click)="toggleTask(task)" class="task-toggle" [class.task-toggle--done]="task.done">
                   <span class="material-symbols-outlined task-toggle__icon">{{ task.done ? 'check_circle' : 'radio_button_unchecked' }}</span>
                   {{ task.done ? 'Completed' : 'Mark complete' }}
                 </button>
