@@ -1,149 +1,119 @@
-<aside class="h-screen w-64 fixed left-0 top-0 bg-[#A33E43] shadow-sm flex flex-col py-2 z-50 overflow-y-auto">
-  <div class="px-6 py-4 mb-8 flex items-center gap-3">
-    <div class="w-10 h-10 rounded-xl bg-[#450C21] flex items-center justify-center text-[#FBF2DA]">
+<aside class="sidebar">
+  <div class="sidebar__logo-row">
+    <div class="sidebar__logo">
       <span class="material-symbols-outlined">dashboard</span>
     </div>
   </div>
 
-  <nav class="flex-1 space-y-1">
-    <a routerLink="/dashboard"
-      class="flex items-center gap-3 pl-4 py-3 mx-2 rounded-lg text-[#FBF2DA] hover:bg-[#FBF2DA] hover:text-[#450C21] hover:font-bold transition-all">
+  <nav class="sidebar__nav">
+    <a routerLink="/dashboard" class="nav-link nav-link--home">
       <span class="material-symbols-outlined">home</span>
-      <span class="text-sm font-semibold">Home</span>
+      <span class="nav-link__label">Home</span>
     </a>
-    <a routerLink="/calendar"
-      class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+
+    <a routerLink="/calendar" class="nav-link">
       <span class="material-symbols-outlined">calendar_today</span>
-      <span class="text-sm font-semibold">Calendar</span>
+      <span class="nav-link__label">Calendar</span>
     </a>
-    <a routerLink="/meetings"
-      class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+
+    <a routerLink="/meetings" class="nav-link">
       <span class="material-symbols-outlined">groups</span>
-      <span class="text-sm font-semibold">Meetings</span>
+      <span class="nav-link__label">Meetings</span>
     </a>
-    <a href="#"
-      class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+
+    <a href="#" class="nav-link">
       <span class="material-symbols-outlined">settings</span>
-      <span class="text-sm font-semibold">Settings</span>
+      <span class="nav-link__label">Settings</span>
     </a>
   </nav>
 
-  <div class="mt-auto px-4 pb-6">
-    <button routerLink="/"
-      class="w-full flex items-center gap-3 pl-5 py-3 text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors rounded-lg">
+  <div class="sidebar__footer">
+    <button routerLink="/" class="nav-link nav-link--logout">
       <span class="material-symbols-outlined">logout</span>
-      <span class="text-sm font-semibold">Logout</span>
+      <span class="nav-link__label">Logout</span>
     </button>
   </div>
 </aside>
 
 <app-header>
-  <div class="flex items-center bg-[#A33E43] rounded-full px-4 py-2 w-96 border border-[#FBF2DA]/10">
-    <span class="material-symbols-outlined text-[#FBF2DA]/60">search</span>
-    <input [(ngModel)]="searchTerm"
-      class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2 text-[#FBF2DA] placeholder:text-[#FBF2DA]/50"
-      placeholder="Search tasks or events..." type="text" />
+  <div class="search-bar">
+    <span class="material-symbols-outlined search-bar__icon">search</span>
+    <input (ngModel)]="searchTerm" class="search-bar__input" placeholder="Search tasks or events..."type="text" />
   </div>
 </app-header>
 
-<main class="ml-64 pt-16 min-h-screen bg-[#450C21]">
-  <div class="p-8 max-w-7xl mx-auto space-y-6">
-    <h1 class="text-4xl font-extrabold text-[#FBF2DA] tracking-tight">Welcome back!</h1>
+<main class="dashboard-main">
+  <div class="dashboard-container">
+    <h1 class="dashboard-title">Welcome back!</h1>
 
-    <div class="grid grid-cols-12 gap-6">
+    <div class="dashboard-grid">
       <!-- Left column -->
-      <div class="col-span-12 lg:col-span-8 space-y-6">
+      <div class="dashboard-col dashboard-col--left">
+
         <!-- Create a Meeting -->
-        <div class="bg-[#D9FFD2] rounded-xl p-6 text-[#1c2e1a] flex items-center justify-between gap-4">
+        <div class="panel panel--create-meeting">
           <div>
-            <h2 class="text-xl font-bold">Add a Meeting</h2>
-            <p class="text-sm text-[#1c2e1a]/80 mt-1">Schedule a new session and invite your team.</p>
+            <h2 class="panel__title">Add a Meeting</h2>
+            <p class="panel__subtitle">Schedule a new session and invite your team.</p>
           </div>
-          <button (click)="openCreateModal()"
-            class="bg-[#450C21] text-[#FBF2DA] px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow hover:brightness-110 active:scale-95 transition-all shrink-0">
+          <button (click)="openCreateModal()" class="btn btn--primary-dark"></button>
             <span class="material-symbols-outlined">add</span>
             New Meeting
           </button>
         </div>
 
         @if (meetingSuccessMessage) {
-          <div
-            role="status"
-            class="flex items-center justify-between gap-3 rounded-xl border border-green-300 bg-green-50 px-4 py-3 text-sm font-semibold text-green-800"
-          >
-            <span>
-              {{ meetingSuccessMessage }}
-            </span>
-
-            <button
-              type="button"
-              (click)="meetingSuccessMessage = ''"
-              aria-label="Close success message"
-              class="flex items-center justify-center text-green-800 hover:opacity-60"
-            >
-              <span class="material-symbols-outlined text-lg">
-                close
-              </span>
+          <div role="status" class="alert alert--success">
+            <span>{{ meetingSuccessMessage }}</span>
+            <button type="button" (click)="meetingSuccessMessage = ''" aria-label="Close success message" class="alert__close">
+              <span class="material-symbols-outlined alert__close-icon">close</span>
             </button>
           </div>
         }
 
         <!-- Recent Meetings -->
-        <div class="bg-[#FBF2DA] p-6 rounded-xl">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-bold text-[#450C21]">Recent Meetings</h3>
-            <a routerLink="/meetings"
-              class="text-[#A33E43] text-sm font-semibold hover:underline flex items-center gap-1">
-              View All <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        <div class="panel panel--cream">
+          <div class="panel-header">
+            <h3 class="panel-header__title">Recent Meetings</h3>
+            <a routerLink="/meetings" class="panel-header__link">
+              View All <span class="material-symbols-outlined panel-header__link-icon">arrow_forward</span>
             </a>
-          </div>
-          <div class="space-y-3">
-            @for (meeting of filteredRecentMeetings; track meeting.id) {
-            <a
-              [routerLink]="['/meeting-details', meeting.id]"
-              class="flex items-center justify-between p-3 rounded-lg bg-white border border-[#450C21]/10 hover:border-[#A33E43] hover:shadow-sm transition-all cursor-pointer"
-            >
-              <div>
-                <p class="text-sm font-semibold text-[#450C21]">{{ meeting.title }}</p>
-                <p class="text-xs text-[#450C21]/60">{{ meeting.date }} · {{ meeting.attendees }} attendees</p>
-              </div>
-              <span
-                class="px-2 py-1 rounded-full text-[10px] font-bold"
-                [ngClass]="getMeetingProcessingStatusClasses(meeting.tag)"
-              >
-                {{ meeting.tag }}
-              </span>
-            </a>
-            }
+        </div>
+
+        <div class="list-stack">
+          @for (meeting of filteredRecentMeetings; track meeting.id) {
+          <a [routerLink]="['/meeting-details', meeting.id]" class="meeting-row">
+            <div>
+              <p class="meeting-row__title">{{ meeting.title }}</p>
+              <p class="meeting-row__meta">{{ meeting.date }} · {{ meeting.attendees }} attendees</p>
+            </div>
+            <span class="meeting-row__tag" [ngClass]="getMeetingProcessingStatusClasses(meeting.tag)">
+              {{ meeting.tag }}
+            </span>
+          </a>
+          }
           </div>
         </div>
 
         <!-- Today's Tasks -->
-        <div class="bg-[#A33E43] p-6 rounded-xl">
-          <h3 class="text-lg font-bold text-[#FBF2DA] mb-4">Today's Tasks</h3>
-          <div class="space-y-3">
+        <div class="panel panel--mauve">
+          <h3 class="panel__title panel__title--light">Today's Tasks</h3>
+          <div class="list-stack">
             @if (filteredTasks.length === 0) {
-            <p class="text-sm text-[#FBF2DA]/70">
-              No tasks available.
-            </p>
+            <p class="empty-note">No tasks available.</p>
             }
 
             @for (task of filteredTasks; track task.id) {
-            <div
-              class="p-3 rounded-lg flex flex-col sm:flex-row sm:items-center gap-3 bg-[#450C21]/40 border border-[#FBF2DA]/10">
-              <div class="flex-1" [class.opacity-50]="task.done">
-                <p class="text-sm font-semibold text-[#FBF2DA]" [class.line-through]="task.done">{{ task.title }}</p>
-                <p class="text-xs text-[#FBF2DA]/60">{{ task.meta }}</p>
+            <div class="task-row">
+              <div class="task-row__body" [class.task-row__body--done]="task.done">
+                <p class="task-row__title" [class.task-row__title--done]="task.done">{{ task.title }}</p>
+                <p class="task-row__meta">{{ task.meta }}</p>
               </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <span class="bg-[#75C3D1] text-[#450C21] px-2 py-1 rounded-full text-[10px] font-bold uppercase">{{
-                  task.tag }}</span>
-                <button type="button" (click)="toggleTaskDone(task)"
-                  class="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0"
-                  [class.bg-[#D9FFD2]]="task.done" [class.text-[#1c2e1a]]="task.done" [class.bg-[#FBF2DA]]="!task.done"
-                  [class.text-[#450C21]]="!task.done" [class.hover:brightness-95]="true">
-                  <span class="material-symbols-outlined text-sm">{{ task.done ? 'check_circle' :
-                    'radio_button_unchecked' }}</span>
+
+              <div class="task-row__actions">
+                <span class="task-row__tag">{{ task.tag }}</span>
+                <button type="button" (click)="toggleTaskDone(task)" class="task-toggle" [class.task-toggle--done]="task.done">
+                  <span class="material-symbols-outlined task-toggle__icon">{{ task.done ? 'check_circle' : 'radio_button_unchecked' }}</span>
                   {{ task.done ? 'Completed' : 'Mark complete' }}
                 </button>
               </div>
@@ -154,23 +124,20 @@
       </div>
 
       <!-- Right column -->
-      <div class="col-span-12 lg:col-span-4 space-y-6">
+      <div class="dashboard-col dashboard-col--right">
         <!-- Upcoming Events -->
-        <div class="bg-[#75C3D1] p-6 rounded-xl">
-          <h3 class="text-lg font-bold text-[#450C21] mb-4">Upcoming Events</h3>
-          <div class="space-y-3">
+        <div class="panel panel--sky">
+          <h3 class="panel__title">Upcoming Events</h3>
+          <div class="list-stack">
             @for (event of filteredUpcomingEvents; track event.id) {
-            <a
-              [routerLink]="['/meeting-details', event.id]"
-              class="flex gap-3 rounded-lg hover:brightness-95 hover:scale-[1.01] transition-all cursor-pointer"
-            >
-              <div class="flex flex-col items-center w-10 shrink-0">
-                <span class="text-[10px] font-bold text-[#450C21]/70">{{ event.day }}</span>
-                <span class="text-xl font-bold text-[#450C21]">{{ event.date }}</span>
+            <a [routerLink]="['/meeting-details', event.id]" class="event-row"></a>
+              <div class="event-row__date">
+                <span class="event-row__day">{{ event.day }}</span>
+                <span class="event-row__num">{{ event.date }}</span>
               </div>
-              <div class="flex-1 bg-white/70 rounded-lg p-3 border-l-4 border-[#450C21]">
-                <p class="text-sm font-bold text-[#450C21]">{{ event.title }}</p>
-                <p class="text-xs text-[#450C21]/60">{{ event.time }}</p>
+              <div class="event-row__body">
+                <p class="event-row__title">{{ event.title }}</p>
+                <p class="event-row__time">{{ event.time }}</p>
               </div>
             </a>
             }
@@ -178,29 +145,27 @@
         </div>
 
         <!-- Calendar with marked meeting days -->
-        <div class="bg-[#FBF2DA] p-6 rounded-xl">
-          <div class="flex items-center justify-between mb-4">
-            <span class="text-lg font-bold text-[#450C21]">{{ viewMonthLabel }}</span>
-            <div class="flex gap-1">
-              <button type="button" (click)="previousMonth()"
-                class="p-1 hover:bg-[#450C21]/10 rounded-full text-[#450C21]"><span
-                  class="material-symbols-outlined">chevron_left</span></button>
-              <button type="button" (click)="nextMonth()"
-                class="p-1 hover:bg-[#450C21]/10 rounded-full text-[#450C21]"><span
-                  class="material-symbols-outlined">chevron_right</span></button>
+        <div class="panel panel--cream">
+          <div class="calendar-header">
+            <span class="calendar-header__label">{{ viewMonthLabel }}</span>
+            <div class="calendar-header__nav">
+              <button type="button" (click)="previousMonth()" class="calendar-nav-btn">
+                <span class="material-symbols-outlined">chevron_left</span>
+              </button>
+              <button type="button" (click)="nextMonth()" class="calendar-nav-btn">
+                <span class="material-symbols-outlined">chevron_right"></span>
+              </button>
             </div>
           </div>
-          <div class="grid grid-cols-7 gap-y-2 text-center">
+          <div class="calendar-grid">
             @for (label of weekdayLabels; track $index) {
-            <span class="text-[10px] font-bold text-[#450C21]/50 uppercase">{{ label }}</span>
+            <span class="calendar-weekday">{{ label }}</span>
             }
             @for (cell of calendarDays; track $index) {
-            <span class="py-2 text-sm relative text-[#450C21]" [class.opacity-30]="cell.muted"
-              [class.font-bold]="cell.isToday" [class.bg-[#A33E43]]="cell.isToday" [class.text-white]="cell.isToday"
-              [class.rounded-full]="cell.isToday">
+            <span class="calendar-cell" [class.calendar-cell--muted]="cell.muted" [class.calendar-cell--today]="cell.isToday">
               {{ cell.day }}
               @if (cell.hasMeeting && !cell.isToday) {
-              <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#8CA888] rounded-full"></span>
+              <span class="calendar-cell__dot"></span>
               }
             </span>
             }
@@ -212,74 +177,50 @@
 </main>
 
 @if (showCreateModal) {
-<div class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-  <div class="w-full max-w-md bg-[#FBF2DA] rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
-    <h2 class="text-xl font-bold text-[#450C21] mb-5">Create Meeting</h2>
+<div class="modal-backdrop">
+  <div class="modal modal--create-meeting">
+    <h2 class="modal-title">Create Meeting</h2>
 
-    <div class="space-y-4">
+    <div class="modal-form">
       <div>
-        <label class="text-sm font-semibold text-[#450C21] block mb-1">Name</label>
-        <input type="text" [(ngModel)]="newMeetingName" name="meetingName" placeholder="Meeting name"
-          class="w-full px-4 py-2.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-sm text-[#450C21]" />
+        <label class="field-label">Name</label>
+        <input type="text" [(ngModel)]="newMeetingName" name="meetingName" placeholder="Meeting name" class="field-input" />
       </div>
 
-      <div class="grid grid-cols-2 gap-3">
+      <div class="field-row">
         <div>
-          <label class="text-sm font-semibold text-[#450C21] block mb-1">When</label> 
-          <input type="date" [(ngModel)]="newMeetingDate" name="meetingDate" [min]="minimumMeetingDate"
-            class="w-full px-4 py-2.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-sm text-[#450C21]" />
+          <label class="field-label">When</label>
+          <input type="date" [(ngModel)]="newMeetingDate" name="meetingDate" [min]="minimumMeetingDate" class="field-input" />
         </div>
         <div>
-          <label class="text-sm font-semibold text-[#450C21] block mb-1">Time</label>
-          <input type="time" [(ngModel)]="newMeetingTime" name="meetingTime"
-            class="w-full px-4 py-2.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-sm text-[#450C21]" />
+          <label class="field-label">Time</label>
+          <input type="time" [(ngModel)]="newMeetingTime" name="meetingTime" class="field-input" />
         </div>
       </div>
 
       <div>
-        <label class="text-sm font-semibold text-[#450C21] block mb-1">
-          People to invite</label>
-        <input type="text" [(ngModel)]="peopleSearch" name="peopleSearch" placeholder="Search by name or email..." autocomplete="off" (focus)="peopleSearchFocused = true" (blur)="peopleSearchFocused = false"
-          class="w-full px-4 py-2.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-sm text-[#450C21]" />
-
+        <label class="field-label">People to invite</label>
+        <input type="text" [(ngModel)]="peopleSearch" name="peopleSearch" placeholder="Search by name or email..." autocomplete="off" (focus)="peopleSearchFocused = true" (blur)="peopleSearchFocused = false" class="field-input" />
+       
         @if (isLoadingAttendees) {
-          <p class="mt-2 text-xs font-semibold text-[#450C21]/60">
-            Loading attendees...
-          </p>
+          <p class="hint-text">Loading attendees...</p>
         }
 
         @if (attendeeLoadError) {
-          <p role="alert" class="mt-2 text-xs font-semibold text-red-700">
-            {{ attendeeLoadError }}
-          </p>
+          <p role="alert" class="error-text">{{ attendeeLoadError }}</p>
         }
 
-        @if (
-          peopleSearchFocused &&
-          !isLoadingAttendees &&
-          !attendeeLoadError &&
-          peopleSearch.trim() &&
-          peopleSuggestions.length === 0
-        ) {
-          <p class="mt-2 text-xs font-semibold text-[#450C21]/60">
-            No matching attendees.
-          </p>
+        @if (peopleSearchFocused && !isLoadingAttendees && !attendeeLoadError && peopleSearch.trim() && peopleSuggestions.length === 0) {
+          <p class="hint-text">No matching attendees.</p>
         }
 
         @if (peopleSuggestions.length > 0) {
-          <div class="mt-1 bg-white rounded-lg border border-[#450C21]/10 overflow-hidden">
+          <div class="suggestions-list">
             @for (person of peopleSuggestions; track person.id) {
-            <button type="button" (mousedown)="addPerson(person); $event.preventDefault()"
-              class="w-full text-left px-4 py-2 text-sm text-[#450C21] hover:bg-[#75C3D1]/20 transition-colors"
-            >
-              <span class="block font-semibold">
-                {{ person.name }}
-              </span>
-
+            <button type="button" (mousedown)="addPerson(person); $event.preventDefault()" class="suggestion-item">
+              <span class="suggestion-item__name">{{ person.name }}</span>
               @if (person.email) {
-                <span class="block text-xs text-[#450C21]/60">
-                  {{ person.email }}
-                </span>
+                <span class="suggestion-item__email">{{ person.email }}</span>
               }
             </button>
             }
@@ -287,92 +228,46 @@
         }
 
         @if (!showAddAttendeeForm) {
-          <button
-            type="button"
-            (click)="openAddAttendeeForm()"
-            class="mt-2 flex items-center gap-1 text-sm font-semibold text-[#A33E43] hover:underline"
-          >
-            <span class="material-symbols-outlined text-base">
-              person_add
-            </span>
+          <button type="button" (click)="openAddAttendeeForm()" class="add-attendee-link">
+            <span class="material-symbols-outlined add-attendee-link__icon">person_add</span>
             Add new attendee
           </button>
         }
 
         @if (showAddAttendeeForm) {
-          <div class="mt-3 space-y-3 rounded-lg border border-[#450C21]/10 bg-white p-4">
+          <div class="add-attendee-form">
             <div>
-              <label class="mb-1 block text-xs font-semibold text-[#450C21]">
-                Attendee name
-              </label>
-
-              <input
-                type="text"
-                [(ngModel)]="newAttendeeName"
-                name="newAttendeeName"
-                placeholder="Full name"
-                [disabled]="isCreatingAttendee"
-                class="w-full rounded-lg border-2 border-[#450C21]/10 px-3 py-2 text-sm text-[#450C21] outline-none focus:border-[#75C3D1] disabled:opacity-50"
-              />
+              <label class="field-label field-label--small">Attendee name</label>
+              <input type="text" [(ngModel)]="newAttendeeName" name="newAttendeeName" placeholder="Full name" [disabled]="isCreatingAttendee" class="field-input field-input--small" />
             </div>
 
             <div>
-              <label class="mb-1 block text-xs font-semibold text-[#450C21]">
-                Email (optional)
-              </label>
-
-              <input
-                type="email"
-                [(ngModel)]="newAttendeeEmail"
-                name="newAttendeeEmail"
-                placeholder="name@example.com"
-                [disabled]="isCreatingAttendee"
-                class="w-full rounded-lg border-2 border-[#450C21]/10 px-3 py-2 text-sm text-[#450C21] outline-none focus:border-[#75C3D1] disabled:opacity-50"
-              />
+              <label class="field-label field-label--small">Email (optional)</label>
+              <input type="email" [(ngModel)]="newAttendeeEmail" name="newAttendeeEmail" placeholder="name@example.com" [disabled]="isCreatingAttendee" class="field-input field-input--small" />
             </div>
 
             @if (createAttendeeError) {
-              <p role="alert" class="text-xs font-semibold text-red-700">
-                {{ createAttendeeError }}
-              </p>
+              <p role="alert" class="error-text">{{ createAttendeeError }}</p>
             }
 
             <div class="flex gap-2">
-              <button
-                type="button"
-                (click)="closeAddAttendeeForm()"
-                [disabled]="isCreatingAttendee"
-                class="flex-1 rounded-lg border border-[#450C21]/20 px-3 py-2 text-sm font-semibold text-[#450C21] disabled:opacity-50"
-              >
+              <button type=""button" (click)="closeAddAttendeeForm()" [disabled]="isCreatingAttendee" class="btn btn--outline">
                 Cancel
               </button>
-
-              <button
-                type="button"
-                (click)="createAttendee()"
-                [disabled]="isCreatingAttendee"
-                class="flex-1 rounded-lg bg-[#A33E43] px-3 py-2 text-sm font-semibold text-[#FBF2DA] disabled:opacity-50"
-              >
-                @if (isCreatingAttendee) {
-                  Adding...
-                } @else {
-                  Add attendee
-                }
+              <button type="button" (click)="createAttendee()" [disabled]="isCreatingAttendee" class="btn btn--primary">
+                @if (isCreatingAttendee) { Adding... } @else { Add attendee }
               </button>
             </div>
           </div>
         }
 
         @if (invitedPeople.length > 0) {
-        <div class="flex flex-wrap gap-2 mt-3">
+        <div class="invited-chips">
           @for (person of invitedPeople; track person.id) {
-            <span
-              class="flex items-center gap-1 bg-[#A33E43] text-[#FBF2DA] px-3 py-1 rounded-full text-xs font-semibold"
-            >
+            <span class="invited-chip">
               {{ person.name }}
-              <button type="button" (click)="removePerson(person.id)" [attr.aria-label]="'Remove ' + person.name" class="hover:text-[#D9FFD2]"
-              >
-                <span class="material-symbols-outlined text-sm">close</span>
+              <button type="button" (click)="removePerson(person.id)" [attr.aria-label]="'Remove ' + person.name" class="invited-chip__remove">
+                <span class="material-symbols-outlined invited-chip__remove-icon">close</span>
               </button>
             </span>
           }
@@ -382,35 +277,16 @@
     </div>
 
     @if (createMeetingError) {
-      <div
-        role="alert"
-        class="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
-      >
-        {{ createMeetingError }}
-      </div>
+      <div role="alert" class="alert alert--error">{{ createMeetingError }}</div>
     }
 
-  <div class="flex gap-3 mt-6">
-    <button
-      type="button"
-      (click)="closeCreateModal()"
-      [disabled]="isCreatingMeeting"
-      class="flex-1 py-3 rounded-xl border-2 border-[#450C21]/20 text-[#450C21] font-semibold text-sm hover:bg-[#450C21]/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-    >
+  <div class="modal-actions">
+      <button type="button" (click)="closeCreateModal()" [disabled]="isCreatingMeeting" class="btn btn--outline btn--flex">
       Cancel
     </button>
 
-    <button
-      type="button"
-      (click)="createMeeting()"
-      [disabled]="isCreatingMeeting"
-      class="flex-1 py-3 rounded-xl bg-[#A33E43] text-[#FBF2DA] font-semibold text-sm hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
-    >
-      @if (isCreatingMeeting) {
-        Creating...
-      } @else {
-        Create Meeting
-      }
+    <button type="button" (click)="createMeeting()" [disabled]="isCreatingMeeting" class="btn btn--primary btn--flex">
+        @if (isCreatingMeeting) { Creating... } @else { Create Meeting }
     </button>
   </div>
   </div>

@@ -138,16 +138,16 @@ export class DashboardComponent implements OnInit {
   ): string {
     switch (status) {
       case 'Processed':
-        return 'bg-[#8CA888] text-white';
+        return 'status-processed';
 
       case 'Processing':
-        return 'bg-[#75C3D1] text-[#450C21]';
+        return 'status-processing';
 
       case 'Failed':
-        return 'bg-[#A33E43] text-white';
+        return 'status-failed';
 
       default:
-        return 'bg-[#450C21]/10 text-[#450C21]';
+        return 'status-not-processed';
     }
   }
 

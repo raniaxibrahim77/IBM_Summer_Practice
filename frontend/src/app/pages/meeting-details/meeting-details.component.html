@@ -1,118 +1,96 @@
-<aside class="h-screen w-64 fixed left-0 top-0 bg-[#A33E43] shadow-sm flex flex-col py-2 z-50 overflow-y-auto">
-  <div class="px-6 py-4 mb-8 flex items-center gap-3">
-    <div class="w-10 h-10 rounded-xl bg-[#450C21] flex items-center justify-center text-[#FBF2DA]">
+<aside class="sidebar">
+  <div class="sidebar__logo-row">
+    <div class="sidebar__logo">
       <span class="material-symbols-outlined">dashboard</span>
     </div>
   </div>
 
-  <nav class="flex-1 space-y-1">
-    <a routerLink="/dashboard"
-       class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+  <nav class="sidebar__nav">
+    <a routerLink="/dashboard" class="nav-link">
       <span class="material-symbols-outlined">home</span>
-      <span class="text-sm font-semibold">Home</span>
+      <span class="nav-link__label">Home</span>
     </a>
-    <a routerLink="/calendar"
-       class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+
+    <a routerLink="/calendar" class="nav-link">
       <span class="material-symbols-outlined">calendar_today</span>
-      <span class="text-sm font-semibold">Calendar</span>
+      <span class="nav-link__label">Calendar</span>
     </a>
-    <a routerLink="/meetings"
-       class="flex items-center gap-3 pl-4 py-3 mx-2 rounded-lg text-[#450C21] bg-[#FBF2DA] font-bold transition-all">
+
+    <a routerLink="/meetings" class="nav-link nav-link--active">
       <span class="material-symbols-outlined">groups</span>
-      <span class="text-sm font-semibold">Meetings</span>
+      <span class="nav-link__label">Meetings</span>
     </a>
-    <a href="#" class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+
+    <a href="#" class="nav-link">
       <span class="material-symbols-outlined">settings</span>
-      <span class="text-sm font-semibold">Settings</span>
+      <span class="nav-link__label">Settings</span>
     </a>
   </nav>
 
-  <div class="mt-auto px-4 pb-6">
-    <button routerLink="/" class="w-full flex items-center gap-3 pl-5 py-3 text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors rounded-lg">
+  <div class="sidebar__footer">
+    <button routerLink="/" class="nav-link nav-link--logout">
       <span class="material-symbols-outlined">logout</span>
-      <span class="text-sm font-semibold">Logout</span>
+      <span class="nav-link__label">Logout</span>
     </button>
   </div>
 </aside>
 
 <app-header>
-  <button routerLink="/meetings" class="flex items-center gap-2 text-[#FBF2DA]/85 hover:text-[#FBF2DA] text-sm font-semibold transition-colors">
-    <span class="material-symbols-outlined text-lg">arrow_back</span>
+  <button routerLink="/meetings" class="back-link">
+    <span class="material-symbols-outlined back-link__icon">arrow_back</span>
     Back to Meetings
   </button>
 </app-header>
 
-<main class="ml-64 pt-16 min-h-screen bg-[#450C21]">
-  <div class="p-8 max-w-7xl mx-auto space-y-6">
+<main class="details-main">
+  <div class="details-container">
 
     <!-- Header card -->
-    <div class="bg-[#FBF2DA] rounded-xl p-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+    <div class="header-card">
       <div>
-        <div class="flex items-center gap-3 mb-2">
-          <span class="px-2 py-1 rounded-full text-xs font-bold tracking-wide" [ngClass]="statusClasses">
-            {{ status }}
-          </span>
-          <span class="text-sm text-[#450C21]/60">{{ date }}</span>
+        <div class="header-card__meta-row">
+          <span class="status-badge" [ngClass]="statusClasses">{{ status }}</span>
+          <span class="header-card__date">{{ date }}</span>
         </div>
-        <h1 class="text-3xl font-bold text-[#450C21]">{{ title }}</h1>
+        <h1 class="header-card__title">{{ title }}</h1>
       </div>
 
       <!-- Attendee bubbles -->
-      <div class="relative group shrink-0">
-        <div class="flex -space-x-2 cursor-pointer">
+      <div class="attendees-widget">
+        <div class="attendees-widget__stack">
           @for (attendee of attendees; track attendee.id) {
-            <div
-              class="w-9 h-9 rounded-full border-2 border-[#FBF2DA] flex items-center justify-center text-white text-xs font-bold shadow-sm"
-              [style.background-color]="attendee.color"
-            >{{ attendee.initials }}</div>
+            <div class="attendee-bubble" [style.background-color]="attendee.color">{{ attendee.initials }}</div>
           }
           @if (attendees.length === 0) {
-            <span class="text-sm text-[#450C21]/50">No attendees</span>
+            <span class="attendees-widget__empty">No attendees</span>
           }
         </div>
 
-        <div class="hidden group-hover:block absolute right-0 top-full mt-2 w-72 bg-white border border-[#450C21]/10 shadow-lg p-3 z-50">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-[#A33E43] mb-2">Attendees</h3>
-          <div class="space-y-2 max-h-56 overflow-y-auto">
+        <div class="attendees-popover">
+          <h3 class="attendees-popover__title">Attendees</h3>
+          <div class="attendees-popover__list">
             @for (attendee of attendees; track attendee.id) {
-              <div class="flex items-center gap-2">
-                <div
-                  class="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0"
-                  [style.background-color]="attendee.color"
-                >{{ attendee.initials }}</div>
-                <div class="min-w-0 flex-1">
-                  <p class="text-xs font-semibold text-[#450C21] truncate">{{ attendee.name }}</p>
-                  <p class="text-[11px] text-[#450C21]/50 truncate">{{ attendee.email || 'No email'}}</p>
+              <div class="attendee-row">
+                <div class="attendee-row__avatar" [style.background-color]="attendee.color">{{ attendee.initials }}</div>
+                <div class="attendee-row__info">
+                  <p class="attendee-row__name">{{ attendee.name }}</p>
+                  <p class="attendee-row__email">{{ attendee.email || 'No email' }}</p>
                 </div>
-                <button (click)="removeAttendee(attendee)" class="text-[#450C21]/30 hover:text-[#A33E43] transition-colors">
-                  <span class="material-symbols-outlined text-sm">close</span>
+                <button (click)="removeAttendee(attendee)" class="attendee-row__remove"></button>
+                  <span class="material-symbols-outlined">close</span>
                 </button>
               </div>
             }
           </div>
-          <div class="flex gap-2 mt-3 pt-3 border-t border-[#450C21]/10">
-            <select
-              [(ngModel)]="selectedAttendeeId"
-              class="flex-1 min-w-0 px-2 py-1.5 bg-[#FBF2DA] border-2 border-[#450C21]/10 focus:border-[#75C3D1] outline-none text-xs text-[#450C21]"
-            >
-              <option value="" disabled>
-                Select attendee...
-              </option>
-
+          <div class="attendees-popover__add">
+            <select [(ngModel)]="selectedAttendeeId" class="attendee-select">
+              <option value="" disabled>Select attendee...</option>
               @for (attendee of unassignedAttendees; track attendee.id) {
-                <option [value]="attendee.id">
-                  {{ attendee.name }} — {{ attendee.email || 'No email' }}
-                </option>
+                <option [value]="attendee.id">{{ attendee.name }} — {{ attendee.email || 'No email' }}</option>
               }
             </select>
-
-            <button
-              type="button"
-              (click)="addAttendee()"
-              [disabled]="!selectedAttendeeId"
-              class="w-8 h-8 shrink-0 bg-[#A33E43] text-[#FBF2DA] flex items-center justify-center hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <span class="material-symbols-outlined text-base">add</span>
+            <button type="button" (click)="addAttendee()" [disabled]="!selectedAttendeeId" class="attendee-add-btn">
+              <span class="material-symbols-outlined">add</span>
             </button>
           </div>
         </div>
@@ -120,151 +98,74 @@
     </div>
 
     <!-- Two column layout -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+    <div class="details-grid">
 
       <!-- LEFT: big Meeting Assistant -->
-      <div class="lg:col-span-2 bg-[#FBF2DA] p-6 flex flex-col min-h-[36rem]">
-        <h2 class="text-xs font-bold uppercase tracking-wider text-[#A33E43] mb-4">Meeting Assistant</h2>
+      <div class="panel panel--assistant">
+        <h2 class="panel__eyebrow">Meeting Assistant</h2>
 
-        <div class="flex-1 space-y-2 overflow-y-auto pr-1 mb-3">
+        <div class="chat-scroll">
           @for (msg of chatMessages; track $index) {
-            <div
-              class="text-sm px-3 py-2 rounded-xl max-w-[90%]"
-              [ngClass]="msg.from === 'assistant'
-                ? 'bg-[#75C3D1]/25 text-[#450C21] rounded-tl-none'
-                : 'bg-[#A33E43] text-[#FBF2DA] rounded-tr-none ml-auto'"
-            >{{ msg.text }}</div>
+           <div class="chat-bubble" [class.chat-bubble--assistant]="msg.from === 'assistant'" [class.chat-bubble--user]="msg.from !== 'assistant'">{{ msg.text }}</div>
           }
           @if (isSendingMessage) {
-            <div
-              class="text-sm px-3 py-2 rounded-xl max-w-[90%]
-                    bg-[#75C3D1]/25 text-[#450C21] rounded-tl-none"
-            >
-              Thinking...
-            </div>
+            <div class="chat-bubble chat-bubble--assistant">Thinking..."</div>
           }
         </div>
 
-        <div class="flex flex-wrap gap-2 mb-3">
-          <button
-            type="button"
-            (click)="runQuickAction('summarize')"
-            [disabled]="isSendingMessage"
-            class="px-3 py-1.5 rounded-full bg-[#8CA888]/20
-                  text-[#3d5a3a] text-xs font-semibold
-                  hover:bg-[#8CA888]/35 transition-colors
-                  disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Summarize
-          </button>
-
-          <button
-            type="button"
-            (click)="runQuickAction('risks')"
-            [disabled]="isSendingMessage"
-            class="px-3 py-1.5 rounded-full bg-[#8CA888]/20
-                  text-[#3d5a3a] text-xs font-semibold
-                  hover:bg-[#8CA888]/35 transition-colors
-                  disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Key risks
-          </button>
-
-          <button
-            type="button"
-            (click)="runQuickAction('followup')"
-            [disabled]="isSendingMessage"
-            class="px-3 py-1.5 rounded-full bg-[#8CA888]/20
-                  text-[#3d5a3a] text-xs font-semibold
-                  hover:bg-[#8CA888]/35 transition-colors
-                  disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Follow-up notes
-          </button>
+        <div class=quick-actions">
+          <button type="button" (click)="runQuickAction('summarize')" [disabled]="isSendingMessage" class="quick-action-btn">Summarize</button>
+          <button type="button" (click)="runQuickAction('risks')" [disabled]="isSendingMessage" class="quick-action-btn">Key risks</button>
+          <button type="button" (click)="runQuickAction('followup')" [disabled]="isSendingMessage" class="quick-action-btn">Follow-up notes</button>
         </div>
 
-      <div class="flex gap-2">
+      <div class="chat-input-row">
         <input
-          type="text"
-          [(ngModel)]="chatInput"
-          (keydown.enter)="sendMessage()"
-          [disabled]="isSendingMessage"
-          placeholder="Ask a question..."
-          class="flex-1 min-w-0 px-3 py-2 bg-white border-2
-                border-[#450C21]/10 focus:border-[#75C3D1]
-                rounded-lg outline-none text-xs text-[#450C21]
-                disabled:opacity-50 disabled:cursor-not-allowed"
-        />
-        <button
-          type="button"
-          (click)="sendMessage()"
-          [disabled]="isSendingMessage || !chatInput.trim()"
-          class="w-9 h-9 shrink-0 rounded-lg bg-[#A33E43]
-                text-[#FBF2DA] flex items-center justify-center
-                hover:brightness-110 transition-all
-                disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <span class="material-symbols-outlined text-lg">
-            send
-          </span>
-        </button>
+            type="text"
+            [(ngModel)]="chatInput"
+            (keydown.enter)="sendMessage()"
+            [disabled]="isSendingMessage"
+            placeholder="Ask a question..."
+            class="chat-input"
+          />
+        <button type="button" (click)="sendMessage()" [disabled]="isSendingMessage || !chatInput.trim()" class="chat-send-btn">
+            <span class="material-symbols-outlined">send</span>
+          </button>
       </div>
     </div>
 
     <!-- RIGHT: transcript download + AI summary (narrow) -->
-    <div class="space-y-6">
+    <div class="details-side">
 
-      <div class="bg-[#FBF2DA] p-6">
-      <h2 class="text-xs font-bold uppercase tracking-wider text-[#A33E43] mb-3">Meeting Transcript</h2>
-      <button
-        (click)="downloadTranscript()"
-        [disabled]="!transcriptText"
-        class="w-full flex items-center justify-center gap-2 bg-[#75C3D1] text-[#450C21] px-4 py-3 font-bold text-sm hover:brightness-95 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        <span class="material-symbols-outlined text-lg">download</span>
+      <div class="panel">
+        <h2 class="panel__eyebrow">Meeting Transcript</h2>
+        <button (click)="downloadTranscript()" [disabled]="!transcriptText" class="download-btn">
+            <span class="material-symbols-outlined">download</span>
         Download Transcript
       </button>
     </div>
 
         <!-- AI Summary -->
-        <div class="bg-[#FBF2DA] rounded-xl p-6">
-          <div class="flex items-center justify-between mb-3">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-[#A33E43]">AI Summary</h2>
-            <button
-              type="button"
-              (click)="regenerateSummary()"
-              [disabled]="isGeneratingSummary || !transcriptText"
-              class="flex items-center gap-1 text-xs font-semibold text-[#A33E43]
-                    hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <span
-                class="material-symbols-outlined text-sm"
-                [class.animate-spin]="isGeneratingSummary"
-              >
-                refresh
-              </span>
-
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="panel__eyebrow panel__eyebrow--no-margin">AI Summary</h2>
+            <button type="button" (click)="regenerateSummary()" [disabled]="isGeneratingSummary || !transcriptText" class="regenerate-btn">
+              <span class="material-symbols-outlined regenerate-btn__icon" [class.regenerate-btn__icon--spinning]="isGeneratingSummary">refresh</span>
               {{ isGeneratingSummary ? 'Generating...' : 'Regenerate' }}
             </button>
           </div>
-          <p class="text-sm text-[#450C21]/80 leading-relaxed">{{ aiSummary }}</p>
+          <p class="summary-text">{{ aiSummary }}</p>
 
-          <h3 class="text-xs font-bold uppercase tracking-wider text-[#A33E43] mt-5 mb-3">
+          <h3 class="panel__eyebrow panel__eyebrow--spaced">
             Action Items
-            <span class="normal-case font-normal text-[#450C21]/50">({{ completedActionCount }}/{{ actionItems.length }} done)</span>
+            <span class="action-items-count">({{ completedActionCount }}/{{ actionItems.length }} done)</span>
           </h3>
-          <div class="space-y-2">
+
+          <div class="action-items-list">
             @for (item of actionItems; track item.id) {
-              <label class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/60 cursor-pointer">
-                <input
-                  type="checkbox"
-                  [checked]="item.done"
-                  (change)="toggleActionItem(item)"
-                  class="w-4 h-4 rounded accent-[#8CA888]"
-                />
-                <span class="text-sm text-[#450C21]" [class.line-through]="item.done" [class.opacity-50]="item.done">
-                  {{ item.text }}
-                </span>
+              <label class="action-item">
+                <input type="checkbox" [checked]="item.done" (change)="toggleActionItem(item)" class="action-item__checkbox" />
+                <span class="action-item__text" [class.action-item__text--done]="item.done">{{ item.text }}</span>
               </label>
             }
           </div>
@@ -274,9 +175,8 @@
       </div>
     </div>
 
-    <div class="flex justify-center pt-2">
-      <button routerLink="/meetings" class="flex items-center gap-2 bg-[#FBF2DA] text-[#450C21] px-6 py-3 rounded-xl font-bold hover:brightness-95 active:scale-95 transition-all">
-        <span class="material-symbols-outlined">arrow_back</span>
+    <div class="back-row">
+      <button routerLink="/meetings" class="back-btn">
         Back to Meetings
       </button>
     </div>

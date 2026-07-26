@@ -1,107 +1,98 @@
-<aside class="h-screen w-64 fixed left-0 top-0 bg-[#A33E43] shadow-sm flex flex-col py-2 z-50 overflow-y-auto">
-  <div class="px-6 py-4 mb-8 flex items-center gap-3">
-    <div class="w-10 h-10 rounded-xl bg-[#450C21] flex items-center justify-center text-[#FBF2DA]">
+<aside class="sidebar">
+  <div class="sidebar__logo-row">
+    <div class="sidebar__logo">
       <span class="material-symbols-outlined">dashboard</span>
     </div>
   </div>
 
-  <nav class="flex-1 space-y-1">
-    <a routerLink="/dashboard"
-       class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+  <nav class="sidebar__nav">
+    <a routerLink="/dashboard" class="nav-link">
       <span class="material-symbols-outlined">home</span>
-      <span class="text-sm font-semibold">Home</span>
+      <span class="nav-link__label">Home</span>
     </a>
-    <a routerLink="/calendar"
-       class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+
+    <a routerLink="/calendar" class="nav-link">
       <span class="material-symbols-outlined">calendar_today</span>
-      <span class="text-sm font-semibold">Calendar</span>
+      <span class="nav-link__label">Calendar</span>
     </a>
-    <a routerLink="/meetings"
-       class="flex items-center gap-3 pl-4 py-3 mx-2 rounded-lg text-[#450C21] bg-[#FBF2DA] font-bold transition-all">
+
+    <a routerLink="/meetings" class="nav-link nav-link--active">
       <span class="material-symbols-outlined">groups</span>
-      <span class="text-sm font-semibold">Meetings</span>
+      <span class="nav-link__label">Meetings</span>
     </a>
-    <a href="#" class="flex items-center gap-3 pl-5 py-3 mx-2 rounded-lg text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors">
+
+    <a href="#" class="nav-link">
       <span class="material-symbols-outlined">settings</span>
-      <span class="text-sm font-semibold">Settings</span>
+      <span class="nav-link__label">Settings</span>
     </a>
   </nav>
 
-  <div class="mt-auto px-4 pb-6">
-    <button routerLink="/" class="w-full flex items-center gap-3 pl-5 py-3 text-[#FBF2DA]/85 hover:bg-[#450C21]/30 transition-colors rounded-lg">
+  <div class="sidebar__footer">
+    <button routerLink="/" class="nav-link nav-link--logout">
       <span class="material-symbols-outlined">logout</span>
-      <span class="text-sm font-semibold">Logout</span>
+      <span class="nav-link__label">Logout</span>
     </button>
   </div>
 </aside>
 
 <app-header>
-  <div class="flex items-center bg-[#A33E43] rounded-full px-4 py-2 w-96 border border-[#FBF2DA]/10">
-    <span class="material-symbols-outlined text-[#FBF2DA]/60">search</span>
-    <input [(ngModel)]="searchTerm"
-      class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2 text-[#FBF2DA] placeholder:text-[#FBF2DA]/50"
-      placeholder="Search tasks or events..." type="text" />
+  <div class="search-bar">
+    <span class="material-symbols-outlined search-bar__icon">search</span>
+    <input [(ngModel)]="searchTerm" class="search-bar__input" placeholder="Search tasks or events..." type="text" />
   </div>
 </app-header>
 
-<main class="ml-64 pt-16 min-h-screen bg-[#450C21]">
-  <div class="p-8 max-w-7xl mx-auto space-y-6">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <h1 class="text-3xl font-bold text-[#FBF2DA]">Meetings</h1>
+<main class="meetings-main">
+  <div class="meetings-container">
+    <div class="meetings-header">
+      <h1 class="meetings-title">Meetings</h1>
       <button
-        type="button"
-        (click)="openCreateModal()"
-        class="bg-[#D9FFD2] text-[#1c2e1a] px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow hover:brightness-95 active:scale-95 transition-all"
-      >
+        type="button" (click)="openCreateModal()" class="btn btn--tea">
         <span class="material-symbols-outlined">add</span>
         Log Meeting
       </button>
     </div>
 
     <!-- Search -->
-    <div class="relative max-w-md">
-      <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#450C21]/40">search</span>
+    <div class="table-search">
+      <span class="material-symbols-outlined table-search__icon">search</span>
       <input
         type="text"
         [(ngModel)]="searchTerm"
         placeholder="Search by title..."
-        class="w-full pl-11 pr-4 py-3 bg-[#FBF2DA] text-[#450C21] placeholder-[#450C21]/40 border-2 border-[#FBF2DA] focus:border-[#75C3D1] rounded-xl transition-all outline-none text-sm"
+        class="table-search__input"
       />
     </div>
 
     <!-- Table -->
-   <div class="bg-[#FBF2DA] rounded-xl overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="w-full text-left">
+   <div class="table-panel">
+      <div class="table-panel__scroll">
+        <table class="meetings-table">
         <thead>
           <tr class="bg-[#A33E43] text-[#FBF2DA]">
-            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Title</th>
-            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Date &amp; Time</th>
-            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Attendees</th>
-            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Add Transcript</th>
-            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Actions</th>
+            <th class="meetings-table__head-cell">Title</th>
+            <th class="meetings-table__head-cell">Date &amp; Time</th>
+            <th class="meetings-table__head-cell">Attendees</th>
+            <th class="meetings-table__head-cell">Add Transcript</th>
+            <th class="meetings-table__head-cell">Actions</th>
           </tr>
         </thead>
         <tbody>
           @for (meeting of filteredMeetings; track meeting.id) {
-            <tr class="border-b border-[#450C21]/10 hover:bg-white/60 transition-colors">
-              <td class="px-6 py-4 text-sm font-semibold text-[#450C21]">{{ meeting.title }}</td>
-              <td class="px-6 py-4 text-sm text-[#450C21]/70">{{ meeting.dateTime }}</td>
-              <td class="px-6 py-4">
-                <span class="bg-[#75C3D1] text-[#450C21] px-2 py-1 rounded-full text-xs font-bold">{{ meeting.attendees }}</span>
+            <tr class="meetings-table__row">
+              <td class="meetings-table__cell meetings-table__cell--title">{{ meeting.title }}</td>
+              <td class="eetings-table__cell meetings-table__cell--muted">{{ meeting.dateTime }}</td>
+              <td class="meetings-table__cell">
+                <span class="attendees-badge">{{ meeting.attendees }}</span>
               </td>
-              <td class="px-6 py-4">
-                <label class="cursor-pointer inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold transition-colors"
-                      [class.bg-[#8CA888]]="!meeting.hasTranscript"
-                      [class.text-white]="!meeting.hasTranscript"
-                      [class.bg-[#75C3D1]]="meeting.hasTranscript"
-                      [class.text-[#450C21]]="meeting.hasTranscript">
-                  {{ meeting.hasTranscript ? 'Edit Transcript' : 'Add Transcript' }}
-                  <input type="file" accept=".txt" class="hidden" (change)="onRowTranscriptSelected($event, meeting)" />
+              <td class="meetings-table__cell">
+                <label class="transcript-badge" [class.transcript-badge--edit]="meeting.hasTranscript">
+                    {{ meeting.hasTranscript ? 'Edit Transcript' : 'Add Transcript' }}
+                    <input type="file" accept=".txt" class="visually-hidden" (change)="onRowTranscriptSelected($event, meeting)" />
                 </label>
               </td>
-              <td class="px-6 py-4">
-                <button [routerLink]="['/meeting-details', meeting.id]" class="flex items-center gap-1 text-[#A33E43] hover:underline text-sm font-semibold">
+              <td class="meetings-table__cell">
+                <button [routerLink]="['/meeting-details', meeting.id]" class="ai-details-link">
                   AI Details
                 </button>
               </td>
@@ -109,7 +100,7 @@
           }
           @if (filteredMeetings.length === 0) {
             <tr>
-              <td colspan="5" class="px-6 py-10 text-center text-sm text-[#450C21]/50">No meetings match your search.</td>
+              <td colspan="5" class="meetings-table__empty">No meetings match your search.</td>
             </tr>
           }
           </tbody>
@@ -120,32 +111,28 @@
 </main>
 
 @if (showCreateModal) {
-  <div class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-    <div class="w-full max-w-md bg-[#FBF2DA] rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
-      <h2 class="text-xl font-bold text-[#450C21] mb-5">Log a Meeting</h2>
+  <div class="modal-backdrop">
+    <div class="modal">
+      <h2 class="modal-title">Log a Meeting</h2>
 
-      <div class="space-y-4">
+      <div class="modal-form">
         <div>
-          <label class="text-sm font-semibold text-[#450C21] block mb-1">Name</label>
-          <input
-            type="text"
-            [(ngModel)]="newMeetingName"
-            name="meetingName"
-            placeholder="Meeting name"
-            class="w-full px-4 py-2.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-sm text-[#450C21]"
-          />
+          <label class="field-label">Name</label>
+          <input type="text" [(ngModel)]="newMeetingName" name="meetingName" placeholder="Meeting name" class="field-input" />
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="field-row">
           <div>
-            <label class="text-sm font-semibold text-[#450C21] block mb-1">When</label>
-            <input
-              type="date"
-              [(ngModel)]="newMeetingDate"
-              name="meetingDate"
-              class="w-full px-4 py-2.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-sm text-[#450C21]"
-            />
+            <label class="field-label">When</label>
+            <input type="date" [(ngModel)]="newMeetingDate" name="meetingDate" class="field-input" />
           </div>
+          <div>
+            <label class="field-label">Time</label>
+            <input type="time" [(ngModel)]="newMeetingTime" name="meetingTime" class="field-input" />
+          </div>
+        </div>
+
+
           <div>
             <label class="text-sm font-semibold text-[#450C21] block mb-1">Time</label>
             <input
@@ -158,33 +145,25 @@
         </div>
 
         <div>
-          <label class="text-sm font-semibold text-[#450C21] block mb-1">Attendees</label>
-          <input
-            type="text"
-            [(ngModel)]="peopleSearch"
-            name="peopleSearch"
-            placeholder="Search a list of people..."
-            class="w-full px-4 py-2.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-sm text-[#450C21]"
-          />
+          <label class="field-label">Attendees</label>
+          <input type="text" [(ngModel)]="peopleSearch" name="peopleSearch" placeholder="Search a list of people..." class="field-input" />
+
           @if (peopleSuggestions.length > 0) {
-            <div class="mt-1 bg-white rounded-lg border border-[#450C21]/10 overflow-hidden">
+            <div class="suggestions-list">
               @for (person of peopleSuggestions; track person) {
-                <button
-                  type="button"
-                  (click)="addPerson(person)"
-                  class="w-full text-left px-4 py-2 text-sm text-[#450C21] hover:bg-[#75C3D1]/20 transition-colors"
-                >{{ person }}</button>
+                <button type="button" (click)="addPerson(person)" class="suggestion-item">{{ person }}</button>
               }
             </div>
           }
 
+
           @if (invitedPeople.length > 0) {
-            <div class="flex flex-wrap gap-2 mt-3">
+            <div class="invited-chips">
               @for (person of invitedPeople; track person) {
-                <span class="flex items-center gap-1 bg-[#A33E43] text-[#FBF2DA] px-3 py-1 rounded-full text-xs font-semibold">
+                <span class="invited-chip">
                   {{ person }}
-                  <button type="button" (click)="removePerson(person)" class="hover:text-[#D9FFD2]">
-                    <span class="material-symbols-outlined text-sm">close</span>
+                  <button type="button" (click)="removePerson(person)" class="invited-chip__remove">
+                    <span class="material-symbols-outlined invited-chip__remove-icon">close</span>
                   </button>
                 </span>
               }
@@ -193,48 +172,40 @@
         </div>
 
         <div>
-          <label class="text-sm font-semibold text-[#450C21] block mb-1">Transcript <span class="text-[#A33E43]">*</span></label>
+          <label class="field-label">Transcript <span class="required-mark">*</span></label>
 
           @if (!transcriptFile) {
-            <label class="flex flex-col items-center justify-center gap-1 w-full px-4 py-6 bg-white border-2 border-dashed border-[#450C21]/20 hover:border-[#75C3D1] rounded-lg cursor-pointer transition-colors">
-              <span class="material-symbols-outlined text-[#450C21]/40">upload_file</span>
-              <span class="text-xs text-[#450C21]/60">Click to upload .txt</span>
-              <input type="file" accept=".txt" class="hidden" (change)="onTranscriptFileSelected($event)" />
+            <label class="upload-dropzone">
+              <span class="material-symbols-outlined upload-dropzone__icon">upload_file</span>
+              <span class="upload-dropzone__text">Click to upload .txt</span>
+              <input type="file" accept=".txt" class="visually-hidden" (change)="onTranscriptFileSelected($event)" />
             </label>
           } @else {
-            <div class="flex items-center justify-between px-4 py-2.5 bg-white border-2 border-[#450C21]/10 rounded-lg">
-              <span class="flex items-center gap-2 text-sm text-[#450C21] truncate">
-                <span class="material-symbols-outlined text-base text-[#8CA888]">description</span>
+            <div class="file-chip">
+              <span class="file-chip__name">
+                <span class="material-symbols-outlined file-chip__icon">description</span>
                 {{ transcriptFile.name }}
               </span>
-              <button type="button" (click)="removeTranscriptFile()" class="text-[#450C21]/40 hover:text-[#A33E43]">
-                <span class="material-symbols-outlined text-lg">close</span>
+              <button type="button" (click)="removeTranscriptFile()" class="file-chip__remove">
+                <span class="material-symbols-outlined">close</span>
               </button>
             </div>
           }
 
           @if (transcriptError) {
-            <p class="text-xs text-[#A33E43] font-semibold mt-1">{{ transcriptError }}</p>
+            <p class="error-text">{{ transcriptError }}</p>
           }
         </div>
 
-        <label class="flex items-center gap-2 text-sm text-[#450C21] cursor-pointer pt-2">
-          <input type="checkbox" [(ngModel)]="processWithAI" name="processWithAI" class="w-4 h-4 rounded accent-[#A33E43]" />
+        <label class="checkbox-row">
+          <input type="checkbox" [(ngModel)]="processWithAI" name="processWithAI" class="checkbox-row__input" />
           Process with AI now
         </label>
       </div>
 
-      <div class="flex gap-3 mt-6">
-        <button
-          type="button"
-          (click)="closeCreateModal()"
-          class="flex-1 py-3 rounded-xl border-2 border-[#450C21]/20 text-[#450C21] font-semibold text-sm hover:bg-[#450C21]/5 transition-all"
-        >Cancel</button>
-        <button
-          type="button"
-          (click)="createMeeting()"
-          class="flex-1 py-3 rounded-xl bg-[#A33E43] text-[#FBF2DA] font-semibold text-sm hover:brightness-110 active:scale-95 transition-all"
-        >Log a Meeting</button>
+      <div class="modal-actions">
+        <button type="button" (click)="closeCreateModal()" class="btn btn--outline btn--flex">Cancel</button>
+        <button type="button" (click)="createMeeting()" class="btn btn--primary btn--flex">Log a Meeting</button>
       </div>
     </div>
   </div>
