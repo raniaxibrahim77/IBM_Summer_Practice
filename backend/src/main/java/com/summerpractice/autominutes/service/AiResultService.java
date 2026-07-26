@@ -15,8 +15,6 @@ import com.summerpractice.autominutes.repository.TranscriptRepository;
 import com.summerpractice.autominutes.repository.ActionItemRepository;
 import org.springframework.stereotype.Service;
 
-
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -59,13 +57,14 @@ public class AiResultService {
 
         String rawResponse = ollamaService.generate(fullPrompt);
 
+        AiResponseParser.ParsedAiResult parsed = AiResponseParser.parseRawResponse(rawResponse);
+
         AiResult aiResult = new AiResult(meeting, template);
-        // TODO: replace with Person B's parseRawResponse() once ready
-        aiResult.setConciseSummary(rawResponse);
-        aiResult.setDetailedSummary(null);
-        aiResult.setKeyPoints(null);
-        aiResult.setDecisions(null);
-        aiResult.setFollowUpNotes(null);
+        aiResult.setConciseSummary(parsed.conciseSummary());
+        aiResult.setDetailedSummary(parsed.detailedSummary());
+        aiResult.setKeyPoints(parsed.keyPoints());
+        aiResult.setDecisions(parsed.decisions());
+        aiResult.setFollowUpNotes(parsed.followUpNotes());
         aiResult.setStatus("COMPLETED");
 
         AiResult saved = aiResultRepository.save(aiResult);
@@ -73,15 +72,22 @@ public class AiResultService {
         meeting.setProcessingStatus("COMPLETED");
         meetingRepository.save(meeting);
 
-        String actionItemsPrompt = "List the action items from this transcript. "
-                + "One action item per line, no numbering, no extra text, no headers.\n\n"
-                + "TRANSCRIPT:\n" + transcript.getContent();
-
-        String actionItemsRaw = ollamaService.generate(actionItemsPrompt);
-
-        List<ActionItemResponse> actionItems = parseAndSaveActionItems(actionItemsRaw, saved);
+        List<ActionItemResponse> actionItems = saveActionItems(parsed.actionItems(), saved);
 
         return toResponse(saved, actionItems);
+    }
+
+    private List<ActionItemResponse> saveActionItems(
+            List<AiResponseParser.ParsedActionItem> parsedItems, AiResult aiResult) {
+        return parsedItems.stream()
+                .map(parsedItem -> {
+                    ActionItem item = new ActionItem(aiResult, parsedItem.description());
+                    item.setProposedAssignee(parsedItem.assignee());
+                    item.setDeadline(parsedItem.deadline());
+                    return actionItemRepository.save(item);
+                })
+                .map(ActionItemResponse::from)
+                .toList();
     }
 
     private PromptTemplate getOrCreateDefaultTemplate() {
@@ -122,21 +128,5 @@ public class AiResultService {
                 .map(ActionItemResponse::from)
                 .toList();
         return toResponse(latest, actionItems);
-    }
-
-    private List<ActionItemResponse> parseAndSaveActionItems(String rawResponse, AiResult aiResult) {
-        if (rawResponse == null || rawResponse.isBlank()) {
-            return List.of();
-        }
-
-        return Arrays.stream(rawResponse.split("\n"))
-                .map(String::trim)
-                .filter(line -> !line.isBlank())
-                .map(line -> {
-                    ActionItem item = new ActionItem(aiResult, line);
-                    return actionItemRepository.save(item);
-                })
-                .map(ActionItemResponse::from)
-                .toList();
     }
 }

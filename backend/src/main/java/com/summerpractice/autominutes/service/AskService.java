@@ -5,6 +5,8 @@ import com.summerpractice.autominutes.dto.AskResponse;
 import com.summerpractice.autominutes.exception.ResourceNotFoundException;
 import com.summerpractice.autominutes.model.Transcript;
 import com.summerpractice.autominutes.repository.TranscriptRepository;
+import com.summerpractice.autominutes.model.PromptTemplate;
+import com.summerpractice.autominutes.repository.PromptTemplateRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,12 +15,16 @@ import java.util.UUID;
 @Service
 public class AskService {
 
+    private static final String ASK_TEMPLATE_NAME = "ask-meeting-default";
+
     private final TranscriptRepository transcriptRepository;
     private final OllamaService ollamaService;
+    private final PromptTemplateRepository promptTemplateRepository;
 
-    public AskService(TranscriptRepository transcriptRepository, OllamaService ollamaService) {
+    public AskService(TranscriptRepository transcriptRepository, OllamaService ollamaService, PromptTemplateRepository promptTemplateRepository) {
         this.transcriptRepository = transcriptRepository;
         this.ollamaService = ollamaService;
+        this.promptTemplateRepository = promptTemplateRepository;
     }
 
     public AskResponse ask(UUID meetingId, AskRequest request) {
@@ -33,6 +39,10 @@ public class AskService {
     }
 
     private String buildPrompt(String transcriptContent, AskRequest request) {
+        PromptTemplate askTemplate = promptTemplateRepository
+                .findByNameAndActiveTrue(ASK_TEMPLATE_NAME)
+                .orElseThrow(() -> new ResourceNotFoundException("Prompt template not found: " + ASK_TEMPLATE_NAME));
+
         StringBuilder sb = new StringBuilder();
         sb.append("You are a helpful assistant answering questions about a meeting transcript.\n\n");
         sb.append("TRANSCRIPT:\n").append(transcriptContent).append("\n\n");
