@@ -42,3 +42,36 @@ Write "none" if there are no action items. $prompt$,
     now(),
     now()
 );
+
+-- Ask meeting prompt template
+UPDATE prompt_template
+SET active = false
+WHERE
+    name = 'ask-meeting-default'
+    AND active = true;
+
+INSERT INTO prompt_template (
+    id,
+    name,
+    prompt_text,
+    version,
+    active,
+    created_at,
+    updated_at
+)
+VALUES (
+    gen_random_uuid(),
+    'ask-meeting-default',
+    $askprompt$
+You are a helpful assistant answering questions about a meeting transcript.
+
+Answer using only information found in the transcript and previous conversation.
+Do not invent information that is not present in the transcript.
+If the answer is not available in the transcript, clearly say so.
+Be concise and direct.
+    $askprompt$,
+    'v1',
+    true,
+    now(),
+    now()
+);

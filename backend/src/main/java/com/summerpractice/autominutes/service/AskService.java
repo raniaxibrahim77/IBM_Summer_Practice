@@ -38,27 +38,49 @@ public class AskService {
         return new AskResponse(answer);
     }
 
-    private String buildPrompt(String transcriptContent, AskRequest request) {
-        PromptTemplate askTemplate = promptTemplateRepository
-                .findByNameAndActiveTrue(ASK_TEMPLATE_NAME)
-                .orElseThrow(() -> new ResourceNotFoundException("Prompt template not found: " + ASK_TEMPLATE_NAME));
+    private String buildPrompt(
+            String transcriptContent,
+            AskRequest request
+    ) {
+        PromptTemplate askTemplate =
+                promptTemplateRepository
+                        .findByNameAndActiveTrue(
+                                ASK_TEMPLATE_NAME
+                        )
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Prompt template not found: "
+                                                + ASK_TEMPLATE_NAME
+                                )
+                        );
 
         StringBuilder sb = new StringBuilder();
-        sb.append("You are a helpful assistant answering questions about a meeting transcript.\n\n");
-        sb.append("TRANSCRIPT:\n").append(transcriptContent).append("\n\n");
 
-        List<AskRequest.ChatMessage> history = request.getPreviousMessages();
+        sb.append(askTemplate.getPromptText())
+                .append("\n\n");
+
+        sb.append("TRANSCRIPT:\n")
+                .append(transcriptContent)
+                .append("\n\n");
+
+        List<AskRequest.ChatMessage> history =
+                request.getPreviousMessages();
+
         if (history != null && !history.isEmpty()) {
             sb.append("CONVERSATION SO FAR:\n");
-            for (AskRequest.ChatMessage msg : history) {
-                sb.append(msg.getRole()).append(": ").append(msg.getText()).append("\n");
+
+            for (AskRequest.ChatMessage message : history) {
+                sb.append(message.getRole())
+                        .append(": ")
+                        .append(message.getText())
+                        .append("\n");
             }
+
             sb.append("\n");
         }
 
-        sb.append("NEW QUESTION:\n").append(request.getQuestion()).append("\n\n");
-        sb.append("Answer the new question based only on the transcript and conversation above. ");
-        sb.append("Be concise and direct.");
+        sb.append("NEW QUESTION:\n")
+                .append(request.getQuestion());
 
         return sb.toString();
     }
