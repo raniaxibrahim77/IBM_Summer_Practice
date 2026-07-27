@@ -103,10 +103,12 @@
               <span class="material-symbols-outlined">task_alt</span>
               Task Reminders
             </h2>
-            <button class="panel-header__view-all">View All</button>
+            <button class="panel-header__view-all" (click)="toggleViewAllTasks()">
+              {{ showAllTasks ? 'Show Less' : 'View All' }}
+            </button>
           </div>
           <div class="list-stack">
-            @for (task of taskReminders; track task.title) {
+           @for (task of visibleTaskReminders; track task.id) {
               <div class="task-row">
                 <div class="task-row__body" [class.task-row__body--done]="task.done">
                   <p class="task-row__title" [class.task-row__title--done]="task.done">{{ task.title }}</p>

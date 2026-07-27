@@ -124,7 +124,8 @@
 
 /* Calendar panel */
 .calendar-panel {
-  grid-column: span 12;
+  grid-column: span 8;
+  min-width: 0; 
   background-color: var(--vanilla-cream);
   border-radius: 0.75rem;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
@@ -301,7 +302,8 @@
 
 /* Right column */
 .calendar-side {
-  grid-column: span 12;
+  grid-column: span 4;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -387,6 +389,12 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--vanilla-cream);
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .task-row__title--done {
@@ -448,6 +456,7 @@
   display: flex;
   gap: 1rem;
   cursor: pointer;
+  overflow-wrap: anywhere;
 }
 
 .timeline-row__time {
@@ -458,6 +467,7 @@
   text-align: right;
   padding: 0.5rem 0;
   flex-shrink: 0;
+  overflow-wrap: anywhere;
 }
 
 .timeline-row__body {

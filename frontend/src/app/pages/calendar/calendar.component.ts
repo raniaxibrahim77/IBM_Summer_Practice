@@ -94,6 +94,16 @@ export class CalendarComponent implements OnInit {
     return `${MONTH_NAMES[this.viewMonth]} ${this.viewYear}`;
   }
 
+  showAllTasks = false;
+
+  get visibleTaskReminders(): TaskReminder[] {
+    return this.showAllTasks ? this.taskReminders : this.taskReminders.slice(0, 5);
+  }
+
+  toggleViewAllTasks(): void {
+    this.showAllTasks = !this.showAllTasks;
+  }
+
   previousMonth(): void {
     this.viewMonth--;
     if (this.viewMonth < 0) {
@@ -186,7 +196,14 @@ export class CalendarComponent implements OnInit {
   }
 
   private buildTaskReminders(): void {
-    this.taskReminders = this.actionItems.map((item) => ({
+    const sorted = [...this.actionItems].sort((a, b) => {
+      if (!a.deadline && !b.deadline) return 0;
+      if (!a.deadline) return 1;
+      if (!b.deadline) return -1;
+      return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+    });
+
+    this.taskReminders = sorted.map((item) => ({
       id: item.id,
       title: item.description,
       status: item.status === 'DONE' ? 'Completed' : this.formatDeadline(item.deadline),
