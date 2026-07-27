@@ -23,14 +23,20 @@ DECISIONS:
 * Write "none" if no decisions were made.
 
 FOLLOW_UP_NOTES:
-Any notes about what should happen next, or "none" if not applicable.
+Any notes about what should happen next, or "none" if not applicable
+
+MEETING_DATE: {meeting_datetime}
+
+When determining ACTION_ITEMS deadlines, resolve relative dates (e.g. "Friday", "next Monday")
+using MEETING_DATE as the reference point. Always use the same year as MEETING_DATE unless the
+transcript explicitly states a different year.
 
 ACTION_ITEMS:
 description|assignee|deadline
 One action item per line in that exact format, using a pipe character to separate fields.
 Leave assignee or deadline empty (but keep the pipes) if unknown.
 Format deadline as YYYY-MM-DD if a date can be inferred, otherwise leave it empty.
-Write "none" if there are no action items.$prompt$,
+Write "none" if there are no action items. $prompt$,
     'v2',
     true,
     now(),

@@ -15,10 +15,11 @@ public class MeetingResponse {
     private LocalDateTime updatedAt;
     private UUID ownerId;
     private long attendeeCount;
+    private boolean hasTranscript;
 
     public MeetingResponse(UUID id, String title, String description, LocalDateTime meetingDatetime,
                            String processingStatus, LocalDateTime createdAt, LocalDateTime updatedAt,
-                           UUID ownerId, long attendeeCount) {
+                           UUID ownerId, long attendeeCount, boolean hasTranscript) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -28,9 +29,10 @@ public class MeetingResponse {
         this.updatedAt = updatedAt;
         this.ownerId = ownerId;
         this.attendeeCount = attendeeCount;
+        this.hasTranscript = hasTranscript;
     }
 
-    public static MeetingResponse from(Meeting meeting, long attendeeCount) {
+    public static MeetingResponse from(Meeting meeting, long attendeeCount, boolean hasTranscript) {
         return new MeetingResponse(
                 meeting.getId(),
                 meeting.getTitle(),
@@ -40,9 +42,15 @@ public class MeetingResponse {
                 meeting.getCreatedAt(),
                 meeting.getUpdatedAt(),
                 meeting.getOwner() != null ? meeting.getOwner().getId() : null,
-                attendeeCount
+                attendeeCount,
+                hasTranscript
         );
     }
+
+    public boolean isHasTranscript() { return hasTranscript; }
+
+    public void setHasTranscript(boolean hasTranscript) { this.hasTranscript = hasTranscript; }
+
 
     public UUID getId() {
         return id;

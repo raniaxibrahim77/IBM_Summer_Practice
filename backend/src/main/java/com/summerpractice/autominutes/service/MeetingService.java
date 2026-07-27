@@ -12,6 +12,7 @@ import com.summerpractice.autominutes.model.Attendee;
 import com.summerpractice.autominutes.model.MeetingAttendee;
 import com.summerpractice.autominutes.repository.AttendeeRepository;
 import com.summerpractice.autominutes.repository.MeetingAttendeeRepository;
+import com.summerpractice.autominutes.repository.TranscriptRepository;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,12 +29,14 @@ public class MeetingService {
     private final AppUserRepository appUserRepository;
     private final AttendeeRepository attendeeRepository;
     private final MeetingAttendeeRepository meetingAttendeeRepository;
+    private final TranscriptRepository transcriptRepository;
 
-    public MeetingService(MeetingRepository meetingRepository, AppUserRepository appUserRepository, AttendeeRepository attendeeRepository, MeetingAttendeeRepository meetingAttendeeRepository) {
+    public MeetingService(MeetingRepository meetingRepository, AppUserRepository appUserRepository, AttendeeRepository attendeeRepository, MeetingAttendeeRepository meetingAttendeeRepository, TranscriptRepository transcriptRepository) {
         this.meetingRepository = meetingRepository;
         this.appUserRepository = appUserRepository;
         this.attendeeRepository = attendeeRepository;
         this.meetingAttendeeRepository = meetingAttendeeRepository;
+        this.transcriptRepository = transcriptRepository;
     }
 
     @Transactional
@@ -87,7 +90,8 @@ public class MeetingService {
 
         return MeetingResponse.from(
                 savedMeeting,
-                meetingAttendees.size()
+                meetingAttendees.size(),
+                false
         );
     }
 
@@ -109,7 +113,8 @@ public class MeetingService {
                         meeting,
                         meetingAttendeeRepository.countByMeeting_Id(
                                 meeting.getId()
-                        )
+                        ),
+                        transcriptRepository.existsByMeeting_Id(meeting.getId())
                 ))
                 .toList();
     }
@@ -125,8 +130,10 @@ public class MeetingService {
 
         long attendeeCount =
                 meetingAttendeeRepository.countByMeeting_Id(id);
+        boolean hasTranscript =
+                transcriptRepository.existsByMeeting_Id(id);
 
-        return MeetingResponse.from(meeting, attendeeCount);
+        return MeetingResponse.from(meeting, attendeeCount, hasTranscript);
     }
 
     @Transactional
@@ -143,10 +150,13 @@ public class MeetingService {
 
         long attendeeCount =
                 meetingAttendeeRepository.countByMeeting_Id(id);
+        boolean hasTranscript =
+                transcriptRepository.existsByMeeting_Id(id);
 
         return MeetingResponse.from(
                 savedMeeting,
-                attendeeCount
+                attendeeCount,
+                hasTranscript
         );
     }
 
