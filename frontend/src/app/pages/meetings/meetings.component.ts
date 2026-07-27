@@ -2,10 +2,12 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { MeetingService, MeetingResponse } from '../../services/meeting.service';
+import { MeetingCreateRequest, MeetingResponse, MeetingService } from '../../services/meeting.service';
+import { MeetingAiService } from '../../services/meeting-ai.service';
 import { TranscriptService } from '../../services/transcript.service';
 import { AuthService } from '../../services/auth.service';
 import { HeaderComponent } from '../../shared/header/header.component';
+import { AttendeeResponse, AttendeeService } from '../../services/attendee.service';
 
 interface MeetingRow {
   id: string;
@@ -31,6 +33,8 @@ export class MeetingsComponent implements OnInit {
     private meetingService: MeetingService,
     private authService: AuthService,
     private transcriptService: TranscriptService,
+    private attendeeService: AttendeeService,
+    private meetingAiService: MeetingAiService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -147,25 +151,71 @@ export class MeetingsComponent implements OnInit {
   newMeetingTime = '';
   peopleSearch = '';
   processWithAI = true;
+  isLoggingMeeting = false;
+  logMeetingError = '';
 
   transcriptFile: File | null = null;
   transcriptError: string | null = null;
 
-  readonly allPeople = ['Alex', 'Alex Baker', 'Alex Caleb', 'Ana Barbona', 'Maria Maria', 'Roana'];
-  invitedPeople: string[] = [];
+  availableAttendees: AttendeeResponse[] = [];
+  invitedPeople: AttendeeResponse[] = [];
 
-  get peopleSuggestions(): string[] {
-    const term = this.peopleSearch.trim().toLowerCase();
+  get peopleSuggestions(): AttendeeResponse[] {
+    const term =
+      this.peopleSearch.trim().toLowerCase();
+
     if (!term) {
       return [];
     }
-    return this.allPeople.filter(
-      (p) => p.toLowerCase().includes(term) && !this.invitedPeople.includes(p)
-    );
+
+    return this.availableAttendees
+      .filter((attendee) => {
+        const matchesSearch =
+          attendee.name
+            .toLowerCase()
+            .includes(term) ||
+          (
+            attendee.email
+              ?.toLowerCase()
+              .includes(term) ?? false
+          );
+
+        const alreadyInvited =
+          this.invitedPeople.some(
+            (invited) =>
+              invited.id === attendee.id
+          );
+
+        return (
+          matchesSearch &&
+          !alreadyInvited
+        );
+      })
+      .slice(0, 5);
+  }
+
+  private loadAvailableAttendees(): void {
+    this.attendeeService
+      .getAttendees()
+      .subscribe({
+        next: (attendees) => {
+          this.availableAttendees =
+            attendees;
+
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error(
+            'Failed to load attendees',
+            error
+          );
+        }
+      });
   }
 
   openCreateModal(): void {
     this.showCreateModal = true;
+    this.loadAvailableAttendees();
   }
 
   closeCreateModal(): void {
@@ -178,31 +228,59 @@ export class MeetingsComponent implements OnInit {
     this.processWithAI = true;
     this.transcriptFile = null;
     this.transcriptError = null;
+    this.isLoggingMeeting = false;
+    this.logMeetingError = '';
   }
 
-  addPerson(person: string): void {
-    if (!this.invitedPeople.includes(person)) {
-      this.invitedPeople.push(person);
+  addPerson(
+    attendee: AttendeeResponse
+  ): void {
+    const alreadyInvited =
+      this.invitedPeople.some(
+        (invited) =>
+          invited.id === attendee.id
+      );
+
+    if (!alreadyInvited) {
+      this.invitedPeople.push(attendee);
     }
+
     this.peopleSearch = '';
   }
 
-  removePerson(person: string): void {
-    this.invitedPeople = this.invitedPeople.filter((p) => p !== person);
+  removePerson(
+    attendeeId: string
+  ): void {
+    this.invitedPeople =
+      this.invitedPeople.filter(
+        (attendee) =>
+          attendee.id !== attendeeId
+      );
   }
 
-  onTranscriptFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0] ?? null;
+  onTranscriptFileSelected(
+    event: Event
+  ): void {
+    const input =
+      event.target as HTMLInputElement;
+
+    const file =
+      input.files?.[0] ?? null;
 
     if (!file) {
       this.transcriptFile = null;
       return;
     }
 
-    const isValidType = file.name.toLowerCase().endsWith('.txt') || file.name.toLowerCase().endsWith('.docx');
-    if (!isValidType) {
-      this.transcriptError = 'Please upload a .txt or .docx file.';
+    const isTextFile =
+      file.name
+        .toLowerCase()
+        .endsWith('.txt');
+
+    if (!isTextFile) {
+      this.transcriptError =
+        'Please upload a .txt file.';
+
       this.transcriptFile = null;
       input.value = '';
       return;
@@ -216,18 +294,182 @@ export class MeetingsComponent implements OnInit {
     this.transcriptFile = null;
   }
 
-  createMeeting(): void {
-    if (!this.newMeetingName.trim()) {
-      return;
-    }
-    if (!this.transcriptFile) {
-      this.transcriptError = 'A transcript file is required to create a meeting.';
+  logMeeting(): void {
+    this.logMeetingError = '';
+    this.transcriptError = null;
+
+    const title =
+      this.newMeetingName.trim();
+
+    if (!title) {
+      this.logMeetingError =
+        'Please enter a meeting name.';
       return;
     }
 
-    // TODO: replace with a real POST to /api/meetings (multipart: metadata + transcript file),
-    // then re-fetch or prepend the returned MeetingResponse instead of faking an id locally.
-    console.log('Creating meeting with transcript:', this.transcriptFile.name);
-    this.closeCreateModal();
+    if (!this.newMeetingDate) {
+      this.logMeetingError =
+        'Please select the meeting date.';
+      return;
+    }
+
+    if (!this.newMeetingTime) {
+      this.logMeetingError =
+        'Please select the meeting time.';
+      return;
+    }
+
+    const meetingDateTime = new Date(
+      `${this.newMeetingDate}T${this.newMeetingTime}:00`
+    );
+
+    if (
+      Number.isNaN(meetingDateTime.getTime())
+    ) {
+      this.logMeetingError =
+        'The meeting date is invalid.';
+      return;
+    }
+
+    if (
+      meetingDateTime.getTime() >
+      Date.now()
+    ) {
+      this.logMeetingError =
+        'A logged meeting must be in the past.';
+      return;
+    }
+
+    if (!this.transcriptFile) {
+      this.transcriptError =
+        'A transcript file is required.';
+      return;
+    }
+
+    if (this.isLoggingMeeting) {
+      return;
+    }
+
+    this.isLoggingMeeting = true;
+
+    this.transcriptFile
+      .text()
+      .then((content) => {
+        if (!content.trim()) {
+          this.isLoggingMeeting = false;
+          this.transcriptError =
+            'The transcript file is empty.';
+          this.cdr.markForCheck();
+          return;
+        }
+
+        const request: MeetingCreateRequest = {
+          title,
+          description: '',
+          meetingDatetime:
+            `${this.newMeetingDate}T${this.newMeetingTime}:00`,
+          ownerId:
+            this.authService.getCurrentUser()?.id ??
+            null,
+          attendeeIds:
+            this.invitedPeople.map(
+              (attendee) => attendee.id
+            )
+        };
+
+        this.meetingService
+          .createMeeting(request)
+          .subscribe({
+            next: (createdMeeting) => {
+              this.transcriptService
+                .createTranscript(
+                  createdMeeting.id,
+                  content
+                )
+                .subscribe({
+                  next: () => {
+                    const newRow =
+                      this.toMeetingRow(createdMeeting);
+
+                    newRow.hasTranscript = true;
+
+                    this.meetings = [
+                      newRow,
+                      ...this.meetings
+                    ];
+
+                    const finishLogging = (): void => {
+                      this.closeCreateModal();
+                      this.cdr.markForCheck();
+                    };
+
+                    if (!this.processWithAI) {
+                      finishLogging();
+                      return;
+                    }
+
+                    this.meetingAiService
+                      .generateAiResult(createdMeeting.id)
+                      .subscribe({
+                        next: () => {
+                          finishLogging();
+                        },
+                        error: (error) => {
+                          console.error(
+                            'Meeting was logged, but AI processing failed',
+                            error
+                          );
+
+                          alert(
+                            'The meeting and transcript were saved, but the AI summary could not be generated.'
+                          );
+
+                          finishLogging();
+                        }
+                      });
+                  },
+                  error: (error) => {
+                    console.error(
+                      'Failed to save transcript',
+                      error
+                    );
+
+                    this.isLoggingMeeting =
+                      false;
+
+                    this.logMeetingError =
+                      'The meeting was created, but the transcript could not be saved.';
+
+                    this.cdr.markForCheck();
+                  }
+                });
+            },
+            error: (error) => {
+              console.error(
+                'Failed to log meeting',
+                error
+              );
+
+              this.isLoggingMeeting = false;
+              this.logMeetingError =
+                error.error?.message ||
+                'The meeting could not be logged.';
+
+              this.cdr.markForCheck();
+            }
+          });
+      })
+      .catch((error) => {
+        console.error(
+          'Failed to read transcript',
+          error
+        );
+
+        this.isLoggingMeeting = false;
+        this.transcriptError =
+          'The transcript file could not be read.';
+
+        this.cdr.markForCheck();
+      });
   }
 }

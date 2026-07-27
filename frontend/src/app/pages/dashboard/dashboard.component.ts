@@ -3,46 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MeetingCreateRequest, MeetingResponse, MeetingService } from '../../services/meeting.service';
-import { ActionItemResponse, ActionItemService } from '../../services/action-item.service';
+import { CalendarDay, DashboardService, MeetingProcessingStatusLabel, RecentMeeting, Task, UpcomingEvent } from '../../services/dashboard.service';
 import { AttendeeResponse, AttendeeService } from '../../services/attendee.service';
 import { AuthService } from '../../services/auth.service';
 import { HeaderComponent } from '../../shared/header/header.component';
 
-interface Task {
-  id: string;
-  title: string;
-  meta: string;
-  done: boolean;
-  tag: string;
-}
-
-type MeetingProcessingStatusLabel =
-  | 'Not processed'
-  | 'Processing'
-  | 'Processed'
-  | 'Failed';
-interface RecentMeeting {
-  id: string;
-  title: string;
-  date: string;
-  attendees: number;
-  tag: MeetingProcessingStatusLabel;
-}
-
-interface UpcomingEvent {
-  id: string;
-  day: string;
-  date: string;
-  title: string;
-  time: string;
-}
-
-interface CalendarDay {
-  day: number;
-  muted: boolean;
-  hasMeeting: boolean;
-  isToday: boolean;
-}
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -81,8 +46,8 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private meetingService: MeetingService,
+    private dashboardService: DashboardService,
     private authService: AuthService,
-    private actionItemService: ActionItemService,
     private attendeeService: AttendeeService,
     private cdr: ChangeDetectorRef
   ) {
@@ -152,47 +117,32 @@ export class DashboardComponent implements OnInit {
   }
 
   private loadRecentMeetings(): void {
-    this.meetingService.getMeetings(this.authService.getCurrentUser()?.id).subscribe({
-      next: (meetings) => {
-        const now = new Date();
+    const ownerId =
+      this.authService.getCurrentUser()?.id;
 
-        this.meetings = meetings;
+    this.dashboardService
+      .loadMeetingOverview(ownerId)
+      .subscribe({
+        next: (overview) => {
+          this.meetings =
+            overview.meetings;
 
-        this.recentMeetings = meetings
-          .filter(
-            (meeting) =>
-                new Date(meeting.meetingDatetime).getTime() <=
-                now.getTime()
-          )
-          .sort(
-            (a, b) =>
-              new Date(b.meetingDatetime).getTime() -
-              new Date(a.meetingDatetime).getTime()
-          )
-          .slice(0, 3)
-          .map((meeting) => this.toRecentMeeting(meeting));
+          this.recentMeetings =
+            overview.recentMeetings;
 
-          this.upcomingEvents = meetings
-            .filter(
-              (meeting) =>
-                new Date(meeting.meetingDatetime).getTime() >
-                now.getTime()
-          )
-          .sort(
-            (a, b) =>
-              new Date(a.meetingDatetime).getTime() -
-              new Date(b.meetingDatetime).getTime()
-          )
-          .slice(0, 3)
-          .map((meeting) => this.toUpcomingEvent(meeting));
+          this.upcomingEvents =
+            overview.upcomingEvents;
 
-        this.buildCalendar();
-        this.cdr.markForCheck();
-      },
-      error: (error) => {
-        console.error('Failed to load recent meetings', error);
-      }
-    });
+          this.buildCalendar();
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error(
+            'Failed to load recent meetings',
+            error
+          );
+        }
+      });
   }
 
   private loadAttendees(): void {
@@ -215,93 +165,26 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  private formatMeetingProcessingStatus(
-    status: string
-  ): MeetingProcessingStatusLabel {
-    switch (status) {
-      case 'DONE':
-      case 'COMPLETED':
-        return 'Processed';
-
-      case 'IN_PROGRESS':
-      case 'PROCESSING':
-        return 'Processing';
-
-      case 'FAILED':
-        return 'Failed';
-
-      case 'NOT_STARTED':
-      case 'NOT_PROCESSED':
-      default:
-        return 'Not processed';
-    }
-  }
-
-  private toRecentMeeting(meeting: MeetingResponse): RecentMeeting {
-    const date = new Date(meeting.meetingDatetime);
-
-    return {
-      id: meeting.id,
-      title: meeting.title,
-      date: date.toLocaleDateString([], {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-      }),
-      attendees: meeting.attendeeCount,
-      tag: this.formatMeetingProcessingStatus(
-        meeting.processingStatus
-      )
-    };
-  }
-
-  private toUpcomingEvent(meeting: MeetingResponse): UpcomingEvent {
-    const date = new Date(meeting.meetingDatetime);
-
-    return {
-      id: meeting.id,
-      day: date
-        .toLocaleDateString([], { weekday: 'short' })
-        .toUpperCase(),
-      date: date.getDate().toString().padStart(2, '0'),
-      title: meeting.title,
-      time: date.toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    };
-  }
-
   private loadTasks(): void {
-    this.actionItemService.getActionItems().subscribe({
-      next: (items) => {
-        this.tasks = items
-          .slice(0, 3)
-          .map((item) => this.toTask(item));
-      },
-      error: (error) => {
-        console.error('Failed to load tasks', error);
-      }
-    });
-  }
-
-  private toTask(item: ActionItemResponse): Task {
-    return {
-      id: item.id,
-      title: item.description,
-      meta: item.deadline
-        ? `Due ${new Date(item.deadline).toLocaleDateString()}`
-        : 'No deadline',
-      done: item.status === 'DONE',
-      tag: item.proposedAssignee || 'Unassigned'
-    };
+    this.dashboardService
+      .loadTasks()
+      .subscribe({
+        next: (tasks) => {
+          this.tasks = tasks;
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error(
+            'Failed to load tasks',
+            error
+          );
+        }
+      });
   }
 
   get viewMonthLabel(): string {
     return `${MONTH_NAMES[this.viewMonth]} ${this.viewYear}`;
   }
-
-
 
   previousMonth(): void {
     this.viewMonth--;
@@ -322,64 +205,33 @@ export class DashboardComponent implements OnInit {
   }
 
   private buildCalendar(): void {
-    const firstOfMonth = new Date(this.viewYear, this.viewMonth, 1);
-    const firstWeekday = (firstOfMonth.getDay() + 6) % 7;
-
-    const daysInMonth = new Date(this.viewYear, this.viewMonth + 1, 0).getDate();
-    const daysInPrevMonth = new Date(this.viewYear, this.viewMonth, 0).getDate();
-
-    const isCurrentRealMonth =
-      this.viewYear === this.today.getFullYear() && this.viewMonth === this.today.getMonth();
-
-    const cells: CalendarDay[] = [];
-
-    for (let i = firstWeekday - 1; i >= 0; i--) {
-      cells.push({ day: daysInPrevMonth - i, muted: true, hasMeeting: false, isToday: false });
-    }
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const hasMeeting = this.meetings.some((meeting) => {
-        const date = new Date(meeting.meetingDatetime);
-
-        return (
-          date.getFullYear() === this.viewYear &&
-          date.getMonth() === this.viewMonth &&
-          date.getDate() === d
-        );
-      });
-
-      cells.push({
-        day: d,
-        muted: false,
-        hasMeeting,
-        isToday: isCurrentRealMonth && d === this.today.getDate(),
-      });
-    }
-
-    let nextDay = 1;
-    while (cells.length % 7 !== 0) {
-      cells.push({ day: nextDay++, muted: true, hasMeeting: false, isToday: false });
-    }
-
-    this.calendarDays = cells;
+    this.calendarDays =
+      this.dashboardService.buildCalendar(
+        this.meetings,
+        this.viewYear,
+        this.viewMonth,
+        this.today
+      );
   }
-
   toggleTaskDone(task: Task): void {
-    const newStatus = task.done ? 'OPEN' : 'DONE';
+    this.dashboardService
+      .updateTaskStatus(task)
+      .subscribe({
+        next: (updatedTask) => {
+          Object.assign(
+            task,
+            updatedTask
+          );
 
-    this.actionItemService.updateStatus(task.id, newStatus).subscribe({
-      next: (updatedItem) => {
-        task.done = updatedItem.status === 'DONE';
-        task.meta = task.done
-          ? 'Completed'
-          : updatedItem.deadline
-            ? `Due ${new Date(updatedItem.deadline).toLocaleDateString()}`
-            : 'No deadline';
-      },
-      error: (error) => {
-        console.error('Failed to update task', error);
-      }
-    });
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error(
+            'Failed to update task',
+            error
+          );
+        }
+      });
   }
 
   // --- Create Meeting modal state ---

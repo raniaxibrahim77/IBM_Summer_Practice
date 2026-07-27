@@ -38,7 +38,12 @@
 <app-header>
   <div class="search-bar">
     <span class="material-symbols-outlined search-bar__icon">search</span>
-    <input [(ngModel)]="searchTerm" class="search-bar__input" placeholder="Search tasks or events..." type="text" />
+    <input
+      [(ngModel)]="searchTerm"
+      class="search-bar__input"
+      placeholder="Search tasks or events..."
+      type="text"
+    />
   </div>
 </app-header>
 
@@ -46,8 +51,7 @@
   <div class="meetings-container">
     <div class="meetings-header">
       <h1 class="meetings-title">Meetings</h1>
-      <button
-        type="button" (click)="openCreateModal()" class="btn btn--tea">
+      <button type="button" (click)="openCreateModal()" class="btn btn--tea">
         <span class="material-symbols-outlined">add</span>
         Log Meeting
       </button>
@@ -65,48 +69,60 @@
     </div>
 
     <!-- Table -->
-   <div class="table-panel">
+    <div class="table-panel">
       <div class="table-panel__scroll">
         <table class="meetings-table">
-        <thead>
-          <tr class="bg-[#A33E43] text-[#FBF2DA]">
-            <th class="meetings-table__head-cell">Title</th>
-            <th class="meetings-table__head-cell">Date &amp; Time</th>
-            <th class="meetings-table__head-cell">Attendees</th>
-            <th class="meetings-table__head-cell">Add Transcript</th>
-            <th class="meetings-table__head-cell">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (meeting of filteredMeetings; track meeting.id) {
-            <tr class="meetings-table__row">
-              <td class="meetings-table__cell meetings-table__cell--title">{{ meeting.title }}</td>
-              <td class="eetings-table__cell meetings-table__cell--muted">{{ meeting.dateTime }}</td>
-              <td class="meetings-table__cell">
-                <span class="attendees-badge">{{ meeting.attendees }}</span>
-              </td>
-              <td class="meetings-table__cell">
-                <label class="transcript-badge" [class.transcript-badge--edit]="meeting.hasTranscript">
+          <thead>
+            <tr class="bg-[#A33E43] text-[#FBF2DA]">
+              <th class="meetings-table__head-cell">Title</th>
+              <th class="meetings-table__head-cell">Date &amp; Time</th>
+              <th class="meetings-table__head-cell">Attendees</th>
+              <th class="meetings-table__head-cell">Add Transcript</th>
+              <th class="meetings-table__head-cell">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (meeting of filteredMeetings; track meeting.id) {
+              <tr class="meetings-table__row">
+                <td class="meetings-table__cell meetings-table__cell--title">
+                  {{ meeting.title }}
+                </td>
+                <td class="meetings-table__cell meetings-table__cell--muted">
+                  {{ meeting.dateTime }}
+                </td>
+                <td class="meetings-table__cell">
+                  <span class="attendees-badge">{{ meeting.attendees }}</span>
+                </td>
+                <td class="meetings-table__cell">
+                  <label
+                    class="transcript-badge"
+                    [class.transcript-badge--edit]="meeting.hasTranscript"
+                  >
                     {{ meeting.hasTranscript ? 'Edit Transcript' : 'Add Transcript' }}
-                    <input type="file" accept=".txt" class="visually-hidden" (change)="onRowTranscriptSelected($event, meeting)" />
-                </label>
-              </td>
-              <td class="meetings-table__cell">
-                <button [routerLink]="['/meeting-details', meeting.id]" class="ai-details-link">
-                  AI Details
-                </button>
-              </td>
-            </tr>
-          }
-          @if (filteredMeetings.length === 0) {
-            <tr>
-              <td colspan="5" class="meetings-table__empty">No meetings match your search.</td>
-            </tr>
-          }
+                    <input
+                      type="file"
+                      accept=".txt"
+                      class="visually-hidden"
+                      (change)="onRowTranscriptSelected($event, meeting)"
+                    />
+                  </label>
+                </td>
+                <td class="meetings-table__cell">
+                  <button [routerLink]="['/meeting-details', meeting.id]" class="ai-details-link">
+                    AI Details
+                  </button>
+                </td>
+              </tr>
+            }
+            @if (filteredMeetings.length === 0) {
+              <tr>
+                <td colspan="5" class="meetings-table__empty">No meetings match your search.</td>
+              </tr>
+            }
           </tbody>
         </table>
       </div>
-    </div>  
+    </div>
   </div>
 </main>
 
@@ -118,52 +134,76 @@
       <div class="modal-form">
         <div>
           <label class="field-label">Name</label>
-          <input type="text" [(ngModel)]="newMeetingName" name="meetingName" placeholder="Meeting name" class="field-input" />
+          <input
+            type="text"
+            [(ngModel)]="newMeetingName"
+            name="meetingName"
+            placeholder="Meeting name"
+            class="field-input"
+          />
         </div>
 
         <div class="field-row">
           <div>
             <label class="field-label">When</label>
-            <input type="date" [(ngModel)]="newMeetingDate" name="meetingDate" class="field-input" />
+            <input
+              type="date"
+              [(ngModel)]="newMeetingDate"
+              name="meetingDate"
+              class="field-input"
+            />
           </div>
+
           <div>
             <label class="field-label">Time</label>
-            <input type="time" [(ngModel)]="newMeetingTime" name="meetingTime" class="field-input" />
-          </div>
-        </div>
-
-
-          <div>
-            <label class="text-sm font-semibold text-[#450C21] block mb-1">Time</label>
             <input
               type="time"
               [(ngModel)]="newMeetingTime"
               name="meetingTime"
-              class="w-full px-4 py-2.5 bg-white border-2 border-[#450C21]/10 focus:border-[#75C3D1] rounded-lg outline-none text-sm text-[#450C21]"
+              class="field-input"
             />
           </div>
         </div>
 
         <div>
           <label class="field-label">Attendees</label>
-          <input type="text" [(ngModel)]="peopleSearch" name="peopleSearch" placeholder="Search a list of people..." class="field-input" />
+          <input
+            type="text"
+            [(ngModel)]="peopleSearch"
+            name="peopleSearch"
+            placeholder="Search a list of people..."
+            class="field-input"
+          />
 
           @if (peopleSuggestions.length > 0) {
             <div class="suggestions-list">
-              @for (person of peopleSuggestions; track person) {
-                <button type="button" (click)="addPerson(person)" class="suggestion-item">{{ person }}</button>
+              @for (person of peopleSuggestions; track person.id) {
+                <button type="button" (click)="addPerson(person)" class="suggestion-item">
+                  <span>{{ person.name }}</span>
+
+                  @if (person.email) {
+                    <span class="suggestion-item__email">
+                      {{ person.email }}
+                    </span>
+                  }
+                </button>
               }
             </div>
           }
 
-
           @if (invitedPeople.length > 0) {
             <div class="invited-chips">
-              @for (person of invitedPeople; track person) {
+              @for (person of invitedPeople; track person.id) {
                 <span class="invited-chip">
-                  {{ person }}
-                  <button type="button" (click)="removePerson(person)" class="invited-chip__remove">
-                    <span class="material-symbols-outlined invited-chip__remove-icon">close</span>
+                  {{ person.name }}
+
+                  <button
+                    type="button"
+                    (click)="removePerson(person.id)"
+                    class="invited-chip__remove"
+                    [attr.aria-label]="'Remove ' + person.name"
+                  >
+                    <span class="material-symbols-outlined invited-chip__remove-icon"> close </span>
                   </button>
                 </span>
               }
@@ -178,7 +218,12 @@
             <label class="upload-dropzone">
               <span class="material-symbols-outlined upload-dropzone__icon">upload_file</span>
               <span class="upload-dropzone__text">Click to upload .txt</span>
-              <input type="file" accept=".txt" class="visually-hidden" (change)="onTranscriptFileSelected($event)" />
+              <input
+                type="file"
+                accept=".txt"
+                class="visually-hidden"
+                (change)="onTranscriptFileSelected($event)"
+              />
             </label>
           } @else {
             <div class="file-chip">
@@ -198,14 +243,40 @@
         </div>
 
         <label class="checkbox-row">
-          <input type="checkbox" [(ngModel)]="processWithAI" name="processWithAI" class="checkbox-row__input" />
+          <input
+            type="checkbox"
+            [(ngModel)]="processWithAI"
+            name="processWithAI"
+            class="checkbox-row__input"
+          />
           Process with AI now
         </label>
       </div>
 
+      @if (logMeetingError) {
+        <p role="alert" class="error-text">
+          {{ logMeetingError }}
+        </p>
+      }
+
       <div class="modal-actions">
-        <button type="button" (click)="closeCreateModal()" class="btn btn--outline btn--flex">Cancel</button>
-        <button type="button" (click)="createMeeting()" class="btn btn--primary btn--flex">Log a Meeting</button>
+        <button type="button" (click)="closeCreateModal()" class="btn btn--outline btn--flex">
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          (click)="logMeeting()"
+          [disabled]="isLoggingMeeting"
+          class="btn btn--primary btn--flex"
+        >
+          @if (isLoggingMeeting) {
+            Logging...
+          } @else {
+            Log a Meeting
+          }
+        </button>
       </div>
     </div>
+  </div>
 }
