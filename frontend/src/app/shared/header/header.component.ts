@@ -8,7 +8,7 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './header.component.html',
 })
 export class HeaderComponent {
-  userName = 'Guest';
+  @Input() userName = 'Guest';
   get userInitial(): string {
     return this.userName.charAt(0).toUpperCase();
   }

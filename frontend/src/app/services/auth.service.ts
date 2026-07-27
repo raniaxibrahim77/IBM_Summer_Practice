@@ -7,6 +7,7 @@ export interface AppUserResponse {
   id: string;
   username: string;
   email: string;
+  createdAt?: string;
 }
 
 export interface LoginRequest {
@@ -18,6 +19,11 @@ export interface RegisterRequest {
   username: string;
   email: string;
   password: string;
+}
+
+export interface UpdateProfileRequest {
+  username: string;
+  email: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -37,6 +43,22 @@ export class AuthService {
     return this.http
       .post<AppUserResponse>(`${this.apiUrl}/auth/register`, request)
       .pipe(tap((user) => this.setCurrentUser(user)));
+  }
+
+  updateProfile(
+    userId: string,
+    request: UpdateProfileRequest
+  ): Observable<AppUserResponse> {
+    return this.http
+      .put<AppUserResponse>(
+        `${this.apiUrl}/auth/${userId}/profile`,
+        request
+      )
+      .pipe(
+        tap((updatedUser) =>
+          this.setCurrentUser(updatedUser)
+        )
+      );
   }
 
   getCurrentUser(): AppUserResponse | null {

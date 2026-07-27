@@ -1,0 +1,294 @@
+<!-- Shared application sidebar -->
+<aside class="sidebar">
+  <div class="sidebar__logo-row">
+    <div class="sidebar__logo">
+      <span class="material-symbols-outlined">dashboard</span>
+    </div>
+  </div>
+
+  <!-- Main application navigation -->
+  <nav class="sidebar__nav">
+    <a routerLink="/dashboard" class="nav-link">
+      <span class="material-symbols-outlined">home</span>
+      <span class="nav-link__label">Home</span>
+    </a>
+
+    <a routerLink="/calendar" class="nav-link">
+      <span class="material-symbols-outlined">calendar_today</span>
+      <span class="nav-link__label">Calendar</span>
+    </a>
+
+    <a routerLink="/meetings" class="nav-link">
+      <span class="material-symbols-outlined">groups</span>
+      <span class="nav-link__label">Meetings</span>
+    </a>
+
+    <!-- Current page -->
+    <a
+      routerLink="/settings"
+      class="nav-link nav-link--active"
+    >
+      <span class="material-symbols-outlined">settings</span>
+      <span class="nav-link__label">Settings</span>
+    </a>
+  </nav>
+
+  <div class="sidebar__footer">
+    <button
+      type="button"
+      routerLink="/"
+      class="nav-link nav-link--logout"
+    >
+      <span class="material-symbols-outlined">logout</span>
+      <span class="nav-link__label">Logout</span>
+    </button>
+  </div>
+</aside>
+
+<!-- Reuses the application header and signed-in user display -->
+<app-header
+  [userName]="currentUser?.username ?? 'Guest'"
+/>
+
+<main class="settings-main">
+  <div class="settings-container">
+    <!-- Page heading -->
+    <div class="settings-heading">
+      <h1 class="settings-title">Settings</h1>
+      <p class="settings-subtitle">
+        Manage your account information and preferences.
+      </p>
+    </div>
+
+    <!-- Basic profile information -->
+    <section class="settings-card">
+      <div class="settings-card__header">
+        <div>
+          <h2 class="settings-card__title">
+            Profile information
+          </h2>
+          <p class="settings-card__subtitle">
+            Your personal account information.
+          </p>
+        </div>
+
+        @if (!isEditingProfile) {
+          <button
+            type="button"
+            class="profile-field__action"
+            (click)="startProfileEdit()"
+          >
+            Edit profile
+          </button>
+        }
+      </div>
+
+<!-- Avatar generated from the user's initials. -->
+      <div class="profile-summary">
+        <div class="profile-avatar" aria-label="Profile avatar">
+          {{ userInitials }}
+        </div>
+
+        <div>
+          <p class="profile-summary__name">
+            {{ currentUser?.username || 'Guest' }}
+          </p>
+          <p class="profile-summary__email">
+            {{ currentUser?.email || 'No email available' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Profile fields switch between read-only and edit modes. -->
+      <div class="profile-fields">
+        @if (isEditingProfile) {
+          <form
+            class="profile-edit-form"
+            (ngSubmit)="saveProfile()"
+          >
+            <div class="profile-edit-field">
+              <label
+                for="profileUsername"
+                class="profile-field__label"
+              >
+                Username
+              </label>
+
+              <input
+                id="profileUsername"
+                type="text"
+                name="profileUsername"
+                [(ngModel)]="profileUsername"
+                class="profile-edit-input"
+                autocomplete="username"
+              />
+            </div>
+
+            <div class="profile-edit-field">
+              <label
+                for="profileEmail"
+                class="profile-field__label"
+              >
+                Email
+              </label>
+
+              <input
+                id="profileEmail"
+                type="email"
+                name="profileEmail"
+                [(ngModel)]="profileEmail"
+                class="profile-edit-input"
+                autocomplete="email"
+              />
+            </div>
+
+            @if (profileError) {
+              <p role="alert" class="settings-message settings-message--error">
+                {{ profileError }}
+              </p>
+            }
+
+            <div class="profile-edit-actions">
+              <button
+                type="button"
+                class="btn btn--outline"
+                [disabled]="isSavingProfile"
+                (click)="cancelProfileEdit()"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                class="btn btn--primary"
+                [disabled]="isSavingProfile"
+              >
+                @if (isSavingProfile) {
+                  Saving...
+                } @else {
+                  Save changes
+                }
+              </button>
+            </div>
+          </form>
+        } @else {
+          <div class="profile-field">
+            <div>
+              <p class="profile-field__label">
+                Username
+              </p>
+              <p class="profile-field__value">
+                {{ currentUser?.username || 'Guest' }}
+              </p>
+            </div>
+          </div>
+
+          <div class="profile-field">
+            <div>
+              <p class="profile-field__label">
+                Email
+              </p>
+              <p class="profile-field__value">
+                {{ currentUser?.email || 'No email available' }}
+              </p>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+      @if (profileSuccess) {
+        <p
+          role="status"
+          class="settings-message settings-message--success"
+        >
+          {{ profileSuccess }}
+        </p>
+      }
+
+    <!-- Account security -->
+    <section class="settings-card">
+      <div class="settings-card__header">
+        <div>
+          <h2 class="settings-card__title">
+            Security
+          </h2>
+          <p class="settings-card__subtitle">
+            Manage your password and account security.
+          </p>
+        </div>
+      </div>
+
+      <div class="profile-fields">
+        <div class="profile-field">
+          <div>
+            <p class="profile-field__label">
+              Password
+            </p>
+            <p class="profile-field__value">
+              ••••••••
+            </p>
+          </div>
+
+          <!-- TODO: Connect to a dedicated password-change endpoint. -->
+          <button 
+            type="button" 
+              class="profile-field__action" 
+              disabled
+            >
+              Change
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+@if (showSaveConfirmation) {
+  <div
+    class="confirmation-backdrop"
+    role="presentation"
+    (click)="cancelSaveConfirmation()"
+  >
+    <section
+      class="confirmation-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirmationTitle"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="confirmation-modal__icon">
+        <span class="material-symbols-outlined">edit</span>
+      </div>
+
+      <h2
+        id="confirmationTitle"
+        class="confirmation-modal__title"
+      >
+        Save profile changes?
+      </h2>
+
+      <p class="confirmation-modal__message">
+        Your username and email will be updated.
+      </p>
+
+      <div class="confirmation-modal__actions">
+        <button
+          type="button"
+          class="btn btn--outline"
+          (click)="cancelSaveConfirmation()"
+        >
+          Keep editing
+        </button>
+
+        <button
+          type="button"
+          class="btn btn--primary"
+          (click)="confirmProfileSave()"
+        >
+          Yes, save changes
+        </button>
+      </div>
+    </section>
+  </div>
+}

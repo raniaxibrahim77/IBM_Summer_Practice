@@ -4,6 +4,7 @@ import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { CalendarComponent } from './pages/calendar/calendar.component';
 import { MeetingsComponent } from './pages/meetings/meetings.component';
 import { MeetingDetailsComponent } from './pages/meeting-details/meeting-details.component';
+import { SettingsComponent } from './pages/settings/settings.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -12,4 +13,5 @@ export const routes: Routes = [
   { path: 'calendar', component: CalendarComponent },
   { path: 'meetings', component: MeetingsComponent },
   { path: 'meeting-details/:id', component: MeetingDetailsComponent },
+  { path: 'settings', component: SettingsComponent },
 ];
