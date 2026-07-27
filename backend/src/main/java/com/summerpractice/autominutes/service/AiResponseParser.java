@@ -11,12 +11,12 @@ public class AiResponseParser {
 
     private static final List<String> SECTION_LABELS = List.of(
             "CONCISE_SUMMARY", "DETAILED_SUMMARY", "KEY_POINTS",
-            "DECISIONS", "FOLLOW_UP_NOTES", "ACTION_ITEMS"
+            "DECISIONS", "FOLLOW_UP_NOTES", "ACTION_ITEMS", "ATTENDEES"
     );
 
     public static ParsedAiResult parseRawResponse(String raw) {
         if (raw == null || raw.isBlank()) {
-            return new ParsedAiResult("", "", "", "", "", new ArrayList<>());
+            return new ParsedAiResult("", "", "", "", "", new ArrayList<>(), new ArrayList<>());
         }
 
         String normalized = raw.replace("\r\n", "\n").trim();
@@ -27,15 +27,12 @@ public class AiResponseParser {
         String decisions = extractBullets(extractRawBlock(normalized, "DECISIONS"));
         String followUpNotes = cleanProse(extractRawBlock(normalized, "FOLLOW_UP_NOTES"));
         List<ParsedActionItem> actionItems = extractActionItems(extractRawBlock(normalized, "ACTION_ITEMS"));
+        List<String> attendees = extractAttendees(extractRawBlock(normalized, "ATTENDEES"));
 
-        return new ParsedAiResult(conciseSummary, detailedSummary, keyPoints, decisions, followUpNotes, actionItems);
+        return new ParsedAiResult(conciseSummary, detailedSummary, keyPoints, decisions, followUpNotes, actionItems, attendees);
     }
 
-    /**
-     * Finds "LABEL:" anywhere at the start of a line (content may follow on the
-     * same line, or start on the next line) and returns everything up to the
-     * next section label or end of text.
-     */
+
     private static String extractRawBlock(String text, String label) {
         Pattern labelPattern = Pattern.compile("(?m)^" + Pattern.quote(label) + ":");
         Matcher matcher = labelPattern.matcher(text);
@@ -112,6 +109,28 @@ public class AiResponseParser {
         return items;
     }
 
+    private static List<String> extractAttendees(String block) {
+        List<String> names = new ArrayList<>();
+        if (block.isBlank() || block.equalsIgnoreCase("none")) {
+            return names;
+        }
+
+        String normalized = block.replace("\n", ",");
+
+        for (String piece : normalized.split(",")) {
+            String cleaned = piece.strip();
+            if (cleaned.startsWith("*") || cleaned.startsWith("-")) {
+                cleaned = cleaned.substring(1).strip();
+            }
+            cleaned = cleaned.replaceAll("^\\d+\\.\\s*", "");
+
+            if (!cleaned.isEmpty() && !cleaned.equalsIgnoreCase("none")) {
+                names.add(cleaned);
+            }
+        }
+        return names;
+    }
+
     private static LocalDate parseDeadline(String value) {
         if (value == null || value.isBlank() || value.equalsIgnoreCase("none")) {
             return null;
@@ -131,6 +150,7 @@ public class AiResponseParser {
             String keyPoints,
             String decisions,
             String followUpNotes,
-            List<ParsedActionItem> actionItems
+            List<ParsedActionItem> actionItems,
+            List<String> attendees
     ) {}
 }

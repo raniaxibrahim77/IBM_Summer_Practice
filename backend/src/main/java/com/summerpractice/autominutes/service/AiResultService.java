@@ -8,11 +8,15 @@ import com.summerpractice.autominutes.model.Meeting;
 import com.summerpractice.autominutes.model.PromptTemplate;
 import com.summerpractice.autominutes.model.Transcript;
 import com.summerpractice.autominutes.model.ActionItem;
+import com.summerpractice.autominutes.model.Attendee;
+import com.summerpractice.autominutes.model.MeetingAttendee;
+import com.summerpractice.autominutes.repository.AttendeeRepository;
 import com.summerpractice.autominutes.repository.AiResultRepository;
 import com.summerpractice.autominutes.repository.MeetingRepository;
 import com.summerpractice.autominutes.repository.PromptTemplateRepository;
 import com.summerpractice.autominutes.repository.TranscriptRepository;
 import com.summerpractice.autominutes.repository.ActionItemRepository;
+import com.summerpractice.autominutes.repository.MeetingAttendeeRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,19 +33,25 @@ public class AiResultService {
     private final PromptTemplateRepository promptTemplateRepository;
     private final OllamaService ollamaService;
     private final ActionItemRepository actionItemRepository;
+    private final AttendeeRepository attendeeRepository;
+    private final MeetingAttendeeRepository meetingAttendeeRepository;
 
     public AiResultService(MeetingRepository meetingRepository,
                            TranscriptRepository transcriptRepository,
                            AiResultRepository aiResultRepository,
                            PromptTemplateRepository promptTemplateRepository,
                            OllamaService ollamaService,
-                           ActionItemRepository actionItemRepository){
+                           ActionItemRepository actionItemRepository,
+                           AttendeeRepository attendeeRepository,
+                           MeetingAttendeeRepository meetingAttendeeRepository){
         this.meetingRepository = meetingRepository;
         this.transcriptRepository = transcriptRepository;
         this.aiResultRepository = aiResultRepository;
         this.promptTemplateRepository = promptTemplateRepository;
         this.ollamaService = ollamaService;
         this.actionItemRepository = actionItemRepository;
+        this.attendeeRepository = attendeeRepository;
+        this.meetingAttendeeRepository = meetingAttendeeRepository;
     }
 
     public AiResultResponse generateAiResult(UUID meetingId) {
@@ -74,7 +84,32 @@ public class AiResultService {
 
         List<ActionItemResponse> actionItems = saveActionItems(parsed.actionItems(), saved);
 
+        linkAttendeesFromTranscript(parsed.attendees(), meeting);
+
         return toResponse(saved, actionItems);
+    }
+
+    private void linkAttendeesFromTranscript(List<String> names, Meeting meeting) {
+        for (String rawName : names) {
+            String name = rawName.strip();
+            if (name.isEmpty()) {
+                continue;
+            }
+
+            Attendee attendee = attendeeRepository.findAll().stream()
+                    .filter(a -> a.getName().equalsIgnoreCase(name))
+                    .findFirst()
+                    .orElseGet(() -> attendeeRepository.save(new Attendee(name, null)));
+
+            boolean alreadyLinked = meetingAttendeeRepository
+                    .findByMeeting_IdOrderByAttendee_NameAsc(meeting.getId())
+                    .stream()
+                    .anyMatch(ma -> ma.getAttendee().getId().equals(attendee.getId()));
+
+            if (!alreadyLinked) {
+                meetingAttendeeRepository.save(new MeetingAttendee(meeting, attendee, "Participant"));
+            }
+        }
     }
 
     private List<ActionItemResponse> saveActionItems(
