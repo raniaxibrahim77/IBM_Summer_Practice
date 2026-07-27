@@ -42,11 +42,6 @@ export class MeetingsComponent implements OnInit {
     this.meetingService.getMeetings(this.authService.getCurrentUser()?.id).subscribe({
       next: (meetings) => {
         this.meetings = meetings.map((meeting) => this.toMeetingRow(meeting));
-        // MeetingResponse does not currently include transcript availability,
-        // so check the transcript endpoint for each meeting.
-        this.meetings.forEach((meeting) => {
-          this.loadTranscriptStatus(meeting);
-        });
         this.cdr.markForCheck();
       },
       error: (err) => console.error('Failed to load meetings', err),
@@ -63,23 +58,8 @@ export class MeetingsComponent implements OnInit {
       title: m.title,
       dateTime,
       attendees: m.attendeeCount,
-      hasTranscript: false,
+      hasTranscript: m.hasTranscript,
     };
-  }
-
-  private loadTranscriptStatus(meeting: MeetingRow): void {
-    this.transcriptService
-      .getTranscript(meeting.id)
-      .subscribe({
-        next: () => {
-          meeting.hasTranscript = true;
-          this.cdr.markForCheck();
-        },
-        error: () => {
-          meeting.hasTranscript = false;
-          this.cdr.markForCheck();
-        },
-      });
   }
 
   get filteredMeetings(): MeetingRow[] {

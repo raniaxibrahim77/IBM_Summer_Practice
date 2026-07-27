@@ -12,6 +12,7 @@ export interface MeetingResponse {
   updatedAt: string;
   ownerId: string | null;
   attendeeCount: number;
+  hasTranscript: boolean; 
 }
 
 export interface MeetingCreateRequest {
