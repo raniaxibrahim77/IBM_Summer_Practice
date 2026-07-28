@@ -127,15 +127,48 @@ public class AiResponseParser {
             }
             cleaned = cleaned.replaceAll("^\\d+\\.\\s*", "");
             cleaned = cleaned.replaceAll(":$", "");
+            cleaned = cleaned.strip();
 
-            boolean looksLikeLabel = cleaned.equals(cleaned.toUpperCase())
-                    && cleaned.contains("_") || cleaned.equalsIgnoreCase("TRANSCRIPT");
-
-            if (!cleaned.isEmpty() && !cleaned.equalsIgnoreCase("none")) {
+            if (isValidName(cleaned)) {
                 names.add(cleaned);
             }
         }
         return names;
+    }
+
+    private static boolean isValidName(String value) {
+        if (value.isEmpty() || value.equalsIgnoreCase("none")) {
+            return false;
+        }
+
+        if (value.contains(":") || value.contains("@")) {
+            return false;
+        }
+
+        if (value.chars().anyMatch(Character::isDigit)) {
+            return false;
+        }
+
+        String[] words = value.split("\\s+");
+        if (words.length == 0 || words.length > 3) {
+            return false;
+        }
+
+        for (String word : words) {
+            if (word.isEmpty() || !Character.isUpperCase(word.charAt(0))) {
+                return false;
+            }
+            if (word.equals(word.toUpperCase()) && word.length() > 1) {
+                return false;
+            }
+            for (char c : word.toCharArray()) {
+                if (!Character.isLetter(c) && c != '\'' && c != '-') {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     private static LocalDate parseDeadline(String value) {
