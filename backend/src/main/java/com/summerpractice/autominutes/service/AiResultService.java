@@ -106,10 +106,15 @@ public class AiResultService {
             Attendee attendee = attendeeRepository.findAll().stream()
                     .filter(a -> a.getName().equalsIgnoreCase(name))
                     .findFirst()
-                    .orElseGet(() -> attendeeRepository.save(new Attendee(name, null)));
+                    .orElseGet(() -> attendeeRepository.save(new Attendee(name, generatePlaceholderEmail(name))));
 
                 meetingAttendeeRepository.save(new MeetingAttendee(meeting, attendee, "Participant"));
         }
+    }
+
+    private String generatePlaceholderEmail(String name) {
+        String slug = name.trim().toLowerCase().replaceAll("[^a-z0-9]+", ".");
+        return slug + "@example.com";
     }
 
     private List<ActionItemResponse> saveActionItems(
