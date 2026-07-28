@@ -2,13 +2,25 @@ package com.summerpractice.autominutes.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 import java.util.Map;
 
 @Service
 public class OllamaService {
 
-    private final RestClient restClient = RestClient.create("http://localhost:11434");
+    private final RestClient restClient;
+
+    public OllamaService() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(10_000);
+        factory.setReadTimeout(120_000);
+
+        this.restClient = RestClient.builder()
+                .baseUrl("http://localhost:11434")
+                .requestFactory(factory)
+                .build();
+    }
 
     public String generate(String prompt) {
         Map<String, Object> options = Map.of(
