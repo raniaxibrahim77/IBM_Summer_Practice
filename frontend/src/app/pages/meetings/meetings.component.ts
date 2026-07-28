@@ -26,6 +26,9 @@ interface MeetingRow {
 })
 export class MeetingsComponent implements OnInit {
   searchTerm = '';
+  pageSize = 10;
+  readonly pageSizeOptions = [5, 10, 20];
+  currentPage = 1;
 
   meetings: MeetingRow[] = [];
 
@@ -73,6 +76,39 @@ export class MeetingsComponent implements OnInit {
     }
     return this.meetings.filter((m) => m.title.toLowerCase().includes(term));
   }
+
+
+get totalPages(): number {
+  return Math.max(1, Math.ceil(this.filteredMeetings.length / this.pageSize));
+}
+
+get pagedMeetings(): MeetingRow[] {
+  const start = (this.currentPage - 1) * this.pageSize;
+  return this.filteredMeetings.slice(start, start + this.pageSize);
+}
+
+onSearchChange(): void {
+  this.currentPage = 1;
+}
+
+onPageSizeChange(): void {
+  this.currentPage = 1;
+}
+
+goToPage(page: number): void {
+  if (page < 1 || page > this.totalPages) {
+    return;
+  }
+  this.currentPage = page;
+}
+
+previousPage(): void {
+  this.goToPage(this.currentPage - 1);
+}
+
+nextPage(): void {
+  this.goToPage(this.currentPage + 1);
+}
 
   onRowTranscriptSelected(event: Event, meeting: MeetingRow): void {
     const input = event.target as HTMLInputElement;

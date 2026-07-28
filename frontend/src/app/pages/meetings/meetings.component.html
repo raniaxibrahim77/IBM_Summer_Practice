@@ -39,10 +39,11 @@
   <div class="search-bar">
     <span class="material-symbols-outlined search-bar__icon">search</span>
     <input
-      [(ngModel)]="searchTerm"
-      class="search-bar__input"
-      placeholder="Search tasks or events..."
       type="text"
+      [(ngModel)]="searchTerm"
+      (ngModelChange)="onSearchChange()"
+      placeholder="Search by title..."
+      class="search-bar__input"
     />
   </div>
 </app-header>
@@ -82,7 +83,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (meeting of filteredMeetings; track meeting.id) {
+            @for (meeting of pagedMeetings; track meeting.id) {
               <tr class="meetings-table__row">
                 <td class="meetings-table__cell meetings-table__cell--title">
                   {{ meeting.title }}
@@ -129,13 +130,54 @@
                 </td>
               </tr>
             }
-            @if (filteredMeetings.length === 0) {
+            @if (pagedMeetings.length === 0) {
               <tr>
                 <td colspan="5" class="meetings-table__empty">No meetings match your search.</td>
               </tr>
             }
           </tbody>
         </table>
+      </div>
+    </div>
+<!-- Pagination -->
+    <div class="pagination">
+      <div class="pagination__size">
+        <label for="pageSize" class="pagination__size-label">Show:</label>
+        <select
+          id="pageSize"
+          [(ngModel)]="pageSize"
+          (ngModelChange)="onPageSizeChange()"
+          class="pagination__size-select"
+        >
+          @for (size of pageSizeOptions; track size) {
+            <option [ngValue]="size">{{ size }}</option>
+          }
+        </select>
+        <span class="pagination__count">
+          {{ filteredMeetings.length }} meeting{{ filteredMeetings.length === 1 ? '' : 's' }}
+        </span>
+      </div>
+
+      <div class="pagination__controls">
+        <button
+          type="button"
+          class="pagination__btn"
+          [disabled]="currentPage === 1"
+          (click)="previousPage()"
+        >
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+
+        <span class="pagination__page">Page {{ currentPage }} of {{ totalPages }}</span>
+
+        <button
+          type="button"
+          class="pagination__btn"
+          [disabled]="currentPage === totalPages"
+          (click)="nextPage()"
+        >
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
       </div>
     </div>
   </div>
