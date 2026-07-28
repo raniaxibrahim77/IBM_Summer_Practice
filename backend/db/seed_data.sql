@@ -215,3 +215,117 @@ ON CONFLICT (meeting_id)
 DO UPDATE SET
     content = EXCLUDED.content,
     updated_at = now();
+
+
+-- Add 5 future meetings for testuser
+WITH existing_user AS (
+    SELECT id FROM app_user WHERE username = 'testuser'
+)
+INSERT INTO meeting (id, title, description, meeting_datetime, processing_status, created_at, updated_at, owner_id)
+SELECT gen_random_uuid(), title, description, meeting_datetime::timestamp, status, now(), now(), existing_user.id
+FROM existing_user, (VALUES
+    ('Q3 Kickoff', 'Planning session for Q3 objectives', '2026-08-03 10:00:00', 'NOT_STARTED'),
+    ('Client Renewal Call', 'Contract renewal discussion with client', '2026-08-05 14:00:00', 'NOT_STARTED'),
+    ('Design Review Round 2', 'Follow-up on UI feedback', '2026-08-07 11:00:00', 'NOT_STARTED'),
+    ('Security Audit Prep', 'Preparing documentation for upcoming audit', '2026-08-10 09:30:00', 'NOT_STARTED'),
+    ('Team Retro August', 'Monthly team retrospective', '2026-08-14 15:00:00', 'NOT_STARTED')
+) AS meetings(title, description, meeting_datetime, status);
+
+
+-- Add transcripts for 3 of the new meetings
+INSERT INTO transcript (id, meeting_id, content, created_at, updated_at)
+SELECT
+    gen_random_uuid(),
+    m.id,
+    seed_transcript.content,
+    now(),
+    now()
+FROM meeting m
+JOIN (
+    VALUES
+    (
+        'Q3 Kickoff',
+        $q3$Meeting: Q3 Kickoff
+Date: August 3, 2026
+
+Participants: Alex, Elena, Marcus, and Priya
+
+Alex: Let's set our priorities for Q3. Our biggest focus should be finishing the AI summary feature and stabilizing the meeting attendee sync.
+
+            Elena: I can take ownership of the frontend polish work — cleaning up remaining inline styles and making sure every page pulls from the shared components.
+
+            Marcus: On the backend side, I want to tackle performance. Some of our queries are running way more often than they need to, especially on the meetings list page.
+
+Priya: I'll focus on testing. We need proper coverage on the AI parsing logic before we present this to stakeholders.
+
+Alex: Let's also revisit the prompt templates. They've changed a lot recently and we should document what each version actually does.
+
+Elena: Agreed. I'll create a short doc summarizing the current prompt structure by end of next week.
+
+Marcus: I can profile the slow queries by Friday and report back with findings.
+
+Priya: I'll have a first pass of test cases ready by August 10th.
+
+Alex: Sounds good. We'll check in again in two weeks to review progress.
+
+End of transcript.
+$q3$
+        ),
+        (
+            'Client Renewal Call',
+            $renewal$Meeting: Client Renewal Call
+Date: August 5, 2026
+
+                Participants: Alex, Sam, and the client team
+
+            Alex: Thanks for joining. We wanted to walk through the renewal terms for the next contract period.
+
+            Client: We've been happy with the platform overall, but we'd like to discuss pricing given the upcoming usage increase.
+
+            Sam: We can put together a tiered pricing option that scales with your team size. I'll have a proposal ready by next week.
+
+Client: That would be helpful. We'd also like to request faster support response times as part of the renewal.
+
+            Alex: We can commit to a four-hour response window for critical issues. I'll get that written into the updated agreement.
+
+Sam: I'll coordinate with legal to have the revised contract ready for review by August 12th.
+
+            Client: Great, we should be able to sign shortly after that.
+
+Alex: Perfect. We'll follow up with the documents early next week.
+
+End of transcript.
+$renewal$
+    ),
+    (
+        'Design Review Round 2',
+        $design$Meeting: Design Review Round 2
+Date: August 7, 2026
+
+Participants: Elena, Priya, and Daniel
+
+Elena: Thanks for the feedback on the first round. Let's go through the updated mockups.
+
+Priya: The new color contrast looks much better, especially on the dashboard cards. My only concern is the button spacing on mobile view.
+
+Daniel: I noticed that too. I think we should increase the tap target size for the primary action buttons.
+
+Elena: I'll adjust the spacing and re-export the mobile mockups by Friday.
+
+Priya: Once that's updated, I can run it by a couple of users for quick feedback.
+
+Daniel: I'll also double check the calendar view since that had some alignment issues last time.
+
+Elena: Sounds good. Let's regroup early next week once the updated mockups are ready.
+
+Priya: I'll schedule the user feedback session for August 13th.
+
+End of transcript.
+$design$
+    )
+) AS seed_transcript(meeting_title, content)
+    ON seed_transcript.meeting_title = m.title
+ON CONFLICT (meeting_id)
+DO UPDATE SET
+    content = EXCLUDED.content,
+    updated_at = now();
