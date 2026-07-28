@@ -64,4 +64,15 @@ public class TranscriptService {
 
         return TranscriptResponse.from(transcriptRepository.save(transcript));
     }
+
+    @Transactional
+    public void deleteTranscript(UUID meetingId) {
+        Transcript transcript = transcriptRepository
+                .findByMeeting_Id(meetingId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Transcript not found for meeting: " + meetingId
+                ));
+
+        transcriptRepository.delete(transcript);
+    }
 }

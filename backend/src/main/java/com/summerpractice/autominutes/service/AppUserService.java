@@ -86,6 +86,15 @@ public class AppUserService {
         user.setUsername(username);
         user.setEmail(email);
 
+        String newPassword = request.getNewPassword();
+
+        if (
+                newPassword != null &&
+                        !newPassword.isBlank()
+        ) {
+            user.setPassword(newPassword);
+        }
+
         AppUser updatedUser =
                 appUserRepository.save(user);
 

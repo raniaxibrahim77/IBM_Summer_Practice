@@ -43,4 +43,12 @@ public class TranscriptController {
     ) {
         return transcriptService.updateTranscript(meetingId, request);
     }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteTranscript(
+            @PathVariable UUID meetingId
+    ) {
+        transcriptService.deleteTranscript(meetingId);
+        return ResponseEntity.noContent().build();
+    }
 }

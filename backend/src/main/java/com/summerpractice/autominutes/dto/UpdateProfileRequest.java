@@ -2,6 +2,7 @@ package com.summerpractice.autominutes.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public class UpdateProfileRequest {
 
@@ -11,6 +12,9 @@ public class UpdateProfileRequest {
     @Email
     @NotBlank
     private String email;
+
+    @Size(min = 6, message = "Password must contain at least 6 characters")
+    private String newPassword;
 
     public UpdateProfileRequest() {
     }
@@ -29,5 +33,13 @@ public class UpdateProfileRequest {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getNewPassword() {
+        return newPassword;
+    }
+
+    public void setNewPassword(String newPassword) {
+        this.newPassword = newPassword;
     }
 }
