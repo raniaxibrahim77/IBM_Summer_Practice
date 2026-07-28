@@ -693,3 +693,63 @@
   font-weight: 600;
   line-height: 1.4;
 }
+
+.panel-header {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.panel-header__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.panel-header__actions .regenerate-btn,
+.panel-header__actions .export-btn {
+  min-height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.5rem;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.panel-header__actions .regenerate-btn {
+  color: var(--night-bordeaux);
+  background: transparent;
+  border: 1px solid var(--dusty-mauve);
+}
+
+.panel-header__actions .regenerate-btn:hover:not(:disabled) {
+  background: rgba(163, 62, 67, 0.08);
+  text-decoration: none;
+}
+
+.panel-header__actions .export-btn {
+  color: var(--night-bordeaux);
+  background: var(--sky-blue);
+  border: 1px solid var(--dusty-mauve);
+}
+
+.panel-header__actions .export-btn:hover:not(:disabled) {
+  filter: brightness(0.95);
+}
+
+.panel-header__actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.panel-header__actions .material-symbols-outlined {
+  font-size: 1rem;
+}

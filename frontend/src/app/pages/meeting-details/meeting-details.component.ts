@@ -7,6 +7,7 @@ import { TranscriptService } from '../../services/transcript.service';
 import { HeaderComponent } from '../../shared/header/header.component';
 import { AttendeeResponse, AttendeeService, } from '../../services/attendee.service';
 import { MeetingAiService, AiResultResponse, } from '../../services/meeting-ai.service';
+import { ActionItemService } from '../../services/action-item.service';
 
 interface Attendee {
   id: string;
@@ -21,6 +22,7 @@ interface ActionItem {
   id: string;
   text: string;
   done: boolean;
+  isUpdating: boolean;
 }
 
 interface ChatMessage {
@@ -55,6 +57,7 @@ export class MeetingDetailsComponent implements OnInit {
   attendees: Attendee[] = [];
   availableAttendees: AttendeeResponse[] = [];
   aiSummary = 'No AI summary is available for this meeting yet.';
+  hasAiResult = false;
   actionItems: ActionItem[] = [];
   transcriptText = '';
   
@@ -77,6 +80,7 @@ export class MeetingDetailsComponent implements OnInit {
     private transcriptService: TranscriptService,
     private attendeeService: AttendeeService,
     private meetingAiService: MeetingAiService,
+    private actionItemService: ActionItemService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -229,20 +233,18 @@ export class MeetingDetailsComponent implements OnInit {
   }
 
   private applyAiResult(result: AiResultResponse): void {
+    this.hasAiResult = true;
     this.aiSummary =
       result.conciseSummary ??
       result.detailedSummary ??
       'The AI response did not contain a summary.';
 
-    this.actionItems = (result.actionItems ?? []).map(
-      (item) => ({
-        id: item.id,
-        text: item.description,
-        done:
-          item.status === 'DONE' ||
-          item.status === 'COMPLETED',
-      })
-    );
+    this.actionItems = (result.actionItems ?? []).map((item) => ({
+      id: item.id,
+      text: item.description,
+      done: item.status === 'DONE' || item.status === 'COMPLETED',
+      isUpdating: false,
+    }));
   }
 
   private getAiErrorMessage(
@@ -295,7 +297,42 @@ export class MeetingDetailsComponent implements OnInit {
   }
 
   toggleActionItem(item: ActionItem): void {
-    item.done = !item.done;
+    if (item.isUpdating) {
+      return;
+    }
+
+    const previousValue = item.done;
+    const nextValue = !previousValue;
+    const nextStatus = nextValue ? 'DONE' : 'OPEN';
+
+    item.done = nextValue;
+    item.isUpdating = true;
+
+    this.actionItemService
+      .updateStatus(item.id, nextStatus)
+      .subscribe({
+        next: (updatedItem) => {
+          item.done =
+            updatedItem.status === 'DONE' ||
+            updatedItem.status === 'COMPLETED';
+
+          item.isUpdating = false;
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error(
+            'Failed to update action item status',
+            error
+          );
+
+          // go back to previous value if request fails
+          item.done = previousValue;
+          item.isUpdating = false;
+
+          alert('The action item status could not be updated.');
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   removeAttendee(attendee: Attendee): void {
@@ -488,6 +525,69 @@ export class MeetingDetailsComponent implements OnInit {
     link.download = `${this.title.replace(/\s+/g, '_')}_transcript.txt`;
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  exportSummary(): void {
+    if (!this.hasAiResult || !this.aiSummary.trim()) {
+      return;
+    }
+
+    const actionItemLines =
+      this.actionItems.length > 0
+        ? this.actionItems.map((item) => {
+            const checkbox = item.done ? '[x]' : '[ ]';
+            return `${checkbox} ${item.text}`;
+          })
+        : ['No action items were generated.'];
+
+    const content = [
+      this.title,
+      '='.repeat(this.title.length),
+      '',
+      `Date: ${this.date}`,
+      `Status: ${this.status}`,
+      '',
+      'AI SUMMARY',
+      '----------',
+      '',
+      this.aiSummary.trim(),
+      '',
+      'ACTION ITEMS',
+      '------------',
+      '',
+      ...actionItemLines,
+      '',
+      `Completed: ${this.completedActionCount}/${this.actionItems.length}`,
+      '',
+    ].join('\n');
+
+    const blob = new Blob([content], {
+      type: 'text/plain;charset=utf-8',
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download =
+      `${this.toSafeFileName(this.title)}_summary.txt`;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
+  }
+
+  private toSafeFileName(value: string): string {
+    const safeName = value
+      .trim()
+      .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '')
+      .replace(/\s+/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^\.+|\.+$/g, '');
+
+    return safeName || 'meeting';
   }
 
   runQuickAction(action: 'summarize' | 'risks' | 'followup'): void {
