@@ -57,6 +57,9 @@ export class MeetingDetailsComponent implements OnInit {
   aiSummary = 'No AI summary is available for this meeting yet.';
   actionItems: ActionItem[] = [];
   transcriptText = '';
+  
+  isUploadingTranscript = false;
+  transcriptUploadError = '';
 
   isGeneratingSummary = false;
   isSendingMessage = false;
@@ -126,7 +129,6 @@ export class MeetingDetailsComponent implements OnInit {
         this.cdr.markForCheck();
       },
       error: () => {
-        // no AiResult yet — expected, keep placeholder
       },
     });
   }
@@ -401,6 +403,77 @@ export class MeetingDetailsComponent implements OnInit {
 
           this.cdr.markForCheck();
         },
+      });
+  }
+
+  onTranscriptSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+
+    if (!file || this.isUploadingTranscript) {
+      return;
+    }
+
+    this.transcriptUploadError = '';
+
+    if (!file.name.toLowerCase().endsWith('.txt')) {
+      this.transcriptUploadError =
+        'Please select a .txt file.';
+      input.value = '';
+      return;
+    }
+
+    this.isUploadingTranscript = true;
+
+    file
+      .text()
+      .then((content) => {
+        if (!content.trim()) {
+          this.isUploadingTranscript = false;
+          this.transcriptUploadError =
+            'The transcript file is empty.';
+          this.cdr.markForCheck();
+          return;
+        }
+
+        this.transcriptService
+          .createTranscript(this.meetingId, content)
+          .subscribe({
+            next: () => {
+              this.transcriptText = content;
+              this.isUploadingTranscript = false;
+              this.transcriptUploadError = '';
+              input.value = '';
+              this.cdr.markForCheck();
+            },
+            error: (error) => {
+              console.error(
+                'Failed to upload transcript',
+                error
+              );
+
+              this.isUploadingTranscript = false;
+              this.transcriptUploadError =
+                error.error?.message ||
+                'The transcript could not be uploaded.';
+
+              input.value = '';
+              this.cdr.markForCheck();
+            }
+          });
+      })
+      .catch((error) => {
+        console.error(
+          'Failed to read transcript file',
+          error
+        );
+
+        this.isUploadingTranscript = false;
+        this.transcriptUploadError =
+          'The transcript file could not be read.';
+
+        input.value = '';
+        this.cdr.markForCheck();
       });
   }
 

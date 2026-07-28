@@ -94,11 +94,13 @@
                   <span class="attendees-badge">{{ meeting.attendees }}</span>
                 </td>
                 <td class="meetings-table__cell">
+                <div class="transcript-actions">
                   <label
                     class="transcript-badge"
                     [class.transcript-badge--edit]="meeting.hasTranscript"
                   >
                     {{ meeting.hasTranscript ? 'Edit Transcript' : 'Add Transcript' }}
+
                     <input
                       type="file"
                       accept=".txt"
@@ -106,10 +108,23 @@
                       (change)="onRowTranscriptSelected($event, meeting)"
                     />
                   </label>
-                </td>
+
+                  @if (meeting.hasTranscript) {
+                    <button
+                      type="button"
+                      class="delete-transcript-button"
+                      aria-label="Delete transcript"
+                      title="Delete transcript"
+                      (click)="openDeleteTranscriptConfirmation(meeting, $event)"
+                    >
+                      <span class="material-symbols-outlined">close</span>
+                    </button>
+                  }
+                </div>
+              </td>
                 <td class="meetings-table__cell">
                   <button [routerLink]="['/meeting-details', meeting.id]" class="ai-details-link">
-                    AI Details
+                    View Details
                   </button>
                 </td>
               </tr>
@@ -280,3 +295,62 @@
     </div>
   </div>
 }
+
+  @if (meetingPendingTranscriptDelete) {
+      <div
+        class="confirmation-backdrop"
+        role="presentation"
+        (click)="closeDeleteTranscriptConfirmation()"
+      >
+        <section
+          class="confirmation-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="deleteTranscriptTitle"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="confirmation-modal__icon confirmation-modal__icon--danger">
+            <span class="material-symbols-outlined">delete</span>
+          </div>
+
+          <h2
+            id="deleteTranscriptTitle"
+            class="confirmation-modal__title"
+          >
+            Delete transcript?
+          </h2>
+
+          <p class="confirmation-modal__message">
+            Are you sure you want to delete the transcript for
+            <strong>{{ meetingPendingTranscriptDelete.title }}</strong>?
+            This action cannot be undone.
+          </p>
+
+          @if (deleteTranscriptError) {
+            <p class="confirmation-modal__error">
+              {{ deleteTranscriptError }}
+            </p>
+          }
+
+          <div class="confirmation-modal__actions">
+            <button
+              type="button"
+              class="confirmation-button confirmation-button--cancel"
+              [disabled]="isDeletingTranscript"
+              (click)="closeDeleteTranscriptConfirmation()"
+            >
+              Keep transcript
+            </button>
+
+            <button
+              type="button"
+              class="confirmation-button confirmation-button--danger"
+              [disabled]="isDeletingTranscript"
+              (click)="confirmDeleteTranscript()"
+            >
+              {{ isDeletingTranscript ? 'Deleting...' : 'Yes, delete it' }}
+            </button>
+          </div>
+        </section>
+      </div>
+    }

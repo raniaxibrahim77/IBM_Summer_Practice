@@ -25,6 +25,15 @@ export class SettingsComponent implements OnInit {
   profileUsername = '';
   profileEmail = '';
 
+  isEditingPassword = false;
+  isSavingPassword = false;
+
+  newPassword = '';
+  confirmNewPassword = '';
+
+  passwordError = '';
+  passwordSuccess = '';
+
   profileError = '';
   profileSuccess = '';
 
@@ -134,6 +143,91 @@ export class SettingsComponent implements OnInit {
 
   cancelSaveConfirmation(): void {
     this.showSaveConfirmation = false;
+  }
+
+  startPasswordEdit(): void {
+    this.newPassword = '';
+    this.confirmNewPassword = '';
+    this.passwordError = '';
+    this.passwordSuccess = '';
+    this.isEditingPassword = true;
+  }
+
+  cancelPasswordEdit(): void {
+    if (this.isSavingPassword) {
+      return;
+    }
+
+    this.newPassword = '';
+    this.confirmNewPassword = '';
+    this.passwordError = '';
+    this.isEditingPassword = false;
+  }
+
+  savePassword(): void {
+    this.passwordError = '';
+    this.passwordSuccess = '';
+
+    if (!this.currentUser) {
+      this.passwordError =
+        'No authenticated user was found.';
+      return;
+    }
+
+    if (this.newPassword.length < 6) {
+      this.passwordError =
+        'Password must contain at least 6 characters.';
+      return;
+    }
+
+    if (
+      this.newPassword !==
+      this.confirmNewPassword
+    ) {
+      this.passwordError =
+        'The passwords do not match.';
+      return;
+    }
+
+    if (this.isSavingPassword) {
+      return;
+    }
+
+    this.isSavingPassword = true;
+
+    this.authService
+      .updateProfile(this.currentUser.id, {
+        username: this.currentUser.username,
+        email: this.currentUser.email,
+        newPassword: this.newPassword
+      })
+      .subscribe({
+        next: (updatedUser) => {
+          this.currentUser = updatedUser;
+          this.isSavingPassword = false;
+          this.isEditingPassword = false;
+          this.newPassword = '';
+          this.confirmNewPassword = '';
+          this.passwordSuccess =
+            'Password changed successfully.';
+
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error(
+            'Failed to change password',
+            error
+          );
+
+          this.isSavingPassword = false;
+          this.passwordError =
+            error.error?.messages?.[0] ||
+            error.error?.message ||
+            'The password could not be changed.';
+
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   get userInitials(): string {

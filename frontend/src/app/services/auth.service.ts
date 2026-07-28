@@ -24,6 +24,7 @@ export interface RegisterRequest {
 export interface UpdateProfileRequest {
   username: string;
   email: string;
+  newPassword?: string;
 }
 
 @Injectable({ providedIn: 'root' })

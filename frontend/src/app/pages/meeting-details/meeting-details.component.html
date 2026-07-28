@@ -138,20 +138,77 @@
     <div class="details-side">
 
       <div class="panel">
-        <h2 class="panel__eyebrow">Meeting Transcript</h2>
-        <button (click)="downloadTranscript()" [disabled]="!transcriptText" class="download-btn">
-            <span class="material-symbols-outlined">download</span>
-        Download Transcript
-      </button>
-    </div>
+        <h2 class="panel__eyebrow">
+          Meeting Transcript
+        </h2>
+
+        @if (transcriptText) {
+          <button
+            type="button"
+            (click)="downloadTranscript()"
+            class="download-btn"
+          >
+            <span class="material-symbols-outlined">
+              download
+            </span>
+
+            Download Transcript
+          </button>
+        } @else {
+          <label
+            class="download-btn add-transcript-btn"
+            [class.add-transcript-btn--disabled]="isUploadingTranscript"
+          >
+            <span class="material-symbols-outlined">
+              upload_file
+            </span>
+
+            {{
+              isUploadingTranscript
+                ? 'Uploading...'
+                : 'Add Transcript'
+            }}
+
+            <input
+              type="file"
+              accept=".txt"
+              class="visually-hidden"
+              [disabled]="isUploadingTranscript"
+              (change)="onTranscriptSelected($event)"
+            />
+          </label>
+        }
+
+        @if (transcriptUploadError) {
+          <p class="transcript-upload-error">
+            {{ transcriptUploadError }}
+          </p>
+        }
+      </div>
 
         <!-- AI Summary -->
         <div class="panel">
           <div class="panel-header">
             <h2 class="panel__eyebrow panel__eyebrow--no-margin">AI Summary</h2>
-            <button type="button" (click)="regenerateSummary()" [disabled]="isGeneratingSummary || !transcriptText" class="regenerate-btn">
-              <span class="material-symbols-outlined regenerate-btn__icon" [class.regenerate-btn__icon--spinning]="isGeneratingSummary">refresh</span>
-              {{ isGeneratingSummary ? 'Generating...' : 'Regenerate' }}
+            <button 
+              type="button" 
+              (click)="regenerateSummary()" 
+              [disabled]="isGeneratingSummary || !transcriptText" 
+              class="regenerate-btn"
+            >
+              <span 
+                class="material-symbols-outlined regenerate-btn__icon" 
+                [class.regenerate-btn__icon--spinning]="isGeneratingSummary"
+              >
+                refresh
+              </span>
+              {{
+                isGeneratingSummary
+                  ? 'Generating...'
+                  : status === 'Processed'
+                    ? 'Regenerate'
+                    : 'Generate Summary'
+              }}
             </button>
           </div>
           <p class="summary-text">{{ aiSummary }}</p>

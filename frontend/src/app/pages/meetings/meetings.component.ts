@@ -29,6 +29,10 @@ export class MeetingsComponent implements OnInit {
 
   meetings: MeetingRow[] = [];
 
+  meetingPendingTranscriptDelete: MeetingRow | null = null;
+  isDeletingTranscript = false;
+  deleteTranscriptError = '';
+
   constructor(
     private meetingService: MeetingService,
     private authService: AuthService,
@@ -121,6 +125,61 @@ export class MeetingsComponent implements OnInit {
   };
   reader.readAsText(file);
   input.value = '';
+}
+
+openDeleteTranscriptConfirmation(
+  meeting: MeetingRow,
+  event: Event
+): void {
+  event.preventDefault();
+  event.stopPropagation();
+
+  this.meetingPendingTranscriptDelete = meeting;
+  this.deleteTranscriptError = '';
+}
+
+closeDeleteTranscriptConfirmation(): void {
+  if (this.isDeletingTranscript) {
+    return;
+  }
+
+  this.meetingPendingTranscriptDelete = null;
+  this.deleteTranscriptError = '';
+}
+
+confirmDeleteTranscript(): void {
+  const meeting = this.meetingPendingTranscriptDelete;
+
+  if (!meeting || this.isDeletingTranscript) {
+    return;
+  }
+
+  this.isDeletingTranscript = true;
+  this.deleteTranscriptError = '';
+
+  this.transcriptService
+    .deleteTranscript(meeting.id)
+    .subscribe({
+      next: () => {
+        meeting.hasTranscript = false;
+        this.isDeletingTranscript = false;
+        this.meetingPendingTranscriptDelete = null;
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.error(
+          'Failed to delete transcript',
+          error
+        );
+
+        this.isDeletingTranscript = false;
+        this.deleteTranscriptError =
+          error.error?.message ||
+          'The transcript could not be deleted. Please try again.';
+
+        this.cdr.markForCheck();
+      }
+    });
 }
 
   // Meeting modal state

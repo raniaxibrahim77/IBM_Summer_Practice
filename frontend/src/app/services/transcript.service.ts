@@ -37,4 +37,10 @@ export class TranscriptService {
       { content }
     );
   }
+
+  deleteTranscript(meetingId: string): Observable<void> {
+    return this.http.delete<void>(
+      `${this.apiUrl}/meetings/${meetingId}/transcript`
+    );
+  }
 }
