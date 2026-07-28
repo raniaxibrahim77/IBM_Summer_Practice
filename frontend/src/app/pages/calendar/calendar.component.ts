@@ -51,6 +51,7 @@ export class CalendarComponent implements OnInit {
   readonly weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   cells: CalendarCell[] = [];
+  selectedDay: CalendarCell | null = null;
 
   private meetings: MeetingResponse[] = [];
 
@@ -141,6 +142,14 @@ export class CalendarComponent implements OnInit {
 
   goToMeeting(id: string): void {
     this.router.navigate(['/meeting-details', id]);
+  }
+
+  openDayDetails(cell: CalendarCell): void {
+    this.selectedDay = cell;
+  }
+
+  closeDayDetails(): void {
+    this.selectedDay = null;
   }
 
   private buildCalendar(): void {

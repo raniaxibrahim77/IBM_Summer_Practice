@@ -78,7 +78,7 @@
               >
                 <span class="day-cell__number" [class.day-cell__number--today]="cell.isToday">{{ cell.day }}</span>
                 <div class="day-cell__events">
-                  @for (event of cell.events; track event.id) {
+                  @for (event of cell.events | slice:0:3; track event.id) {
                     <div
                       class="day-event"
                       [class.day-event--primary]="event.kind === 'primary'"
@@ -86,6 +86,11 @@
                       [class.day-event--tertiary]="event.kind === 'tertiary'"
                       (click)="event.kind === 'primary' && goToMeeting(event.id)"
                     >{{ event.title }}</div>
+                  }
+                  @if (cell.events.length > 3) {
+                    <div class="day-event day-event--more" (click)="openDayDetails(cell)">
+                      +{{ cell.events.length - 3 }} more
+                    </div>
                   }
                 </div>
               </div>
@@ -109,20 +114,21 @@
           </div>
           <div class="list-stack">
            @for (task of visibleTaskReminders; track task.id) {
-              <div class="task-row">
-                <div class="task-row__body" [class.task-row__body--done]="task.done">
-                  <p class="task-row__title" [class.task-row__title--done]="task.done">{{ task.title }}</p>
-                  <p class="task-row__meta">{{ task.status }}</p>
-                </div>
-                <span class="task-row__tag">{{ task.tag }}</span>
-                <button type="button" (click)="toggleTask(task)" class="task-toggle" [class.task-toggle--done]="task.done">
-                  <span class="material-symbols-outlined task-toggle__icon">{{ task.done ? 'check_circle' : 'radio_button_unchecked' }}</span>
-                  {{ task.done ? 'Completed' : 'Mark complete' }}
-                </button>
+            <div class="task-row">
+              <div class="task-row__body" [class.task-row__body--done]="task.done">
+                <p class="task-row__title" [class.task-row__title--done]="task.done">{{ task.title }}</p>
+                <p class="task-row__meta">
+                  {{ task.status }}
+                  <span class="task-row__tag">{{ task.tag }}</span>
+                </p>
               </div>
-            }
+              <button type="button" (click)="toggleTask(task)" class="task-toggle" [class.task-toggle--done]="task.done" [attr.aria-label]="task.done ? 'Completed' : 'Mark complete'">
+                <span class="material-symbols-outlined task-toggle__icon">{{ task.done ? 'check_circle' : 'radio_button_unchecked' }}</span>
+              </button>
+            </div>
+           }
+            </div>
           </div>
-        </div>
 
         <!-- Scheduled Meetings timeline -->
         <div class="panel panel--cream panel--grow">
