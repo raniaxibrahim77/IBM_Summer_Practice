@@ -126,6 +126,10 @@ public class AiResponseParser {
                 cleaned = cleaned.substring(1).strip();
             }
             cleaned = cleaned.replaceAll("^\\d+\\.\\s*", "");
+            cleaned = cleaned.replaceAll(":$", "");
+
+            boolean looksLikeLabel = cleaned.equals(cleaned.toUpperCase())
+                    && cleaned.contains("_") || cleaned.equalsIgnoreCase("TRANSCRIPT");
 
             if (!cleaned.isEmpty() && !cleaned.equalsIgnoreCase("none")) {
                 names.add(cleaned);
