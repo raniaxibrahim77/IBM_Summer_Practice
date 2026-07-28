@@ -93,6 +93,10 @@ public class AiResultService {
     }
 
     private void linkAttendeesFromTranscript(List<String> names, Meeting meeting) {
+        List<MeetingAttendee> existingLinks = meetingAttendeeRepository
+                .findByMeeting_IdOrderByAttendee_NameAsc(meeting.getId());
+        meetingAttendeeRepository.deleteAll(existingLinks);
+
         for (String rawName : names) {
             String name = rawName.strip();
             if (name.isEmpty()) {
@@ -104,14 +108,7 @@ public class AiResultService {
                     .findFirst()
                     .orElseGet(() -> attendeeRepository.save(new Attendee(name, null)));
 
-            boolean alreadyLinked = meetingAttendeeRepository
-                    .findByMeeting_IdOrderByAttendee_NameAsc(meeting.getId())
-                    .stream()
-                    .anyMatch(ma -> ma.getAttendee().getId().equals(attendee.getId()));
-
-            if (!alreadyLinked) {
                 meetingAttendeeRepository.save(new MeetingAttendee(meeting, attendee, "Participant"));
-            }
         }
     }
 
