@@ -34,15 +34,18 @@ public class AiResponseParser {
 
 
     private static String extractRawBlock(String text, String label) {
-        Pattern labelPattern = Pattern.compile("(?m)^" + Pattern.quote(label) + ":");
-        Matcher matcher = labelPattern.matcher(text);
+        Pattern labelPattern = Pattern.compile("(?im)^" + flexibleLabel(label) + "\\s*:?");        Matcher matcher = labelPattern.matcher(text);
         if (!matcher.find()) {
             return "";
         }
         int contentStart = matcher.end();
 
+        String anyLabelAlternation = SECTION_LABELS.stream()
+                .map(AiResponseParser::flexibleLabel)
+                .reduce((a, b) -> a + "|" + b)
+                .orElse("");
         Pattern anyLabel = Pattern.compile(
-                "(?m)^(" + String.join("|", SECTION_LABELS) + "):"
+                "(?im)^(" + anyLabelAlternation + ")\\s*:?"
         );
         Matcher next = anyLabel.matcher(text);
         next.region(contentStart, text.length());
@@ -140,6 +143,11 @@ public class AiResponseParser {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private static String flexibleLabel(String label) {
+        String[] words = label.split("_");
+        return String.join("[_\\s]*", words);
     }
 
     public record ParsedActionItem(String description, String assignee, LocalDate deadline) {}

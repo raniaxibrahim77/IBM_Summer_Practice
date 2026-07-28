@@ -11,10 +11,18 @@ public class OllamaService {
     private final RestClient restClient = RestClient.create("http://localhost:11434");
 
     public String generate(String prompt) {
+        Map<String, Object> options = Map.of(
+                "num_ctx", 8192,
+                "temperature", 0.3,
+                "repeat_penalty", 1.3,
+                "num_predict", 2048
+        );
+
         Map<String, Object> requestBody = Map.of(
-                "model", "llama3.2",
+                "model", "llama3.2:3b",
                 "prompt", prompt,
-                "stream", false
+                "stream", false,
+                "options", options
         );
 
         try {
@@ -23,6 +31,9 @@ public class OllamaService {
                     .body(requestBody)
                     .retrieve()
                     .body(Map.class);
+
+            System.out.println("=== DONE REASON: " + response.get("done_reason"));
+            System.out.println("=== EVAL COUNT: " + response.get("eval_count"));
 
             return (String) response.get("response");
         } catch (Exception e) {

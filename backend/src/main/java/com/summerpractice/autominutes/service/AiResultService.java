@@ -63,9 +63,12 @@ public class AiResultService {
 
         PromptTemplate template = getOrCreateDefaultTemplate();
 
-        String fullPrompt = template.getPromptText() + "\n\nTRANSCRIPT:\n" + transcript.getContent();
+        String promptText = template.getPromptText()
+                .replace("{meeting_datetime}", meeting.getMeetingDatetime().toString());
+        String fullPrompt = promptText + "\n\nTRANSCRIPT:\n" + transcript.getContent();
 
         String rawResponse = ollamaService.generate(fullPrompt);
+        System.out.println("=== RAW OLLAMA RESPONSE ===\n" + rawResponse);
 
         AiResponseParser.ParsedAiResult parsed = AiResponseParser.parseRawResponse(rawResponse);
 
