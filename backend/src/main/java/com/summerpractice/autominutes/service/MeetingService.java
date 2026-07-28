@@ -13,6 +13,9 @@ import com.summerpractice.autominutes.model.MeetingAttendee;
 import com.summerpractice.autominutes.repository.AttendeeRepository;
 import com.summerpractice.autominutes.repository.MeetingAttendeeRepository;
 import com.summerpractice.autominutes.repository.TranscriptRepository;
+import com.summerpractice.autominutes.model.AiResult;
+import com.summerpractice.autominutes.repository.AiResultRepository;
+import com.summerpractice.autominutes.repository.ActionItemRepository;
 
 import java.util.List;
 import java.util.UUID;
@@ -30,13 +33,25 @@ public class MeetingService {
     private final AttendeeRepository attendeeRepository;
     private final MeetingAttendeeRepository meetingAttendeeRepository;
     private final TranscriptRepository transcriptRepository;
+    private final AiResultRepository aiResultRepository;
+    private final ActionItemRepository actionItemRepository;
 
-    public MeetingService(MeetingRepository meetingRepository, AppUserRepository appUserRepository, AttendeeRepository attendeeRepository, MeetingAttendeeRepository meetingAttendeeRepository, TranscriptRepository transcriptRepository) {
+    public MeetingService(
+            MeetingRepository meetingRepository,
+            AppUserRepository appUserRepository,
+            AttendeeRepository attendeeRepository,
+            MeetingAttendeeRepository meetingAttendeeRepository,
+            TranscriptRepository transcriptRepository,
+            AiResultRepository aiResultRepository,
+            ActionItemRepository actionItemRepository
+    ) {
         this.meetingRepository = meetingRepository;
         this.appUserRepository = appUserRepository;
         this.attendeeRepository = attendeeRepository;
         this.meetingAttendeeRepository = meetingAttendeeRepository;
         this.transcriptRepository = transcriptRepository;
+        this.aiResultRepository = aiResultRepository;
+        this.actionItemRepository = actionItemRepository;
     }
 
     @Transactional
@@ -163,8 +178,43 @@ public class MeetingService {
     @Transactional
     public void deleteMeeting(UUID id) {
         Meeting meeting = meetingRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Meeting not found: " + id));
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Meeting not found: " + id
+                        )
+                );
+
+        List<AiResult> aiResults =
+                aiResultRepository
+                        .findByMeetingIdOrderByGeneratedAtDesc(id);
+
+        for (AiResult aiResult : aiResults) {
+            actionItemRepository.deleteAll(
+                    actionItemRepository.findByAiResultId(
+                            aiResult.getId()
+                    )
+            );
+        }
+
+        actionItemRepository.flush();
+
+        aiResultRepository.deleteAll(aiResults);
+        aiResultRepository.flush();
+
+        transcriptRepository
+                .findByMeeting_Id(id)
+                .ifPresent(transcriptRepository::delete);
+
+        transcriptRepository.flush();
+
+        meetingAttendeeRepository.deleteAll(
+                meetingAttendeeRepository
+                        .findByMeeting_IdOrderByAttendee_NameAsc(id)
+        );
+
+        meetingAttendeeRepository.flush();
 
         meetingRepository.delete(meeting);
+        meetingRepository.flush();
     }
 }
