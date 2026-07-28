@@ -417,6 +417,7 @@ export class MeetingDetailsComponent implements OnInit {
       .subscribe({
         next: (result) => {
           this.applyAiResult(result);
+          this.loadAttendees();
           this.status = 'Processed';
           this.isGeneratingSummary = false;
           this.cdr.markForCheck();
