@@ -53,6 +53,17 @@
           <span class="header-card__date">{{ date }}</span>
         </div>
         <h1 class="header-card__title">{{ title }}</h1>
+        <button
+          type="button"
+          class="delete-meeting-button"
+          (click)="openDeleteMeetingConfirmation()"
+        >
+          <span class="material-symbols-outlined">
+            delete
+          </span>
+
+          Delete meeting
+        </button>
       </div>
 
       <!-- Attendee bubbles -->
@@ -270,3 +281,75 @@
       </button>
     </div>
 </main>
+
+@if (showDeleteMeetingConfirmation) {
+  <div
+    class="confirmation-backdrop"
+    role="presentation"
+    (click)="closeDeleteMeetingConfirmation()"
+  >
+    <section
+      class="confirmation-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="deleteMeetingTitle"
+      (click)="$event.stopPropagation()"
+    >
+      <div
+        class="confirmation-modal__icon
+               confirmation-modal__icon--danger"
+      >
+        <span class="material-symbols-outlined">
+          delete
+        </span>
+      </div>
+
+      <h2
+        id="deleteMeetingTitle"
+        class="confirmation-modal__title"
+      >
+        Delete meeting?
+      </h2>
+
+      <p class="confirmation-modal__message">
+        Are you sure you want to delete
+        <strong>{{ title }}</strong>?
+
+        Its transcript, AI results and action items
+        will also be deleted. This action cannot be undone.
+      </p>
+
+      @if (deleteMeetingError) {
+        <p class="confirmation-modal__error">
+          {{ deleteMeetingError }}
+        </p>
+      }
+
+      <div class="confirmation-modal__actions">
+        <button
+          type="button"
+          class="confirmation-button
+                 confirmation-button--cancel"
+          [disabled]="isDeletingMeeting"
+          (click)="closeDeleteMeetingConfirmation()"
+        >
+          Keep meeting
+        </button>
+
+        <button
+          type="button"
+          class="confirmation-button
+                 confirmation-button--danger"
+          [disabled]="isDeletingMeeting"
+          (click)="confirmDeleteMeeting()"
+        >
+          {{
+            isDeletingMeeting
+              ? 'Deleting...'
+              : 'Yes, delete it'
+          }}
+        </button>
+      </div>
+    </section>
+  </div>
+}

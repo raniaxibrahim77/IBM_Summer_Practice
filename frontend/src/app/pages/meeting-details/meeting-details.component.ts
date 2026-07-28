@@ -1,12 +1,12 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MeetingService, MeetingResponse } from '../../services/meeting.service';
 import { TranscriptService } from '../../services/transcript.service';
 import { HeaderComponent } from '../../shared/header/header.component';
-import { AttendeeResponse, AttendeeService, } from '../../services/attendee.service';
-import { MeetingAiService, AiResultResponse, } from '../../services/meeting-ai.service';
+import { AttendeeResponse, AttendeeService } from '../../services/attendee.service';
+import { MeetingAiService, AiResultResponse } from '../../services/meeting-ai.service';
 import { ActionItemService } from '../../services/action-item.service';
 
 interface Attendee {
@@ -67,6 +67,10 @@ export class MeetingDetailsComponent implements OnInit {
   isGeneratingSummary = false;
   isSendingMessage = false;
 
+  showDeleteMeetingConfirmation = false;
+  isDeletingMeeting = false;
+  deleteMeetingError = '';
+
   selectedAttendeeId = '';
   chatInput = '';
 
@@ -76,6 +80,7 @@ export class MeetingDetailsComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private meetingService: MeetingService,
     private transcriptService: TranscriptService,
     private attendeeService: AttendeeService,
@@ -611,8 +616,6 @@ export class MeetingDetailsComponent implements OnInit {
       return;
     }
 
-    // Istoricul trebuie capturat înainte să adăugăm
-    // întrebarea curentă în chat.
     const previousMessages = this.chatMessages.map(
       (message) => ({
         role: message.from,
@@ -661,6 +664,56 @@ export class MeetingDetailsComponent implements OnInit {
           });
 
           this.isSendingMessage = false;
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  openDeleteMeetingConfirmation(): void {
+    this.deleteMeetingError = '';
+    this.showDeleteMeetingConfirmation = true;
+  }
+
+  closeDeleteMeetingConfirmation(): void {
+    if (this.isDeletingMeeting) {
+      return;
+    }
+
+    this.showDeleteMeetingConfirmation = false;
+    this.deleteMeetingError = '';
+  }
+
+  confirmDeleteMeeting(): void {
+    if (
+      !this.meetingId ||
+      this.isDeletingMeeting
+    ) {
+      return;
+    }
+
+    this.isDeletingMeeting = true;
+    this.deleteMeetingError = '';
+
+    this.meetingService
+      .deleteMeeting(this.meetingId)
+      .subscribe({
+        next: () => {
+          this.isDeletingMeeting = false;
+          this.showDeleteMeetingConfirmation = false;
+
+          this.router.navigate(['/meetings']);
+        },
+        error: (error) => {
+          console.error(
+            'Failed to delete meeting',
+            error
+          );
+
+          this.isDeletingMeeting = false;
+          this.deleteMeetingError =
+            error.error?.message ||
+            'The meeting could not be deleted. Please try again.';
+
           this.cdr.markForCheck();
         },
       });
