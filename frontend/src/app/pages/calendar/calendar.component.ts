@@ -95,14 +95,38 @@ export class CalendarComponent implements OnInit {
     return `${MONTH_NAMES[this.viewMonth]} ${this.viewYear}`;
   }
 
-  showAllTasks = false;
+  showAllTasksModal = false;
+  taskPage = 0;
+  readonly tasksPerPage = 5;
 
   get visibleTaskReminders(): TaskReminder[] {
-    return this.showAllTasks ? this.taskReminders : this.taskReminders.slice(0, 5);
+    return this.taskReminders.slice(0, 5);
   }
 
-  toggleViewAllTasks(): void {
-    this.showAllTasks = !this.showAllTasks;
+  get pagedModalTasks(): TaskReminder[] {
+    const start = this.taskPage * this.tasksPerPage;
+    return this.taskReminders.slice(start, start + this.tasksPerPage);
+  }
+
+  get totalTaskPages(): number {
+    return Math.max(1, Math.ceil(this.taskReminders.length / this.tasksPerPage));
+  }
+
+  openTaskModal(): void {
+    this.taskPage = 0;
+    this.showAllTasksModal = true;
+  }
+
+  closeTaskModal(): void {
+    this.showAllTasksModal = false;
+  }
+
+  nextTaskPage(): void {
+    if (this.taskPage < this.totalTaskPages - 1) this.taskPage++;
+  }
+
+  prevTaskPage(): void {
+    if (this.taskPage > 0) this.taskPage--;
   }
 
   previousMonth(): void {
@@ -133,8 +157,14 @@ export class CalendarComponent implements OnInit {
     const newStatus = task.done ? 'OPEN' : 'DONE';
     this.actionItemService.updateStatus(task.id, newStatus).subscribe({
       next: (updated) => {
-        task.done = updated.status === 'DONE';
-        task.status = task.done ? 'Completed' : this.formatDeadline(updated.deadline);
+        const item = this.actionItems.find((i) => i.id === updated.id);
+        if (item) {
+          item.status = updated.status;
+          item.deadline = updated.deadline;
+        }
+        this.buildTaskReminders();
+        this.buildCalendar();
+        this.cdr.markForCheck();
       },
       error: (err) => console.error('Failed to update task status', err),
     });
@@ -206,10 +236,13 @@ export class CalendarComponent implements OnInit {
 
   private buildTaskReminders(): void {
     const sorted = [...this.actionItems].sort((a, b) => {
-      if (!a.deadline && !b.deadline) return 0;
-      if (!a.deadline) return 1;
-      if (!b.deadline) return -1;
-      return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+    const aDone = a.status === 'DONE';
+    const bDone = b.status === 'DONE';
+    if (aDone !== bDone) return aDone ? 1 : -1;
+    if (!a.deadline && !b.deadline) return 0;
+    if (!a.deadline) return 1;
+    if (!b.deadline) return -1;
+    return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
     });
 
     this.taskReminders = sorted.map((item) => ({
