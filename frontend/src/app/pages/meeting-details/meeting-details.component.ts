@@ -73,6 +73,12 @@ export class MeetingDetailsComponent implements OnInit {
 
   selectedAttendeeId = '';
   chatInput = '';
+  
+  showAttendeesPopover = false;
+
+  toggleAttendeesPopover(): void {
+  this.showAttendeesPopover = !this.showAttendeesPopover;
+}
 
   chatMessages: ChatMessage[] = [
     { from: 'assistant', text: "Hi, I've read through this meeting. Want a summary, key risks, or the action items again?" },

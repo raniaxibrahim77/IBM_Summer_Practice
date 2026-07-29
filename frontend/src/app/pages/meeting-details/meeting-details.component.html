@@ -68,7 +68,7 @@
 
       <!-- Attendee bubbles -->
       <div class="attendees-widget">
-        <div class="attendees-widget__stack">
+        <div class="attendees-widget__stack" (click)="toggleAttendeesPopover()">
           @for (attendee of attendees; track attendee.id) {
             <div class="attendee-bubble" [style.background-color]="attendee.color">{{ attendee.initials }}</div>
           }
@@ -77,6 +77,7 @@
           }
         </div>
 
+        @if (showAttendeesPopover) {
         <div class="attendees-popover">
           <h3 class="attendees-popover__title">Attendees</h3>
           <div class="attendees-popover__list">
@@ -105,7 +106,8 @@
             </button>
           </div>
         </div>
-      </div>
+      }
+    </div>
     </div>
 
     <!-- Two column layout -->
