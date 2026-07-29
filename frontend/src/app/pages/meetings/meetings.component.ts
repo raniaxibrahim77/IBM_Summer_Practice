@@ -26,7 +26,7 @@ interface MeetingRow {
 })
 export class MeetingsComponent implements OnInit {
   searchTerm = '';
-  pageSize = 10;
+  pageSize = 5;
   readonly pageSizeOptions = [5, 10, 20];
   currentPage = 1;
 
