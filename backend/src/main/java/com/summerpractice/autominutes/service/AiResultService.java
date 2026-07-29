@@ -95,11 +95,14 @@ public class AiResultService {
     private void linkAttendeesFromTranscript(List<String> names, Meeting meeting) {
         List<MeetingAttendee> existingLinks = meetingAttendeeRepository
                 .findByMeeting_IdOrderByAttendee_NameAsc(meeting.getId());
-        meetingAttendeeRepository.deleteAll(existingLinks);
+
+        Set<String> existingNamesLower = existingLinks.stream()
+                .map(link -> link.getAttendee().getName().toLowerCase())
+                .collect(Collectors.toSet());
 
         for (String rawName : names) {
             String name = rawName.strip();
-            if (name.isEmpty()) {
+            if (name.isEmpty() || existingNamesLower.contains(name.toLowerCase())) {
                 continue;
             }
 
@@ -109,6 +112,7 @@ public class AiResultService {
                     .orElseGet(() -> attendeeRepository.save(new Attendee(name, generatePlaceholderEmail(name))));
 
                 meetingAttendeeRepository.save(new MeetingAttendee(meeting, attendee, "Participant"));
+                existingNamesLower.add(name.toLowerCase());
         }
     }
 
