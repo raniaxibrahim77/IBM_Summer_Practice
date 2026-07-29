@@ -12,15 +12,22 @@ import com.summerpractice.autominutes.repository.MeetingRepository;
 import com.summerpractice.autominutes.repository.TranscriptRepository;
 import com.summerpractice.autominutes.repository.AiResultRepository;
 import com.summerpractice.autominutes.repository.ActionItemRepository;
+import com.summerpractice.autominutes.model.ActionItem;
+import com.summerpractice.autominutes.model.AiResult;
+import com.summerpractice.autominutes.model.MeetingAttendee;
+import com.summerpractice.autominutes.model.Transcript;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.InOrder;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -214,5 +221,103 @@ class MeetingServiceTest {
 
         verify(transcriptRepository, never())
                 .existsByMeeting_Id(any());
+    }
+
+    @Test
+    void shouldDeleteMeetingAndAllDependentDataInOrder() {
+        UUID meetingId = UUID.randomUUID();
+        UUID aiResultId = UUID.randomUUID();
+
+        Meeting meeting = new Meeting(
+                "Meeting to delete",
+                "Meeting with generated results",
+                LocalDateTime.of(
+                        2026,
+                        7,
+                        29,
+                        10,
+                        0
+                )
+        );
+        meeting.setId(meetingId);
+
+        AiResult aiResult = mock(AiResult.class);
+        Transcript transcript = mock(Transcript.class);
+        ActionItem actionItem = mock(ActionItem.class);
+
+        MeetingAttendee meetingAttendee =
+                mock(MeetingAttendee.class);
+
+        when(aiResult.getId())
+                .thenReturn(aiResultId);
+
+        when(meetingRepository.findById(meetingId))
+                .thenReturn(Optional.of(meeting));
+
+        when(
+                aiResultRepository
+                        .findByMeetingIdOrderByGeneratedAtDesc(
+                                meetingId
+                        )
+        ).thenReturn(List.of(aiResult));
+
+        when(
+                actionItemRepository.findByAiResultId(
+                        aiResultId
+                )
+        ).thenReturn(List.of(actionItem));
+
+        when(
+                transcriptRepository.findByMeeting_Id(
+                        meetingId
+                )
+        ).thenReturn(Optional.of(transcript));
+
+        when(
+                meetingAttendeeRepository
+                        .findByMeeting_IdOrderByAttendee_NameAsc(
+                                meetingId
+                        )
+        ).thenReturn(List.of(meetingAttendee));
+
+        meetingService.deleteMeeting(meetingId);
+
+        InOrder deletionOrder = inOrder(
+                actionItemRepository,
+                aiResultRepository,
+                transcriptRepository,
+                meetingAttendeeRepository,
+                meetingRepository
+        );
+
+        deletionOrder.verify(actionItemRepository)
+                .deleteAll(List.of(actionItem));
+
+        deletionOrder.verify(actionItemRepository)
+                .flush();
+
+        deletionOrder.verify(aiResultRepository)
+                .deleteAll(List.of(aiResult));
+
+        deletionOrder.verify(aiResultRepository)
+                .flush();
+
+        deletionOrder.verify(transcriptRepository)
+                .delete(transcript);
+
+        deletionOrder.verify(transcriptRepository)
+                .flush();
+
+        deletionOrder.verify(meetingAttendeeRepository)
+                .deleteAll(List.of(meetingAttendee));
+
+        deletionOrder.verify(meetingAttendeeRepository)
+                .flush();
+
+        deletionOrder.verify(meetingRepository)
+                .delete(meeting);
+
+        deletionOrder.verify(meetingRepository)
+                .flush();
     }
 }
