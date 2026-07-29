@@ -100,7 +100,7 @@
           <h3 class="panel__title panel__title--light">Today's Tasks</h3>
           <div class="list-stack">
             @if (filteredTasks.length === 0) {
-            <p class="empty-note">No tasks available.</p>
+            <p class="empty-note">No active tasks.</p>
             }
 
             @for (task of filteredTasks; track task.id) {

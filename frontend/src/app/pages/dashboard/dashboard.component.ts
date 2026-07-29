@@ -87,15 +87,18 @@ export class DashboardComponent implements OnInit {
   }
 
   get filteredTasks(): Task[] {
-    const term = this.searchTerm.trim().toLowerCase();
+    const term =
+      this.searchTerm.trim().toLowerCase();
 
-    if (!term) {
-      return this.tasks;
-    }
+    return this.tasks.filter((task) => {
+      const isActive = !task.done;
 
-    return this.tasks.filter((task) =>
-      task.title.toLowerCase().includes(term)
-    );
+      const matchesSearch =
+        !term ||
+        task.title.toLowerCase().includes(term);
+
+      return isActive && matchesSearch;
+    });
   }
 
   getMeetingProcessingStatusClasses(

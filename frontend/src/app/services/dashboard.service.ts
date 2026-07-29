@@ -129,6 +129,11 @@ export class DashboardService {
       .pipe(
         map((items) =>
           items
+            .filter(
+              (item) =>
+                item.status !== 'DONE' &&
+                item.status !== 'COMPLETED'
+            )
             .slice(0, 3)
             .map((item) =>
               this.toTask(item)
