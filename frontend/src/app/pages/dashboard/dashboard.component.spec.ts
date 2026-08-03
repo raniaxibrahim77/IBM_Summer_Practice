@@ -65,8 +65,49 @@ describe('DashboardComponent', () => {
 
     const element = fixture.nativeElement as HTMLElement;
 
-    expect(element.querySelector('h1')?.textContent).toContain(
-      'Welcome back!'
+    expect(element.querySelector('h1')?.textContent).toContain('Welcome back!');
+  });
+
+  it('should open the create meeting modal', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const openButton = Array.from(element.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('New Meeting'),
+    );
+
+    expect(openButton).toBeTruthy();
+
+    openButton!.click();
+    fixture.detectChanges();
+
+    expect(element.querySelector('[role="dialog"]')).toBeTruthy();
+  });
+
+  it('should validate an empty meeting form', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const openButton = Array.from(element.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('New Meeting'),
+    );
+
+    openButton!.click();
+    fixture.detectChanges();
+
+    const createButton = Array.from(element.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'Create Meeting',
+    );
+
+    expect(createButton).toBeTruthy();
+
+    createButton!.click();
+    fixture.detectChanges();
+
+    expect(element.querySelector('[role="alert"]')?.textContent).toContain(
+      'Please enter a meeting name.',
     );
   });
 });
