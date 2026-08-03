@@ -5,6 +5,114 @@
     aria-modal="true"
     aria-labelledby="create-meeting-title"
   >
-    <ng-content />
+    <h2 id="create-meeting-title" class="modal-title">Create Meeting</h2>
+
+    <div class="modal-form">
+      <div>
+        <label class="field-label">Name</label>
+        <input type="text" [(ngModel)]="newMeetingName" name="meetingName" placeholder="Meeting name" class="field-input" />
+      </div>
+
+      <div class="field-row">
+        <div>
+          <label class="field-label">When</label>
+          <input type="date" [(ngModel)]="newMeetingDate" name="meetingDate" [min]="minimumMeetingDate" class="field-input" />
+        </div>
+        <div>
+          <label class="field-label">Time</label>
+          <input type="time" [(ngModel)]="newMeetingTime" name="meetingTime" class="field-input" />
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">People to invite</label>
+        <input type="text" [(ngModel)]="peopleSearch" name="peopleSearch" placeholder="Search by name or email..." autocomplete="off" (focus)="peopleSearchFocused = true" (blur)="peopleSearchFocused = false" class="field-input" />
+        @if (isLoadingAttendees) {
+          <p class="hint-text">Loading attendees...</p>
+        }
+
+        @if (attendeeLoadError) {
+          <p role="alert" class="error-text">{{ attendeeLoadError }}</p>
+        }
+
+        @if (peopleSearchFocused && !isLoadingAttendees && !attendeeLoadError && peopleSearch.trim() && peopleSuggestions.length === 0) {
+          <p class="hint-text">No matching attendees.</p>
+        }
+
+        @if (peopleSuggestions.length > 0) {
+          <div class="suggestions-list">
+            @for (person of peopleSuggestions; track person.id) {
+            <button type="button" (mousedown)="addPerson(person); $event.preventDefault()" class="suggestion-item">
+              <span class="suggestion-item__name">{{ person.name }}</span>
+              @if (person.email) {
+                <span class="suggestion-item__email">{{ person.email }}</span>
+              }
+            </button>
+            }
+          </div>
+        }
+
+        @if (!showAddAttendeeForm) {
+          <button type="button" (click)="openAddAttendeeForm()" class="add-attendee-link">
+            <span class="material-symbols-outlined add-attendee-link__icon">person_add</span>
+            Add new attendee
+          </button>
+        }
+
+        @if (showAddAttendeeForm) {
+          <div class="add-attendee-form">
+            <div>
+              <label class="field-label field-label--small">Attendee name</label>
+              <input type="text" [(ngModel)]="newAttendeeName" name="newAttendeeName" placeholder="Full name" [disabled]="isCreatingAttendee" class="field-input field-input--small" />
+            </div>
+
+            <div>
+              <label class="field-label field-label--small">Email (optional)</label>
+              <input type="email" [(ngModel)]="newAttendeeEmail" name="newAttendeeEmail" placeholder="name@example.com" [disabled]="isCreatingAttendee" class="field-input field-input--small" />
+            </div>
+
+            @if (createAttendeeError) {
+              <p role="alert" class="error-text">{{ createAttendeeError }}</p>
+            }
+
+            <div class="add-attendee-form__actions">
+              <button type="button" (click)="closeAddAttendeeForm()" [disabled]="isCreatingAttendee" class="btn btn--outline">
+                Cancel
+              </button>
+              <button type="button" (click)="createAttendee()" [disabled]="isCreatingAttendee" class="btn btn--primary">
+                @if (isCreatingAttendee) { Adding... } @else { Add attendee }
+              </button>
+            </div>
+          </div>
+        }
+
+        @if (invitedPeople.length > 0) {
+        <div class="invited-chips">
+          @for (person of invitedPeople; track person.id) {
+            <span class="invited-chip">
+              {{ person.name }}
+              <button type="button" (click)="removePerson(person.id)" [attr.aria-label]="'Remove ' + person.name" class="invited-chip__remove">
+                <span class="material-symbols-outlined invited-chip__remove-icon">close</span>
+              </button>
+            </span>
+          }
+        </div>
+        }
+      </div>
+    </div>
+
+    @if (createMeetingError) {
+      <div role="alert" class="alert alert--error">{{ createMeetingError }}</div>
+    }
+
+  <div class="modal-actions">
+      <button type="button" (click)="cancel()" [disabled]="isCreatingMeeting" class="btn btn--outline btn--flex">
+      Cancel
+    </button>
+
+    <button type="button" (click)="createMeeting()" [disabled]="isCreatingMeeting" class="btn btn--primary btn--flex">
+        @if (isCreatingMeeting) { Creating... } @else { Create Meeting }
+    </button>
+  </div>
   </section>
 </div>
