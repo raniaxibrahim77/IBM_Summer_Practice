@@ -177,9 +177,8 @@
 </main>
 
 @if (showCreateModal) {
-<div class="modal-backdrop">
-  <div class="modal modal--create-meeting">
-    <h2 class="modal-title">Create Meeting</h2>
+<app-create-meeting-modal>
+    <h2 id="create-meeting-title" class="modal-title">Create Meeting</h2>
 
     <div class="modal-form">
       <div>
@@ -289,6 +288,5 @@
         @if (isCreatingMeeting) { Creating... } @else { Create Meeting }
     </button>
   </div>
-  </div>
-</div>
+</app-create-meeting-modal>
 }

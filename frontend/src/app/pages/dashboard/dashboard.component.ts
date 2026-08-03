@@ -7,6 +7,7 @@ import { CalendarDay, DashboardService, MeetingProcessingStatusLabel, RecentMeet
 import { AttendeeResponse, AttendeeService } from '../../services/attendee.service';
 import { AuthService } from '../../services/auth.service';
 import { HeaderComponent } from '../../shared/header/header.component';
+import { CreateMeetingModal } from './components/create-meeting-modal/create-meeting-modal';
 
 
 const MONTH_NAMES = [
@@ -17,7 +18,7 @@ const MONTH_NAMES = [
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, HeaderComponent],
+  imports: [CommonModule, FormsModule, RouterLink, HeaderComponent, CreateMeetingModal],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
