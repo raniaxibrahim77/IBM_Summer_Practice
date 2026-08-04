@@ -1,0 +1,121 @@
+<section class="settings-card">
+  <div class="settings-card__header">
+    <div>
+      <h2 class="settings-card__title">
+        Security
+      </h2>
+
+      <p class="settings-card__subtitle">
+        Manage your password and account security.
+      </p>
+    </div>
+  </div>
+
+  <div class="profile-fields">
+    @if (isEditing) {
+      <form
+        class="profile-edit-form"
+        (ngSubmit)="savePassword()"
+      >
+        <div class="profile-edit-field">
+          <label
+            for="newPassword"
+            class="profile-field__label"
+          >
+            New password
+          </label>
+
+          <input
+            id="newPassword"
+            type="password"
+            name="newPassword"
+            [(ngModel)]="newPassword"
+            class="profile-edit-input"
+            autocomplete="new-password"
+            placeholder="Minimum 6 characters"
+          />
+        </div>
+
+        <div class="profile-edit-field">
+          <label
+            for="confirmPassword"
+            class="profile-field__label"
+          >
+            Confirm new password
+          </label>
+
+          <input
+            id="confirmPassword"
+            type="password"
+            name="confirmPassword"
+            [(ngModel)]="confirmPassword"
+            class="profile-edit-input"
+            autocomplete="new-password"
+            placeholder="Repeat the new password"
+          />
+        </div>
+
+        @if (errorMessage) {
+          <p
+            role="alert"
+            class="settings-message settings-message--error"
+          >
+            {{ errorMessage }}
+          </p>
+        }
+
+        <div class="profile-edit-actions">
+          <button
+            type="button"
+            class="btn btn--outline"
+            [disabled]="isSaving"
+            (click)="cancelEdit()"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            class="btn btn--primary"
+            [disabled]="isSaving"
+          >
+            @if (isSaving) {
+              Saving...
+            } @else {
+              Change password
+            }
+          </button>
+        </div>
+      </form>
+    } @else {
+      <div class="profile-field">
+        <div>
+          <p class="profile-field__label">
+            Password
+          </p>
+
+          <p class="profile-field__value">
+            ••••••••
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="profile-field__action"
+          (click)="startEdit()"
+        >
+          Change
+        </button>
+      </div>
+    }
+  </div>
+
+  @if (successMessage) {
+    <p
+      role="status"
+      class="settings-message settings-message--success"
+    >
+      {{ successMessage }}
+    </p>
+  }
+</section>

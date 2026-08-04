@@ -1,0 +1,144 @@
+<section class="settings-card">
+  <div class="settings-card__header">
+    <div>
+      <h2 class="settings-card__title">Profile information</h2>
+
+      <p class="settings-card__subtitle">Your personal account information.</p>
+    </div>
+
+    @if (!isEditing) {
+      <button type="button" class="profile-field__action" (click)="startEdit()">
+        Edit profile
+      </button>
+    }
+  </div>
+
+  <div class="profile-summary">
+    <div class="profile-avatar" aria-label="Profile avatar">
+      {{ userInitials }}
+    </div>
+
+    <div>
+      <p class="profile-summary__name">
+        {{ user?.username || 'Guest' }}
+      </p>
+
+      <p class="profile-summary__email">
+        {{ user?.email || 'No email available' }}
+      </p>
+    </div>
+  </div>
+
+  <div class="profile-fields">
+    @if (isEditing) {
+      <form class="profile-edit-form" (ngSubmit)="requestSave()">
+        <div class="profile-edit-field">
+          <label for="profileUsername" class="profile-field__label"> Username </label>
+
+          <input
+            id="profileUsername"
+            type="text"
+            name="profileUsername"
+            [(ngModel)]="username"
+            class="profile-edit-input"
+            autocomplete="username"
+          />
+        </div>
+
+        <div class="profile-edit-field">
+          <label for="profileEmail" class="profile-field__label"> Email </label>
+
+          <input
+            id="profileEmail"
+            type="email"
+            name="profileEmail"
+            [(ngModel)]="email"
+            class="profile-edit-input"
+            autocomplete="email"
+          />
+        </div>
+
+        @if (errorMessage) {
+          <p role="alert" class="settings-message settings-message--error">
+            {{ errorMessage }}
+          </p>
+        }
+
+        <div class="profile-edit-actions">
+          <button
+            type="button"
+            class="btn btn--outline"
+            [disabled]="isSaving"
+            (click)="cancelEdit()"
+          >
+            Cancel
+          </button>
+
+          <button type="submit" class="btn btn--primary" [disabled]="isSaving">
+            @if (isSaving) {
+              Saving...
+            } @else {
+              Save changes
+            }
+          </button>
+        </div>
+      </form>
+    } @else {
+      <div class="profile-field">
+        <div>
+          <p class="profile-field__label">Username</p>
+
+          <p class="profile-field__value">
+            {{ user?.username || 'Guest' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="profile-field">
+        <div>
+          <p class="profile-field__label">Email</p>
+
+          <p class="profile-field__value">
+            {{ user?.email || 'No email available' }}
+          </p>
+        </div>
+      </div>
+    }
+  </div>
+</section>
+
+@if (successMessage) {
+  <p role="status" class="settings-message settings-message--success">
+    {{ successMessage }}
+  </p>
+}
+
+@if (showSaveConfirmation) {
+  <div class="confirmation-backdrop" role="presentation" (click)="cancelSaveConfirmation()">
+    <section
+      class="confirmation-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirmationTitle"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="confirmation-modal__icon">
+        <span class="material-symbols-outlined"> edit </span>
+      </div>
+
+      <h2 id="confirmationTitle" class="confirmation-modal__title">Save profile changes?</h2>
+
+      <p class="confirmation-modal__message">Your username and email will be updated.</p>
+
+      <div class="confirmation-modal__actions">
+        <button type="button" class="btn btn--outline" (click)="cancelSaveConfirmation()">
+          Keep editing
+        </button>
+
+        <button type="button" class="btn btn--primary" (click)="confirmSave()">
+          Yes, save changes
+        </button>
+      </div>
+    </section>
+  </div>
+}
