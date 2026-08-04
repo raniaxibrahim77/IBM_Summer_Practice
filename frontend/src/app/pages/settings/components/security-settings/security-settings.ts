@@ -1,16 +1,7 @@
-import {
-  Component,
-  EventEmitter,
-  Input,
-  Output,
-} from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import {
-  AppUserResponse,
-  AuthService,
-} from '../../../../services/auth.service';
-
+import { AppUserResponse, AuthService } from '../../../../services/auth.service';
 @Component({
   selector: 'app-security-settings',
   imports: [FormsModule],
@@ -30,7 +21,10 @@ export class SecuritySettings {
   errorMessage = '';
   successMessage = '';
 
-  constructor(private authService: AuthService) {}
+  constructor(
+  private authService: AuthService,
+  private cdr: ChangeDetectorRef
+) {}
 
   startEdit(): void {
     this.newPassword = '';
@@ -93,6 +87,7 @@ export class SecuritySettings {
           this.successMessage =
             'Password changed successfully.';
           this.userUpdated.emit(updatedUser);
+          this.cdr.markForCheck();
         },
         error: (error) => {
           console.error('Failed to change password', error);
@@ -102,6 +97,8 @@ export class SecuritySettings {
             error.error?.messages?.[0] ||
             error.error?.message ||
             'The password could not be changed.';
+
+          this.cdr.markForCheck();
         },
       });
   }

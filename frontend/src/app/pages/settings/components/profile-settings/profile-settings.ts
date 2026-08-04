@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AppUserResponse, AuthService } from '../../../../services/auth.service';
 
@@ -12,7 +12,10 @@ export class ProfileSettings implements OnChanges {
   @Input() user: AppUserResponse | null = null;
   @Output() userUpdated = new EventEmitter<AppUserResponse>();
 
-  constructor(private authService: AuthService) {}
+  constructor(
+  private authService: AuthService,
+  private cdr: ChangeDetectorRef
+) {}
 
   isEditing = false;
   isSaving = false;
@@ -111,6 +114,7 @@ export class ProfileSettings implements OnChanges {
           this.successMessage = 'Profile updated successfully.';
           this.resetForm();
           this.userUpdated.emit(updatedUser);
+          this.cdr.markForCheck();
         },
         error: (error) => {
           console.error('Failed to update profile', error);
@@ -120,6 +124,8 @@ export class ProfileSettings implements OnChanges {
             error.error?.messages?.[0] ||
             error.error?.message ||
             'The profile could not be updated.';
+
+          this.cdr.markForCheck();
         },
       });
   }
