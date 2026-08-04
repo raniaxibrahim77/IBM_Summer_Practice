@@ -8,6 +8,7 @@ import { TranscriptService } from '../../services/transcript.service';
 import { AuthService } from '../../services/auth.service';
 import { HeaderComponent } from '../../shared/header/header.component';
 import { AttendeeResponse, AttendeeService } from '../../services/attendee.service';
+import { SidebarComponent } from '../../shared/sidebar/sidebar.component';
 
 interface MeetingRow {
   id: string;
@@ -20,7 +21,7 @@ interface MeetingRow {
 @Component({
   selector: 'app-meetings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, HeaderComponent],
+  imports: [CommonModule, FormsModule, RouterLink, HeaderComponent, SidebarComponent],
   templateUrl: './meetings.component.html',
   styleUrl: './meetings.component.css',
 })
