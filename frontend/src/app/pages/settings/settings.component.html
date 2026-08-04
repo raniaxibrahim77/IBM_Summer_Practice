@@ -1,51 +1,5 @@
-<!-- Shared application sidebar -->
-<aside class="sidebar">
-  <div class="sidebar__logo-row">
-    <div class="sidebar__logo">
-      <span class="material-symbols-outlined">dashboard</span>
-    </div>
-  </div>
+<app-sidebar />
 
-  <!-- Main application navigation -->
-  <nav class="sidebar__nav">
-    <a routerLink="/dashboard" class="nav-link">
-      <span class="material-symbols-outlined">home</span>
-      <span class="nav-link__label">Home</span>
-    </a>
-
-    <a routerLink="/calendar" class="nav-link">
-      <span class="material-symbols-outlined">calendar_today</span>
-      <span class="nav-link__label">Calendar</span>
-    </a>
-
-    <a routerLink="/meetings" class="nav-link">
-      <span class="material-symbols-outlined">groups</span>
-      <span class="nav-link__label">Meetings</span>
-    </a>
-
-    <!-- Current page -->
-    <a
-      routerLink="/settings"
-      class="nav-link nav-link--active"
-    >
-      <span class="material-symbols-outlined">settings</span>
-      <span class="nav-link__label">Settings</span>
-    </a>
-  </nav>
-
-  <div class="sidebar__footer">
-    <button
-      type="button"
-      routerLink="/"
-      class="nav-link nav-link--logout"
-    >
-      <span class="material-symbols-outlined">logout</span>
-      <span class="nav-link__label">Logout</span>
-    </button>
-  </div>
-</aside>
-
-<!-- Reuses the application header and signed-in user display -->
 <app-header
   [userName]="currentUser?.username ?? 'Guest'"
 />

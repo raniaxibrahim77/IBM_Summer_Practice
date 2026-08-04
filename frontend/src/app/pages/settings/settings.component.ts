@@ -1,15 +1,15 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { AppUserResponse, AuthService } from '../../services/auth.service';
 import { HeaderComponent } from '../../shared/header/header.component';
+import { SidebarComponent } from '../../shared/sidebar/sidebar.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
   imports: [
     FormsModule,
-    RouterLink,
+    SidebarComponent,
     HeaderComponent
   ],
   templateUrl: './settings.component.html',
