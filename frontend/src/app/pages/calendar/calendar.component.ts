@@ -1,10 +1,11 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { MeetingService, MeetingResponse } from '../../services/meeting.service'; 
 import { ActionItemService, ActionItemResponse } from '../../services/action-item.service';
 import { AuthService } from '../../services/auth.service';
 import { HeaderComponent } from '../../shared/header/header.component';
+import { SidebarComponent } from '../../shared/sidebar/sidebar.component';
 
 interface CalendarCell {
   day: number;
@@ -39,7 +40,7 @@ const MONTH_NAMES = [
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [CommonModule, RouterLink, HeaderComponent],
+  imports: [CommonModule, HeaderComponent, SidebarComponent],
   templateUrl: './calendar.component.html',
   styleUrl: './calendar.component.css',
 })
