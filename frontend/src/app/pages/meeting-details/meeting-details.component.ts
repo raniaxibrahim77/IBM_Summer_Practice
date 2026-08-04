@@ -8,6 +8,7 @@ import { HeaderComponent } from '../../shared/header/header.component';
 import { AttendeeResponse, AttendeeService } from '../../services/attendee.service';
 import { MeetingAiService, AiResultResponse } from '../../services/meeting-ai.service';
 import { ActionItemService } from '../../services/action-item.service';
+import { SidebarComponent } from '../../shared/sidebar/sidebar.component';
 
 interface Attendee {
   id: string;
@@ -41,7 +42,7 @@ type MeetingProcessingStatusLabel =
 @Component({
   selector: 'app-meeting-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, HeaderComponent],
+  imports: [CommonModule, FormsModule, RouterLink, HeaderComponent, SidebarComponent],
   templateUrl: './meeting-details.component.html',
   styleUrl: './meeting-details.component.css',
 })
