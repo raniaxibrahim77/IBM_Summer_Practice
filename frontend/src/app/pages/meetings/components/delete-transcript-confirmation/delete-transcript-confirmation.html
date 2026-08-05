@@ -1,0 +1,56 @@
+<div
+  class="confirmation-backdrop"
+  role="presentation"
+  (click)="cancel()"
+>
+  <section
+    class="confirmation-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="deleteTranscriptTitle"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="confirmation-modal__icon confirmation-modal__icon--danger">
+      <span class="material-symbols-outlined">delete</span>
+    </div>
+
+    <h2
+      id="deleteTranscriptTitle"
+      class="confirmation-modal__title"
+    >
+      Delete transcript?
+    </h2>
+
+    <p class="confirmation-modal__message">
+      Are you sure you want to delete the transcript for
+      <strong>{{ meetingTitle }}</strong>?
+      This action cannot be undone.
+    </p>
+
+    @if (deleteError) {
+      <p class="confirmation-modal__error">
+        {{ deleteError }}
+      </p>
+    }
+
+    <div class="confirmation-modal__actions">
+      <button
+        type="button"
+        class="confirmation-button confirmation-button--cancel"
+        [disabled]="isDeleting"
+        (click)="cancel()"
+      >
+        Keep transcript
+      </button>
+
+      <button
+        type="button"
+        class="confirmation-button confirmation-button--danger"
+        [disabled]="isDeleting"
+        (click)="confirmDelete()"
+      >
+        {{ isDeleting ? 'Deleting...' : 'Yes, delete it' }}
+      </button>
+    </div>
+  </section>
+</div>
