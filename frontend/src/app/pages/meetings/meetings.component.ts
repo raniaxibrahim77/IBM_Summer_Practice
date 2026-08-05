@@ -8,6 +8,7 @@ import { AuthService } from '../../services/auth.service';
 import { HeaderComponent } from '../../shared/header/header.component';
 import { SidebarComponent } from '../../shared/sidebar/sidebar.component';
 import { LogMeetingModal } from './components/log-meeting-modal/log-meeting-modal';
+import { DeleteTranscriptConfirmation } from './components/delete-transcript-confirmation/delete-transcript-confirmation';
 
 interface MeetingRow {
   id: string;
@@ -20,7 +21,7 @@ interface MeetingRow {
 @Component({
   selector: 'app-meetings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, HeaderComponent, SidebarComponent, LogMeetingModal],
+  imports: [CommonModule, FormsModule, RouterLink, HeaderComponent, SidebarComponent, LogMeetingModal, DeleteTranscriptConfirmation],
   templateUrl: './meetings.component.html',
   styleUrl: './meetings.component.css',
 })
@@ -33,8 +34,6 @@ export class MeetingsComponent implements OnInit {
   meetings: MeetingRow[] = [];
 
   meetingPendingTranscriptDelete: MeetingRow | null = null;
-  isDeletingTranscript = false;
-  deleteTranscriptError = '';
 
   constructor(
     private meetingService: MeetingService,
@@ -162,57 +161,25 @@ nextPage(): void {
 
 openDeleteTranscriptConfirmation(
   meeting: MeetingRow,
-  event: Event
+  event: Event,
 ): void {
   event.preventDefault();
   event.stopPropagation();
 
   this.meetingPendingTranscriptDelete = meeting;
-  this.deleteTranscriptError = '';
 }
 
 closeDeleteTranscriptConfirmation(): void {
-  if (this.isDeletingTranscript) {
-    return;
+  this.meetingPendingTranscriptDelete = null;
+}
+
+handleTranscriptDeleted(): void {
+  if (this.meetingPendingTranscriptDelete) {
+    this.meetingPendingTranscriptDelete.hasTranscript = false;
   }
 
   this.meetingPendingTranscriptDelete = null;
-  this.deleteTranscriptError = '';
-}
-
-confirmDeleteTranscript(): void {
-  const meeting = this.meetingPendingTranscriptDelete;
-
-  if (!meeting || this.isDeletingTranscript) {
-    return;
-  }
-
-  this.isDeletingTranscript = true;
-  this.deleteTranscriptError = '';
-
-  this.transcriptService
-    .deleteTranscript(meeting.id)
-    .subscribe({
-      next: () => {
-        meeting.hasTranscript = false;
-        this.isDeletingTranscript = false;
-        this.meetingPendingTranscriptDelete = null;
-        this.cdr.markForCheck();
-      },
-      error: (error) => {
-        console.error(
-          'Failed to delete transcript',
-          error
-        );
-
-        this.isDeletingTranscript = false;
-        this.deleteTranscriptError =
-          error.error?.message ||
-          'The transcript could not be deleted. Please try again.';
-
-        this.cdr.markForCheck();
-      }
-    });
+  this.cdr.markForCheck();
 }
   // Log Meeting modal coordination
   showCreateModal = false;
