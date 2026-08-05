@@ -80,8 +80,8 @@ describe('MeetingsComponent', () => {
     fixture.detectChanges();
 
     const element = fixture.nativeElement as HTMLElement;
-    const openButton = Array.from(element.querySelectorAll('button')).find(
-      (button) => button.textContent?.includes('Log Meeting'),
+    const openButton = Array.from(element.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Log Meeting'),
     );
 
     expect(openButton).toBeTruthy();
@@ -97,8 +97,8 @@ describe('MeetingsComponent', () => {
     fixture.detectChanges();
 
     const element = fixture.nativeElement as HTMLElement;
-    const openButton = Array.from(element.querySelectorAll('button')).find(
-      (button) => button.textContent?.includes('Log Meeting'),
+    const openButton = Array.from(element.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Log Meeting'),
     );
 
     openButton!.click();
@@ -116,5 +116,30 @@ describe('MeetingsComponent', () => {
     expect(element.querySelector('[role="alert"]')?.textContent).toContain(
       'Please enter a meeting name.',
     );
+  });
+
+  it('should open the delete transcript confirmation', () => {
+    const fixture = TestBed.createComponent(MeetingsComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.openDeleteTranscriptConfirmation(
+      {
+        id: 'meeting-1',
+        title: 'Test Meeting',
+        dateTime: 'Aug 5, 2026',
+        attendees: 1,
+        hasTranscript: true,
+      },
+      new Event('click'),
+    );
+
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const dialog = element.querySelector('[role="dialog"]');
+
+    expect(dialog).toBeTruthy();
+    expect(dialog?.textContent).toContain('Delete transcript?');
+    expect(dialog?.textContent).toContain('Test Meeting');
   });
 });
