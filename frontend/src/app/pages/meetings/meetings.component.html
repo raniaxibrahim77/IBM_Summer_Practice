@@ -60,34 +60,34 @@
                   <span class="attendees-badge">{{ meeting.attendees }}</span>
                 </td>
                 <td class="meetings-table__cell">
-                <div class="transcript-actions">
-                  <label
-                    class="transcript-badge"
-                    [class.transcript-badge--edit]="meeting.hasTranscript"
-                  >
-                    {{ meeting.hasTranscript ? 'Edit Transcript' : 'Add Transcript' }}
-
-                    <input
-                      type="file"
-                      accept=".txt"
-                      class="visually-hidden"
-                      (change)="onRowTranscriptSelected($event, meeting)"
-                    />
-                  </label>
-
-                  @if (meeting.hasTranscript) {
-                    <button
-                      type="button"
-                      class="delete-transcript-button"
-                      aria-label="Delete transcript"
-                      title="Delete transcript"
-                      (click)="openDeleteTranscriptConfirmation(meeting, $event)"
+                  <div class="transcript-actions">
+                    <label
+                      class="transcript-badge"
+                      [class.transcript-badge--edit]="meeting.hasTranscript"
                     >
-                      <span class="material-symbols-outlined">close</span>
-                    </button>
-                  }
-                </div>
-              </td>
+                      {{ meeting.hasTranscript ? 'Edit Transcript' : 'Add Transcript' }}
+
+                      <input
+                        type="file"
+                        accept=".txt"
+                        class="visually-hidden"
+                        (change)="onRowTranscriptSelected($event, meeting)"
+                      />
+                    </label>
+
+                    @if (meeting.hasTranscript) {
+                      <button
+                        type="button"
+                        class="delete-transcript-button"
+                        aria-label="Delete transcript"
+                        title="Delete transcript"
+                        (click)="openDeleteTranscriptConfirmation(meeting, $event)"
+                      >
+                        <span class="material-symbols-outlined">close</span>
+                      </button>
+                    }
+                  </div>
+                </td>
                 <td class="meetings-table__cell">
                   <button [routerLink]="['/meeting-details', meeting.id]" class="ai-details-link">
                     View Details
@@ -104,7 +104,7 @@
         </table>
       </div>
     </div>
-<!-- Pagination -->
+    <!-- Pagination -->
     <div class="pagination">
       <div class="pagination__size">
         <label for="pageSize" class="pagination__size-label">Show:</label>
@@ -149,215 +149,62 @@
 </main>
 
 @if (showCreateModal) {
-  <div class="modal-backdrop">
-    <div class="modal">
-      <h2 class="modal-title">Log a Meeting</h2>
+  <app-log-meeting-modal
+    (cancelled)="closeCreateModal()"
+    (meetingLogged)="handleMeetingLogged($event)"
+  />
+}
 
-      <div class="modal-form">
-        <div>
-          <label class="field-label">Name</label>
-          <input
-            type="text"
-            [(ngModel)]="newMeetingName"
-            name="meetingName"
-            placeholder="Meeting name"
-            class="field-input"
-          />
-        </div>
-
-        <div class="field-row">
-          <div>
-            <label class="field-label">When</label>
-            <input
-              type="date"
-              [(ngModel)]="newMeetingDate"
-              name="meetingDate"
-              class="field-input"
-            />
-          </div>
-
-          <div>
-            <label class="field-label">Time</label>
-            <input
-              type="time"
-              [(ngModel)]="newMeetingTime"
-              name="meetingTime"
-              class="field-input"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label class="field-label">Attendees</label>
-          <input
-            type="text"
-            [(ngModel)]="peopleSearch"
-            name="peopleSearch"
-            placeholder="Search a list of people..."
-            class="field-input"
-          />
-
-          @if (peopleSuggestions.length > 0) {
-            <div class="suggestions-list">
-              @for (person of peopleSuggestions; track person.id) {
-                <button type="button" (click)="addPerson(person)" class="suggestion-item">
-                  <span>{{ person.name }}</span>
-
-                  @if (person.email) {
-                    <span class="suggestion-item__email">
-                      {{ person.email }}
-                    </span>
-                  }
-                </button>
-              }
-            </div>
-          }
-
-          @if (invitedPeople.length > 0) {
-            <div class="invited-chips">
-              @for (person of invitedPeople; track person.id) {
-                <span class="invited-chip">
-                  {{ person.name }}
-
-                  <button
-                    type="button"
-                    (click)="removePerson(person.id)"
-                    class="invited-chip__remove"
-                    [attr.aria-label]="'Remove ' + person.name"
-                  >
-                    <span class="material-symbols-outlined invited-chip__remove-icon"> close </span>
-                  </button>
-                </span>
-              }
-            </div>
-          }
-        </div>
-
-        <div>
-          <label class="field-label">Transcript <span class="required-mark">*</span></label>
-
-          @if (!transcriptFile) {
-            <label class="upload-dropzone">
-              <span class="material-symbols-outlined upload-dropzone__icon">upload_file</span>
-              <span class="upload-dropzone__text">Click to upload .txt</span>
-              <input
-                type="file"
-                accept=".txt"
-                class="visually-hidden"
-                (change)="onTranscriptFileSelected($event)"
-              />
-            </label>
-          } @else {
-            <div class="file-chip">
-              <span class="file-chip__name">
-                <span class="material-symbols-outlined file-chip__icon">description</span>
-                {{ transcriptFile.name }}
-              </span>
-              <button type="button" (click)="removeTranscriptFile()" class="file-chip__remove">
-                <span class="material-symbols-outlined">close</span>
-              </button>
-            </div>
-          }
-
-          @if (transcriptError) {
-            <p class="error-text">{{ transcriptError }}</p>
-          }
-        </div>
-
-        <label class="checkbox-row">
-          <input
-            type="checkbox"
-            [(ngModel)]="processWithAI"
-            name="processWithAI"
-            class="checkbox-row__input"
-          />
-          Process with AI now
-        </label>
+@if (meetingPendingTranscriptDelete) {
+  <div
+    class="confirmation-backdrop"
+    role="presentation"
+    (click)="closeDeleteTranscriptConfirmation()"
+  >
+    <section
+      class="confirmation-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="deleteTranscriptTitle"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="confirmation-modal__icon confirmation-modal__icon--danger">
+        <span class="material-symbols-outlined">delete</span>
       </div>
 
-      @if (logMeetingError) {
-        <p role="alert" class="error-text">
-          {{ logMeetingError }}
+      <h2 id="deleteTranscriptTitle" class="confirmation-modal__title">Delete transcript?</h2>
+
+      <p class="confirmation-modal__message">
+        Are you sure you want to delete the transcript for
+        <strong>{{ meetingPendingTranscriptDelete.title }}</strong>?
+        This action cannot be undone.
+      </p>
+
+      @if (deleteTranscriptError) {
+        <p class="confirmation-modal__error">
+          {{ deleteTranscriptError }}
         </p>
       }
 
-      <div class="modal-actions">
-        <button type="button" (click)="closeCreateModal()" class="btn btn--outline btn--flex">
-          Cancel
+      <div class="confirmation-modal__actions">
+        <button
+          type="button"
+          class="confirmation-button confirmation-button--cancel"
+          [disabled]="isDeletingTranscript"
+          (click)="closeDeleteTranscriptConfirmation()"
+        >
+          Keep transcript
         </button>
 
         <button
           type="button"
-          (click)="logMeeting()"
-          [disabled]="isLoggingMeeting"
-          class="btn btn--primary btn--flex"
+          class="confirmation-button confirmation-button--danger"
+          [disabled]="isDeletingTranscript"
+          (click)="confirmDeleteTranscript()"
         >
-          @if (isLoggingMeeting) {
-            Logging...
-          } @else {
-            Log a Meeting
-          }
+          {{ isDeletingTranscript ? 'Deleting...' : 'Yes, delete it' }}
         </button>
       </div>
-    </div>
+    </section>
   </div>
 }
-
-  @if (meetingPendingTranscriptDelete) {
-      <div
-        class="confirmation-backdrop"
-        role="presentation"
-        (click)="closeDeleteTranscriptConfirmation()"
-      >
-        <section
-          class="confirmation-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="deleteTranscriptTitle"
-          (click)="$event.stopPropagation()"
-        >
-          <div class="confirmation-modal__icon confirmation-modal__icon--danger">
-            <span class="material-symbols-outlined">delete</span>
-          </div>
-
-          <h2
-            id="deleteTranscriptTitle"
-            class="confirmation-modal__title"
-          >
-            Delete transcript?
-          </h2>
-
-          <p class="confirmation-modal__message">
-            Are you sure you want to delete the transcript for
-            <strong>{{ meetingPendingTranscriptDelete.title }}</strong>?
-            This action cannot be undone.
-          </p>
-
-          @if (deleteTranscriptError) {
-            <p class="confirmation-modal__error">
-              {{ deleteTranscriptError }}
-            </p>
-          }
-
-          <div class="confirmation-modal__actions">
-            <button
-              type="button"
-              class="confirmation-button confirmation-button--cancel"
-              [disabled]="isDeletingTranscript"
-              (click)="closeDeleteTranscriptConfirmation()"
-            >
-              Keep transcript
-            </button>
-
-            <button
-              type="button"
-              class="confirmation-button confirmation-button--danger"
-              [disabled]="isDeletingTranscript"
-              (click)="confirmDeleteTranscript()"
-            >
-              {{ isDeletingTranscript ? 'Deleting...' : 'Yes, delete it' }}
-            </button>
-          </div>
-        </section>
-      </div>
-    }
