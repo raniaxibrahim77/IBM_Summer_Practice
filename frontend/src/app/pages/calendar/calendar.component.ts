@@ -1,36 +1,22 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { MeetingService, MeetingResponse } from '../../services/meeting.service'; 
+import { MeetingService, MeetingResponse } from '../../services/meeting.service';
 import { ActionItemService, ActionItemResponse } from '../../services/action-item.service';
 import { AuthService } from '../../services/auth.service';
 import { HeaderComponent } from '../../shared/header/header.component';
 import { SidebarComponent } from '../../shared/sidebar/sidebar.component';
-
-interface CalendarCell {
-  day: number;
-  muted: boolean;
-  isToday: boolean;
-  isWeekend: boolean;
-  events: { id: string; title: string; kind: 'primary' | 'secondary' | 'tertiary' }[];
-}
-
-interface TaskReminder {
-  id: string;
-  title: string;
-  status: string;
-  done: boolean;
-  tag: string;
-}
-
-interface TimelineItem {
-  id: string;
-  day: string;
-  time: string;
-  title: string;
-  subtitle: string;
-  kind: 'muted' | 'primary' | 'secondary' | 'empty';
-}
+import { CalendarGridComponent } from './calendar-grid/calendar-grid.component';
+import { TaskRemindersPanelComponent } from './task-reminders-panel/task-reminders-panel.component';
+import { MeetingTimelineComponent } from './meeting-timeline/meeting-timeline.component';
+import {
+  CalendarCell,
+  TaskReminder,
+  TimelineItem,
+  buildCalendarCells,
+  buildTaskReminders,
+  buildTimeline,
+} from './calendar-view.util';
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -40,7 +26,14 @@ const MONTH_NAMES = [
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [CommonModule, HeaderComponent, SidebarComponent],
+  imports: [
+    CommonModule,
+    HeaderComponent,
+    SidebarComponent,
+    CalendarGridComponent,
+    TaskRemindersPanelComponent,
+    MeetingTimelineComponent,
+  ],
   templateUrl: './calendar.component.html',
   styleUrl: './calendar.component.css',
 })
@@ -52,14 +45,11 @@ export class CalendarComponent implements OnInit {
   readonly weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   cells: CalendarCell[] = [];
-  selectedDay: CalendarCell | null = null;
+  taskReminders: TaskReminder[] = [];
+  timeline: TimelineItem[] = [];
 
   private meetings: MeetingResponse[] = [];
-
-  taskReminders: TaskReminder[] = [];
   private actionItems: ActionItemResponse[] = [];
-
-  timeline: TimelineItem[] = [];
 
   constructor(
     private meetingService: MeetingService,
@@ -72,10 +62,9 @@ export class CalendarComponent implements OnInit {
   ngOnInit(): void {
     this.meetingService.getMeetings(this.authService.getCurrentUser()?.id).subscribe({
       next: (meetings) => {
-        console.log('meetings response received', meetings.length);
         this.meetings = meetings;
-        this.buildCalendar();
-        this.buildTimeline();
+        this.rebuildCalendar();
+        this.timeline = buildTimeline(this.meetings);
         this.cdr.markForCheck();
       },
       error: (err) => console.error('Failed to load meetings', err),
@@ -84,8 +73,8 @@ export class CalendarComponent implements OnInit {
     this.actionItemService.getActionItems().subscribe({
       next: (items) => {
         this.actionItems = items;
-        this.buildTaskReminders();
-        this.buildCalendar();
+        this.taskReminders = buildTaskReminders(this.actionItems);
+        this.rebuildCalendar();
         this.cdr.markForCheck();
       },
       error: (err) => console.error('Failed to load action items', err),
@@ -96,47 +85,13 @@ export class CalendarComponent implements OnInit {
     return `${MONTH_NAMES[this.viewMonth]} ${this.viewYear}`;
   }
 
-  showAllTasksModal = false;
-  taskPage = 0;
-  readonly tasksPerPage = 5;
-
-  get visibleTaskReminders(): TaskReminder[] {
-    return this.taskReminders.slice(0, 5);
-  }
-
-  get pagedModalTasks(): TaskReminder[] {
-    const start = this.taskPage * this.tasksPerPage;
-    return this.taskReminders.slice(start, start + this.tasksPerPage);
-  }
-
-  get totalTaskPages(): number {
-    return Math.max(1, Math.ceil(this.taskReminders.length / this.tasksPerPage));
-  }
-
-  openTaskModal(): void {
-    this.taskPage = 0;
-    this.showAllTasksModal = true;
-  }
-
-  closeTaskModal(): void {
-    this.showAllTasksModal = false;
-  }
-
-  nextTaskPage(): void {
-    if (this.taskPage < this.totalTaskPages - 1) this.taskPage++;
-  }
-
-  prevTaskPage(): void {
-    if (this.taskPage > 0) this.taskPage--;
-  }
-
   previousMonth(): void {
     this.viewMonth--;
     if (this.viewMonth < 0) {
       this.viewMonth = 11;
       this.viewYear--;
     }
-    this.buildCalendar();
+    this.rebuildCalendar();
   }
 
   nextMonth(): void {
@@ -145,13 +100,13 @@ export class CalendarComponent implements OnInit {
       this.viewMonth = 0;
       this.viewYear++;
     }
-    this.buildCalendar();
+    this.rebuildCalendar();
   }
 
   goToToday(): void {
     this.viewYear = this.today.getFullYear();
     this.viewMonth = this.today.getMonth();
-    this.buildCalendar();
+    this.rebuildCalendar();
   }
 
   toggleTask(task: TaskReminder): void {
@@ -163,8 +118,8 @@ export class CalendarComponent implements OnInit {
           item.status = updated.status;
           item.deadline = updated.deadline;
         }
-        this.buildTaskReminders();
-        this.buildCalendar();
+        this.taskReminders = buildTaskReminders(this.actionItems);
+        this.rebuildCalendar();
         this.cdr.markForCheck();
       },
       error: (err) => console.error('Failed to update task status', err),
@@ -175,110 +130,7 @@ export class CalendarComponent implements OnInit {
     this.router.navigate(['/meeting-details', id]);
   }
 
-  openDayDetails(cell: CalendarCell): void {
-    this.selectedDay = cell;
-  }
-
-  closeDayDetails(): void {
-    this.selectedDay = null;
-  }
-
-  private buildCalendar(): void {
-    const firstOfMonth = new Date(this.viewYear, this.viewMonth, 1);
-    const firstWeekday = (firstOfMonth.getDay() + 6) % 7;
-    const daysInMonth = new Date(this.viewYear, this.viewMonth + 1, 0).getDate();
-    const daysInPrevMonth = new Date(this.viewYear, this.viewMonth, 0).getDate();
-    const isCurrentRealMonth =
-      this.viewYear === this.today.getFullYear() && this.viewMonth === this.today.getMonth();
-
-    const cells: CalendarCell[] = [];
-
-    for (let i = firstWeekday - 1; i >= 0; i--) {
-      cells.push({ day: daysInPrevMonth - i, muted: true, isToday: false, isWeekend: false, events: [] });
-    }
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const weekdayIndex = (firstWeekday + d - 1) % 7;
-      cells.push({
-        day: d,
-        muted: false,
-        isToday: isCurrentRealMonth && d === this.today.getDate(),
-        isWeekend: weekdayIndex === 5 || weekdayIndex === 6,
-        events: this.getEventsForDay(d),
-      });
-    }
-
-    let nextDay = 1;
-    while (cells.length % 7 !== 0 || cells.length < 42) {
-      cells.push({ day: nextDay++, muted: true, isToday: false, isWeekend: false, events: [] });
-    }
-
-    this.cells = cells;
-  }
-
-  private getEventsForDay(day: number): { id: string; title: string; kind: 'primary' | 'secondary' | 'tertiary' }[] {
-    const meetingEvents = this.meetings
-      .filter((m) => {
-        const d = new Date(m.meetingDatetime);
-        return d.getFullYear() === this.viewYear && d.getMonth() === this.viewMonth && d.getDate() === day;
-      })
-      .map((m) => ({ id: m.id, title: m.title, kind: 'primary' as const }));
-
-    const deadlineEvents = this.actionItems
-      .filter((item) => {
-        if (!item.deadline) return false;
-        const d = new Date(item.deadline);
-        return d.getFullYear() === this.viewYear && d.getMonth() === this.viewMonth && d.getDate() === day;
-      })
-      .map((item) => ({ id: item.id, title: item.description, kind: 'tertiary' as const }));
-
-    return [...meetingEvents, ...deadlineEvents];
-  }
-
-  private buildTaskReminders(): void {
-    const sorted = [...this.actionItems].sort((a, b) => {
-    const aDone = a.status === 'DONE';
-    const bDone = b.status === 'DONE';
-    if (aDone !== bDone) return aDone ? 1 : -1;
-    if (!a.deadline && !b.deadline) return 0;
-    if (!a.deadline) return 1;
-    if (!b.deadline) return -1;
-    return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
-    });
-
-    this.taskReminders = sorted.map((item) => ({
-      id: item.id,
-      title: item.description,
-      status: item.status === 'DONE' ? 'Completed' : this.formatDeadline(item.deadline),
-      done: item.status === 'DONE',
-      tag: item.proposedAssignee ?? 'Task',
-    }));
-  }
-
-  private formatDeadline(deadline: string | null): string {
-    if (!deadline) return 'No deadline';
-    const d = new Date(deadline);
-    const isToday = d.toDateString() === new Date().toDateString();
-    return isToday ? 'Due Today' : `Due ${d.toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
-  }
-
-  private buildTimeline(): void {
-    const now = new Date();
-    const upcoming = this.meetings.filter((m) => new Date(m.meetingDatetime) > now);
-
-    this.timeline = upcoming
-      .sort((a, b) => new Date(a.meetingDatetime).getTime() - new Date(b.meetingDatetime).getTime())
-      .slice(0, 5)
-      .map((m, i) => {
-        const d = new Date(m.meetingDatetime);
-        return {
-          id: m.id,
-          day: d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }),
-          time: d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
-          title: m.title,
-          subtitle: m.description ?? '',
-          kind: i % 2 === 0 ? ('primary' as const) : ('secondary' as const),
-        };
-      });
+  private rebuildCalendar(): void {
+    this.cells = buildCalendarCells(this.viewYear, this.viewMonth, this.today, this.meetings, this.actionItems);
   }
 }

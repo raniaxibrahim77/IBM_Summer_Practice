@@ -7,184 +7,26 @@
 <main class="calendar-main">
   <div class="calendar-container">
     <div class="calendar-grid-layout">
+      <app-calendar-grid
+        [viewMonthLabel]="viewMonthLabel"
+        [weekdayLabels]="weekdayLabels"
+        [cells]="cells"
+        (previousMonth)="previousMonth()"
+        (nextMonth)="nextMonth()"
+        (today)="goToToday()"
+        (meetingClick)="goToMeeting($event)"
+      />
 
-      <!-- Main Calendar -->
-      <div class="calendar-panel">
-        <div class="calendar-panel__toolbar">
-          <div class="calendar-panel__toolbar-left">
-            <h1 class="calendar-panel__title">{{ viewMonthLabel }}</h1>
-            <div class="month-nav">
-              <button type="button" (click)="previousMonth()" class="month-nav__btn">
-                <span class="material-symbols-outlined">chevron_left</span>
-              </button>
-              <div class="month-nav__divider"></div>
-              <button type="button" (click)="nextMonth()" class="month-nav__btn">
-                <span class="material-symbols-outlined">chevron_right</span>
-              </button>
-            </div>
-            <button type="button" (click)="goToToday()" class="today-btn">Today</button>
-          </div>
-        </div>
-
-        <div class="calendar-body">
-          <div class="weekday-row">
-            @for (label of weekdayLabels; track label; let i = $index) {
-              <div class="weekday-cell" [class.weekday-cell--weekend]="i >= 5">{{ label }}</div>
-            }
-          </div>
-
-          <div class="day-grid">
-            @for (cell of cells; track $index) {
-              <div
-                class="day-cell"
-                [class.day-cell--muted]="cell.muted"
-                [class.day-cell--weekend]="cell.isWeekend && !cell.isToday"
-                [class.day-cell--today]="cell.isToday"
-              >
-                <span class="day-cell__number" [class.day-cell__number--today]="cell.isToday">{{ cell.day }}</span>
-                <div class="day-cell__events">
-                  @for (event of cell.events | slice:0:3; track event.id) {
-                    <div
-                      class="day-event"
-                      [class.day-event--primary]="event.kind === 'primary'"
-                      [class.day-event--secondary]="event.kind === 'secondary'"
-                      [class.day-event--tertiary]="event.kind === 'tertiary'"
-                      (click)="event.kind === 'primary' && goToMeeting(event.id)"
-                    >{{ event.title }}</div>
-                  }
-                  @if (cell.events.length > 3) {
-                    <div class="day-event day-event--more" (click)="openDayDetails(cell)">
-                      +{{ cell.events.length - 3 }} more
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-        </div>
-      </div>
-
-      <!-- Right column -->
       <div class="calendar-side">
-        <!-- Task Reminders -->
-        <div class="panel panel--mauve">
-          <div class="panel-header">
-            <h2 class="panel-header__title panel-header__title--light">
-              <span class="material-symbols-outlined">task_alt</span>
-              Task Reminders
-            </h2>
-            <button class="panel-header__view-all" (click)="openTaskModal()">
-              View All
-            </button>
-          </div>
-          <div class="list-stack">
-           @for (task of visibleTaskReminders; track task.id) {
-            <div class="task-row">
-              <div class="task-row__body" [class.task-row__body--done]="task.done">
-                <p class="task-row__title" [class.task-row__title--done]="task.done">{{ task.title }}</p>
-                <p class="task-row__meta">
-                  {{ task.status }}
-                  <span class="task-row__tag">{{ task.tag }}</span>
-                </p>
-              </div>
-              <button type="button" (click)="toggleTask(task)" class="task-toggle" [class.task-toggle--done]="task.done" [attr.aria-label]="task.done ? 'Completed' : 'Mark complete'">
-                <span class="material-symbols-outlined task-toggle__icon">{{ task.done ? 'check_circle' : 'radio_button_unchecked' }}</span>
-              </button>
-            </div>
-           }
-            </div>
-          </div>
-
-        <!-- Scheduled Meetings timeline -->
-        <div class="panel panel--cream panel--grow">
-          <h2 class="panel-header__title">
-            <span class="material-symbols-outlined">groups</span>
-            Scheduled Meetings
-          </h2>
-          <div class="timeline">
-            @for (item of timeline; track item.id) {
-              <div class="timeline-row" (click)="goToMeeting(item.id)">
-                <span class="timeline-row__time">{{ item.day }}<br>{{ item.time }}</span>
-                <div
-                  class="timeline-row__body"
-                  [class.timeline-row__body--muted]="item.kind === 'muted'"
-                  [class.timeline-row__body--empty]="item.kind === 'empty'"
-                  [class.timeline-row__body--primary]="item.kind === 'primary'"
-                  [class.timeline-row__body--secondary]="item.kind === 'secondary'"
-                >
-                  <p class="timeline-row__title">{{ item.title }}</p>
-                  @if (item.subtitle) {
-                    <p class="timeline-row__subtitle">{{ item.subtitle }}</p>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-        </div>
+        <app-task-reminders-panel
+          [tasks]="taskReminders"
+          (toggleTask)="toggleTask($event)"
+        />
+        <app-meeting-timeline
+          [items]="timeline"
+          (meetingClick)="goToMeeting($event)"
+        />
       </div>
     </div>
   </div>
-
-  @if (selectedDay) {
-    <div class="day-modal-overlay" (click)="closeDayDetails()">
-      <div class="day-modal" (click)="$event.stopPropagation()">
-        <div class="day-modal__header">
-          <h3>Day {{ selectedDay.day }}</h3>
-          <button class="day-modal__close" (click)="closeDayDetails()">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
-        <div class="day-modal__events">
-          @for (event of selectedDay.events; track event.id) {
-            <div
-              class="day-event"
-              [class.day-event--primary]="event.kind === 'primary'"
-              [class.day-event--secondary]="event.kind === 'secondary'"
-              [class.day-event--tertiary]="event.kind === 'tertiary'"
-              (click)="event.kind === 'primary' && goToMeeting(event.id)"
-            >{{ event.title }}</div>
-          }
-        </div>
-      </div>
-    </div>
-  }
-
-  @if (showAllTasksModal) {
-    <div class="day-modal-overlay" (click)="closeTaskModal()">
-      <div class="day-modal task-modal" (click)="$event.stopPropagation()">
-        <div class="day-modal__header">
-          <h3>All Tasks</h3>
-          <button class="day-modal__close" (click)="closeTaskModal()">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
-        <div class="task-modal__list">
-          @for (task of pagedModalTasks; track task.id) {
-            <div class="task-row">
-              <div class="task-row__body" [class.task-row__body--done]="task.done">
-                <p class="task-row__title" [class.task-row__title--done]="task.done">{{ task.title }}</p>
-                <p class="task-row__meta">
-                  {{ task.status }}
-                  <span class="task-row__tag">{{ task.tag }}</span>
-                </p>
-              </div>
-              <button type="button" (click)="toggleTask(task)" class="task-toggle" [class.task-toggle--done]="task.done" [attr.aria-label]="task.done ? 'Completed' : 'Mark complete'">
-                <span class="material-symbols-outlined task-toggle__icon">{{ task.done ? 'check_circle' : 'radio_button_unchecked' }}</span>
-              </button>
-            </div>
-          }
-        </div>
-        <div class="task-modal__pagination">
-          <button type="button" (click)="prevTaskPage()" [disabled]="taskPage === 0">
-            <span class="material-symbols-outlined">chevron_left</span>
-          </button>
-          <span>Page {{ taskPage + 1 }} of {{ totalTaskPages }}</span>
-          <button type="button" (click)="nextTaskPage()" [disabled]="taskPage >= totalTaskPages - 1">
-            <span class="material-symbols-outlined">chevron_right</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  }
-  
 </main>

@@ -1,0 +1,78 @@
+<div class="calendar-panel">
+  <div class="calendar-panel__toolbar">
+    <div class="calendar-panel__toolbar-left">
+      <h1 class="calendar-panel__title">{{ viewMonthLabel }}</h1>
+      <div class="month-nav">
+        <button type="button" (click)="previousMonth.emit()" class="month-nav__btn">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <div class="month-nav__divider"></div>
+        <button type="button" (click)="nextMonth.emit()" class="month-nav__btn">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+      </div>
+      <button type="button" (click)="today.emit()" class="today-btn">Today</button>
+    </div>
+  </div>
+
+  <div class="calendar-body">
+    <div class="weekday-row">
+      @for (label of weekdayLabels; track label; let i = $index) {
+        <div class="weekday-cell" [class.weekday-cell--weekend]="i >= 5">{{ label }}</div>
+      }
+    </div>
+
+    <div class="day-grid">
+      @for (cell of cells; track $index) {
+        <div
+          class="day-cell"
+          [class.day-cell--muted]="cell.muted"
+          [class.day-cell--weekend]="cell.isWeekend && !cell.isToday"
+          [class.day-cell--today]="cell.isToday"
+        >
+          <span class="day-cell__number" [class.day-cell__number--today]="cell.isToday">{{ cell.day }}</span>
+          <div class="day-cell__events">
+            @for (event of cell.events | slice:0:3; track event.id) {
+              <div
+                class="day-event"
+                [class.day-event--primary]="event.kind === 'primary'"
+                [class.day-event--secondary]="event.kind === 'secondary'"
+                [class.day-event--tertiary]="event.kind === 'tertiary'"
+                (click)="event.kind === 'primary' && meetingClick.emit(event.id)"
+              >{{ event.title }}</div>
+            }
+            @if (cell.events.length > 3) {
+              <div class="day-event day-event--more" (click)="openDayDetails(cell)">
+                +{{ cell.events.length - 3 }} more
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+@if (selectedDay) {
+  <div class="day-modal-overlay" (click)="closeDayDetails()">
+    <div class="day-modal" (click)="$event.stopPropagation()">
+      <div class="day-modal__header">
+        <h3>Day {{ selectedDay.day }}</h3>
+        <button class="day-modal__close" (click)="closeDayDetails()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="day-modal__events">
+        @for (event of selectedDay.events; track event.id) {
+          <div
+            class="day-event"
+            [class.day-event--primary]="event.kind === 'primary'"
+            [class.day-event--secondary]="event.kind === 'secondary'"
+            [class.day-event--tertiary]="event.kind === 'tertiary'"
+            (click)="event.kind === 'primary' && meetingClick.emit(event.id)"
+          >{{ event.title }}</div>
+        }
+      </div>
+    </div>
+  </div>
+}

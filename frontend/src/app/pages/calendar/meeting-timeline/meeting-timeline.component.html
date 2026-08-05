@@ -1,0 +1,25 @@
+<div class="panel panel--cream panel--grow">
+  <h2 class="panel-header__title">
+    <span class="material-symbols-outlined">groups</span>
+    Scheduled Meetings
+  </h2>
+  <div class="timeline">
+    @for (item of items; track item.id) {
+      <div class="timeline-row" (click)="meetingClick.emit(item.id)">
+        <span class="timeline-row__time">{{ item.day }}<br>{{ item.time }}</span>
+        <div
+          class="timeline-row__body"
+          [class.timeline-row__body--muted]="item.kind === 'muted'"
+          [class.timeline-row__body--empty]="item.kind === 'empty'"
+          [class.timeline-row__body--primary]="item.kind === 'primary'"
+          [class.timeline-row__body--secondary]="item.kind === 'secondary'"
+        >
+          <p class="timeline-row__title">{{ item.title }}</p>
+          @if (item.subtitle) {
+            <p class="timeline-row__subtitle">{{ item.subtitle }}</p>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,65 @@
+<div class="panel panel--mauve">
+  <div class="panel-header">
+    <h2 class="panel-header__title panel-header__title--light">
+      <span class="material-symbols-outlined">task_alt</span>
+      Task Reminders
+    </h2>
+    <button class="panel-header__view-all" (click)="openTaskModal()">
+      View All
+    </button>
+  </div>
+  <div class="list-stack">
+    @for (task of visibleTasks; track task.id) {
+      <div class="task-row">
+        <div class="task-row__body" [class.task-row__body--done]="task.done">
+          <p class="task-row__title" [class.task-row__title--done]="task.done">{{ task.title }}</p>
+          <p class="task-row__meta">
+            {{ task.status }}
+            <span class="task-row__tag">{{ task.tag }}</span>
+          </p>
+        </div>
+        <button type="button" (click)="toggleTask.emit(task)" class="task-toggle" [class.task-toggle--done]="task.done" [attr.aria-label]="task.done ? 'Completed' : 'Mark complete'">
+          <span class="material-symbols-outlined task-toggle__icon">{{ task.done ? 'check_circle' : 'radio_button_unchecked' }}</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>
+
+@if (showAllTasksModal) {
+  <div class="day-modal-overlay" (click)="closeTaskModal()">
+    <div class="day-modal task-modal" (click)="$event.stopPropagation()">
+      <div class="day-modal__header">
+        <h3>All Tasks</h3>
+        <button class="day-modal__close" (click)="closeTaskModal()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="task-modal__list">
+        @for (task of pagedModalTasks; track task.id) {
+          <div class="task-row">
+            <div class="task-row__body" [class.task-row__body--done]="task.done">
+              <p class="task-row__title" [class.task-row__title--done]="task.done">{{ task.title }}</p>
+              <p class="task-row__meta">
+                {{ task.status }}
+                <span class="task-row__tag">{{ task.tag }}</span>
+              </p>
+            </div>
+            <button type="button" (click)="toggleTask.emit(task)" class="task-toggle" [class.task-toggle--done]="task.done" [attr.aria-label]="task.done ? 'Completed' : 'Mark complete'">
+              <span class="material-symbols-outlined task-toggle__icon">{{ task.done ? 'check_circle' : 'radio_button_unchecked' }}</span>
+            </button>
+          </div>
+        }
+      </div>
+      <div class="task-modal__pagination">
+        <button type="button" (click)="prevTaskPage()" [disabled]="taskPage === 0">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <span>Page {{ taskPage + 1 }} of {{ totalTaskPages }}</span>
+        <button type="button" (click)="nextTaskPage()" [disabled]="taskPage >= totalTaskPages - 1">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+      </div>
+    </div>
+  </div>
+}
