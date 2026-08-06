@@ -1,0 +1,87 @@
+<div class="panel panel--assistant">
+  <h2 class="panel__eyebrow">
+    Meeting Assistant
+  </h2>
+
+  <div class="chat-scroll">
+    @for (
+      message of chatMessages;
+      track $index
+    ) {
+      <div
+        class="chat-bubble"
+        [class.chat-bubble--assistant]="
+          message.from === 'assistant'
+        "
+        [class.chat-bubble--user]="
+          message.from === 'user'
+        "
+      >
+        {{ message.text }}
+      </div>
+    }
+
+    @if (isSendingMessage) {
+      <div
+        class="chat-bubble
+               chat-bubble--assistant"
+      >
+        Thinking...
+      </div>
+    }
+  </div>
+
+  <div class="quick-actions">
+    <button
+      type="button"
+      class="quick-action-btn"
+      [disabled]="isSendingMessage"
+      (click)="runQuickAction('summarize')"
+    >
+      Summarize
+    </button>
+
+    <button
+      type="button"
+      class="quick-action-btn"
+      [disabled]="isSendingMessage"
+      (click)="runQuickAction('risks')"
+    >
+      Key risks
+    </button>
+
+    <button
+      type="button"
+      class="quick-action-btn"
+      [disabled]="isSendingMessage"
+      (click)="runQuickAction('followup')"
+    >
+      Follow-up notes
+    </button>
+  </div>
+
+  <div class="chat-input-row">
+    <input
+      type="text"
+      class="chat-input"
+      [(ngModel)]="chatInput"
+      [disabled]="isSendingMessage"
+      placeholder="Ask a question..."
+      (keydown.enter)="sendMessage()"
+    />
+
+    <button
+      type="button"
+      class="chat-send-btn"
+      [disabled]="
+        isSendingMessage ||
+        !chatInput.trim()
+      "
+      (click)="sendMessage()"
+    >
+      <span class="material-symbols-outlined">
+        send
+      </span>
+    </button>
+  </div>
+</div>

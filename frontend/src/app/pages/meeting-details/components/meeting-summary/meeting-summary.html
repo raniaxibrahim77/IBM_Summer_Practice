@@ -1,0 +1,103 @@
+<div class="panel">
+  <div class="panel-header">
+    <h2
+      class="panel__eyebrow
+             panel__eyebrow--no-margin"
+    >
+      AI Summary
+    </h2>
+
+    <div class="panel-header__actions">
+      <button
+        type="button"
+        class="regenerate-btn"
+        [disabled]="
+          isGenerating ||
+          !transcriptText
+        "
+        (click)="regenerateSummary()"
+      >
+        <span
+          class="material-symbols-outlined
+                 regenerate-btn__icon"
+          [class.regenerate-btn__icon--spinning]="
+            isGenerating
+          "
+        >
+          refresh
+        </span>
+
+        {{
+          isGenerating
+            ? 'Generating...'
+            : status === 'Processed'
+              ? 'Regenerate'
+              : 'Generate'
+        }}
+      </button>
+
+      <button
+        type="button"
+        class="export-btn"
+        [disabled]="
+          !hasAiResult ||
+          isGenerating
+        "
+        (click)="exportSummary()"
+      >
+        <span class="material-symbols-outlined">
+          download
+        </span>
+        Export
+      </button>
+    </div>
+  </div>
+
+  <p class="summary-text">
+    {{ aiSummary }}
+  </p>
+
+  @if (summaryError) {
+    <p role="alert" class="summary-error">
+      {{ summaryError }}
+    </p>
+  }
+
+  <h3
+    class="panel__eyebrow
+           panel__eyebrow--spaced"
+  >
+    Action Items
+
+    <span class="action-items-count">
+      ({{ completedActionCount }}/{{ actionItems.length }} done)
+    </span>
+  </h3>
+
+  <div class="action-items-list">
+    @for (item of actionItems; track item.id) {
+      <label class="action-item">
+        <input
+          type="checkbox"
+          class="action-item__checkbox"
+          [checked]="item.done"
+          [disabled]="item.isUpdating"
+          (change)="toggleActionItem(item)"
+        />
+
+        <span
+          class="action-item__text"
+          [class.action-item__text--done]="
+            item.done
+          "
+        >
+          {{ item.text }}
+
+          @if (item.isUpdating) {
+            <small>Saving...</small>
+          }
+        </span>
+      </label>
+    }
+  </div>
+</div>

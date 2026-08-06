@@ -1,0 +1,47 @@
+@if (transcriptText) {
+  <button
+    type="button"
+    class="download-btn"
+    (click)="downloadTranscript()"
+  >
+    <span class="material-symbols-outlined">
+      download
+    </span>
+
+    Download Transcript
+  </button>
+} @else {
+  <label
+    class="download-btn add-transcript-btn"
+    [class.add-transcript-btn--disabled]="
+      isUploading
+    "
+  >
+    <span class="material-symbols-outlined">
+      upload_file
+    </span>
+
+    {{
+      isUploading
+        ? 'Uploading...'
+        : 'Add Transcript'
+    }}
+
+    <input
+      type="file"
+      accept=".txt"
+      class="visually-hidden"
+      [disabled]="isUploading"
+      (change)="onTranscriptSelected($event)"
+    />
+  </label>
+}
+
+@if (uploadError) {
+  <p
+    role="alert"
+    class="transcript-upload-error"
+  >
+    {{ uploadError }}
+  </p>
+}

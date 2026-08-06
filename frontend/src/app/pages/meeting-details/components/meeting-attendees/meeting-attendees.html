@@ -1,0 +1,94 @@
+<div class="attendees-widget">
+  <div
+    class="attendees-widget__stack"
+    (click)="toggle()"
+  >
+    @for (attendee of attendees; track attendee.id) {
+      <div
+        class="attendee-bubble"
+        [style.background-color]="attendee.color"
+      >
+        {{ attendee.initials }}
+      </div>
+    }
+
+    @if (attendees.length === 0) {
+      <span class="attendees-widget__empty">
+        No attendees
+      </span>
+    }
+  </div>
+
+  @if (isOpen) {
+    <div class="attendees-popover">
+      <h3 class="attendees-popover__title">
+        Attendees
+      </h3>
+
+      <div class="attendees-popover__list">
+        @for (attendee of attendees; track attendee.id) {
+          <div class="attendee-row">
+            <div
+              class="attendee-row__avatar"
+              [style.background-color]="attendee.color"
+            >
+              {{ attendee.initials }}
+            </div>
+
+            <div class="attendee-row__info">
+              <p class="attendee-row__name">
+                {{ attendee.name }}
+              </p>
+
+              <p class="attendee-row__email">
+                {{ attendee.email || 'No email' }}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              class="attendee-row__remove"
+              (click)="removeAttendee(attendee)"
+            >
+              <span class="material-symbols-outlined">
+                close
+              </span>
+            </button>
+          </div>
+        }
+      </div>
+
+      <div class="attendees-popover__add">
+        <select
+          [(ngModel)]="selectedAttendeeId"
+          class="attendee-select"
+        >
+          <option value="" disabled>
+            Select attendee...
+          </option>
+
+          @for (
+            attendee of unassignedAttendees;
+            track attendee.id
+          ) {
+            <option [value]="attendee.id">
+              {{ attendee.name }} —
+              {{ attendee.email || 'No email' }}
+            </option>
+          }
+        </select>
+
+        <button
+          type="button"
+          class="attendee-add-btn"
+          [disabled]="!selectedAttendeeId"
+          (click)="addAttendee()"
+        >
+          <span class="material-symbols-outlined">
+            add
+          </span>
+        </button>
+      </div>
+    </div>
+  }
+</div>
