@@ -8,66 +8,113 @@
 </app-header>
 
 <main class="details-main">
-  <div class="details-container">
-    <!-- Header card -->
-    <div class="header-card">
-      <div>
-        <div class="header-card__meta-row">
-          <span class="status-badge" [ngClass]="statusClasses">{{ status }}</span>
-          <span class="header-card__date">{{ date }}</span>
-        </div>
-        <h1 class="header-card__title">{{ title }}</h1>
-        <button
-          type="button"
-          class="delete-meeting-button"
-          (click)="openDeleteMeetingConfirmation()"
-        >
-          <span class="material-symbols-outlined"> delete </span>
+  @if (loading) {
+    <div
+      class="details-state"
+      role="status"
+    >
+      <span
+        class="material-symbols-outlined
+               details-state__icon
+               details-state__icon--loading"
+      >
+        progress_activity
+      </span>
 
-          Delete meeting
-        </button>
+      <p class="details-state__message">
+        Loading meeting...
+      </p>
+    </div>
+  } @else if (notFound) {
+    <div class="details-state">
+      <span
+        class="material-symbols-outlined
+               details-state__icon"
+      >
+        event_busy
+      </span>
+
+      <h1 class="details-state__title">
+        Meeting not found
+      </h1>
+
+      <p class="details-state__message">
+        The meeting may have been deleted or the link is invalid.
+      </p>
+
+      <button
+        type="button"
+        routerLink="/meetings"
+        class="back-btn"
+      >
+        <span class="material-symbols-outlined">
+          arrow_back
+        </span>
+        Back to Meetings
+      </button>
+    </div>
+  } @else {
+    <div class="details-container">
+      <!-- Header card -->
+      <div class="header-card">
+        <div>
+          <div class="header-card__meta-row">
+            <span class="status-badge" [ngClass]="statusClasses">{{ status }}</span>
+            <span class="header-card__date">{{ date }}</span>
+          </div>
+          <h1 class="header-card__title">{{ title }}</h1>
+          <button
+            type="button"
+            class="delete-meeting-button"
+            (click)="openDeleteMeetingConfirmation()"
+          >
+            <span class="material-symbols-outlined"> delete </span>
+
+            Delete meeting
+          </button>
+        </div>
+
+        <!-- Attendee bubbles -->
+        <app-meeting-attendees [meetingId]="meetingId" [refreshKey]="attendeesRefreshKey" />
       </div>
 
-      <!-- Attendee bubbles -->
-      <app-meeting-attendees [meetingId]="meetingId" [refreshKey]="attendeesRefreshKey" />
-    </div>
+      <!-- Two column layout -->
+      <div class="details-grid">
+        <!-- LEFT: big Meeting Assistant -->
+        <app-meeting-assistant [meetingId]="meetingId" />
 
-    <!-- Two column layout -->
-    <div class="details-grid">
-      <!-- LEFT: big Meeting Assistant -->
-      <app-meeting-assistant [meetingId]="meetingId" />
+        <!-- RIGHT: transcript download + AI summary (narrow) -->
+        <div class="details-side">
+          <div class="panel">
+            <h2 class="panel__eyebrow">Meeting Transcript</h2>
 
-      <!-- RIGHT: transcript download + AI summary (narrow) -->
-      <div class="details-side">
-        <div class="panel">
-          <h2 class="panel__eyebrow">Meeting Transcript</h2>
+            <app-meeting-transcript
+              [meetingId]="meetingId"
+              [meetingTitle]="title"
+              [(transcriptText)]="transcriptText"
+            />
+          </div>
 
-          <app-meeting-transcript
+          <!-- AI Summary -->
+          <app-meeting-summary
             [meetingId]="meetingId"
             [meetingTitle]="title"
-            [(transcriptText)]="transcriptText"
+            [meetingDate]="date"
+            [transcriptText]="transcriptText"
+            [(status)]="status"
+            (attendeesRefreshRequested)="refreshAttendees()"
           />
         </div>
-
-        <!-- AI Summary -->
-        <app-meeting-summary
-          [meetingId]="meetingId"
-          [meetingTitle]="title"
-          [meetingDate]="date"
-          [transcriptText]="transcriptText"
-          [(status)]="status"
-          (attendeesRefreshRequested)="refreshAttendees()"
-        />
       </div>
     </div>
-  </div>
 
-  <div class="back-row">
-    <button routerLink="/meetings" class="back-btn">
-      <span class="material-symbols-outlined">arrow_back</span>
-      Back to Meetings
-    </button>
-  </div>
+    <div class="back-row">
+      <button routerLink="/meetings" class="back-btn">
+        <span class="material-symbols-outlined">arrow_back</span>
+        Back to Meetings
+      </button>
+    </div>
+  }
 </main>
 
 @if (showDeleteMeetingConfirmation) {

@@ -201,3 +201,44 @@
 .delete-meeting-button .material-symbols-outlined {
   font-size: 1rem;
 }
+
+.details-state {
+  min-height: calc(100vh - 4rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: var(--vanilla-cream);
+  text-align: center;
+}
+
+.details-state__icon {
+  font-size: 3rem;
+  color: var(--sky-blue);
+}
+
+.details-state__icon--loading {
+  animation: state-spin 1s linear infinite;
+}
+
+.details-state__title {
+  font-size: 1.75rem;
+}
+
+.details-state__message {
+  max-width: 28rem;
+  color: rgba(251, 242, 218, 0.75);
+  line-height: 1.5;
+}
+
+@keyframes state-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
