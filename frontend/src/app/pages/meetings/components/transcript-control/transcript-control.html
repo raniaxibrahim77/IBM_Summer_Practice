@@ -1,0 +1,58 @@
+<div class="transcript-control">
+  <div class="transcript-actions">
+    <label
+      class="transcript-badge"
+      [class.transcript-badge--edit]="hasTranscript"
+    >
+      {{ hasTranscript ? 'Edit Transcript' : 'Add Transcript' }}
+
+      <input
+        type="file"
+        accept=".txt"
+        class="visually-hidden"
+        (change)="onFileSelected($event)"
+      />
+    </label>
+
+    @if (hasTranscript) {
+      <button
+        type="button"
+        class="delete-transcript-button"
+        aria-label="Delete transcript"
+        title="Delete transcript"
+        (click)="openDeleteConfirmation($event)"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    }
+  </div>
+
+  @if (message) {
+    <div
+      class="transcript-message"
+      [attr.role]="messageType === 'error' ? 'alert' : 'status'"
+      [class.transcript-message--success]="messageType === 'success'"
+      [class.transcript-message--error]="messageType === 'error'"
+    >
+      <span>{{ message }}</span>
+
+      <button
+        type="button"
+        class="transcript-message__close"
+        aria-label="Close message"
+        (click)="clearMessage()"
+      >
+        ×
+      </button>
+    </div>
+  }
+</div>
+
+@if (showDeleteConfirmation) {
+  <app-delete-transcript-confirmation
+    [meetingId]="meetingId"
+    [meetingTitle]="meetingTitle"
+    (cancelled)="closeDeleteConfirmation()"
+    (transcriptDeleted)="handleTranscriptDeleted()"
+  />
+}

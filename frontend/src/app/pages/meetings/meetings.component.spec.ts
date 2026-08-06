@@ -118,11 +118,11 @@ describe('MeetingsComponent', () => {
     );
   });
 
-  it('should open the delete transcript confirmation', () => {
+  it('should render the transcript control for a meeting', () => {
     const fixture = TestBed.createComponent(MeetingsComponent);
     fixture.detectChanges();
 
-    fixture.componentInstance.openDeleteTranscriptConfirmation(
+    fixture.componentInstance.meetings = [
       {
         id: 'meeting-1',
         title: 'Test Meeting',
@@ -130,16 +130,18 @@ describe('MeetingsComponent', () => {
         attendees: 1,
         hasTranscript: true,
       },
-      new Event('click'),
-    );
+    ];
 
     fixture.detectChanges();
 
     const element = fixture.nativeElement as HTMLElement;
-    const dialog = element.querySelector('[role="dialog"]');
+    const transcriptControl = element.querySelector(
+      'app-transcript-control',
+    );
 
-    expect(dialog).toBeTruthy();
-    expect(dialog?.textContent).toContain('Delete transcript?');
-    expect(dialog?.textContent).toContain('Test Meeting');
+    expect(transcriptControl).toBeTruthy();
+    expect(transcriptControl?.textContent).toContain(
+      'Edit Transcript',
+    );
   });
 });

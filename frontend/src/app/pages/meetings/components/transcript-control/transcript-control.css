@@ -1,0 +1,117 @@
+:host {
+  --night-bordeaux: #450c21;
+  --dusty-mauve: #a33e43;
+  --sky-blue: #75c3d1;
+  --tea-green: #d9ffd2;
+  --vanilla-cream: #fbf2da;
+  --sage-accent: #8ca888;
+
+  display: inline-block;
+}
+
+.transcript-control {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.transcript-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.transcript-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  color: white;
+  background-color: var(--sage-accent);
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.transcript-badge--edit {
+  color: var(--night-bordeaux);
+  background-color: var(--sky-blue);
+}
+
+.visually-hidden {
+  display: none;
+}
+
+.delete-transcript-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  padding: 0;
+  color: var(--dusty-mauve);
+  background: transparent;
+  border: 1px solid rgba(163, 62, 67, 0.45);
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.delete-transcript-button .material-symbols-outlined {
+  font-size: 1.1rem;
+}
+
+.delete-transcript-button:hover {
+  color: var(--vanilla-cream);
+  background-color: var(--dusty-mauve);
+  transform: scale(1.06);
+}
+
+.transcript-message {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: fit-content;
+  max-width: 20rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.transcript-message--success {
+  color: #1c2e1a;
+  background-color: var(--tea-green);
+  border-color: var(--sage-accent);
+}
+
+.transcript-message--error {
+  color: var(--night-bordeaux);
+  background-color: #f8d7da;
+  border-color: var(--dusty-mauve);
+}
+
+.transcript-message__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.transcript-message__close:hover {
+  opacity: 0.7;
+}

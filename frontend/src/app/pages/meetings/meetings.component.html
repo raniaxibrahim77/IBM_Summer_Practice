@@ -29,6 +29,7 @@
       <input
         type="text"
         [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearchChange()"
         placeholder="Search by title..."
         class="table-search__input"
       />
@@ -39,7 +40,7 @@
       <div class="table-panel__scroll">
         <table class="meetings-table">
           <thead>
-            <tr class="bg-[#A33E43] text-[#FBF2DA]">
+            <tr class="meetings-table__head-row">
               <th class="meetings-table__head-cell">Title</th>
               <th class="meetings-table__head-cell">Date &amp; Time</th>
               <th class="meetings-table__head-cell">Attendees</th>
@@ -60,33 +61,11 @@
                   <span class="attendees-badge">{{ meeting.attendees }}</span>
                 </td>
                 <td class="meetings-table__cell">
-                  <div class="transcript-actions">
-                    <label
-                      class="transcript-badge"
-                      [class.transcript-badge--edit]="meeting.hasTranscript"
-                    >
-                      {{ meeting.hasTranscript ? 'Edit Transcript' : 'Add Transcript' }}
-
-                      <input
-                        type="file"
-                        accept=".txt"
-                        class="visually-hidden"
-                        (change)="onRowTranscriptSelected($event, meeting)"
-                      />
-                    </label>
-
-                    @if (meeting.hasTranscript) {
-                      <button
-                        type="button"
-                        class="delete-transcript-button"
-                        aria-label="Delete transcript"
-                        title="Delete transcript"
-                        (click)="openDeleteTranscriptConfirmation(meeting, $event)"
-                      >
-                        <span class="material-symbols-outlined">close</span>
-                      </button>
-                    }
-                  </div>
+                  <app-transcript-control
+                    [meetingId]="meeting.id"
+                    [meetingTitle]="meeting.title"
+                    [(hasTranscript)]="meeting.hasTranscript"
+                  />
                 </td>
                 <td class="meetings-table__cell">
                   <button [routerLink]="['/meeting-details', meeting.id]" class="ai-details-link">
@@ -152,14 +131,5 @@
   <app-log-meeting-modal
     (cancelled)="closeCreateModal()"
     (meetingLogged)="handleMeetingLogged($event)"
-  />
-}
-
-@if (meetingPendingTranscriptDelete) {
-  <app-delete-transcript-confirmation
-    [meetingId]="meetingPendingTranscriptDelete.id"
-    [meetingTitle]="meetingPendingTranscriptDelete.title"
-    (cancelled)="closeDeleteTranscriptConfirmation()"
-    (transcriptDeleted)="handleTranscriptDeleted()"
   />
 }
